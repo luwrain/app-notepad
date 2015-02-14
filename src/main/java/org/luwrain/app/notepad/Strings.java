@@ -16,7 +16,7 @@
 
 package org.luwrain.app.notepad;
 
-public interface StringConstructor
+public interface Strings
 {
     String appName();
     String introduction();

@@ -30,7 +30,7 @@ public class NotepadApp implements Application, Actions
 
     private Luwrain luwrain;
     private Base base = new Base();
-    private StringConstructor stringConstructor;
+    private Strings strings;
     private EditArea area;
     private String fileName = "";
     private boolean modified = false; 
@@ -49,7 +49,7 @@ public class NotepadApp implements Application, Actions
 	Object o = Langs.requestStringConstructor("notepad");
 	if (o == null)
 	    return false;
-	stringConstructor = (StringConstructor)o;
+	strings = (Strings)o;
 	this.luwrain = luwrain;
 	createArea();
 	if (fileName != null && !fileName.isEmpty())
@@ -59,10 +59,10 @@ public class NotepadApp implements Application, Actions
 	    File f = new File(fileName);
 	    area.setName(f.getName());
 	    if (lines == null)
-		luwrain.message(stringConstructor.errorOpeningFile()); else 
+		luwrain.message(strings.errorOpeningFile()); else 
 		area.setContent(lines);
 	} else
-	    area.setName(stringConstructor.newFileName());
+	    area.setName(strings.newFileName());
 	return true;
     }
 
@@ -70,7 +70,7 @@ public class NotepadApp implements Application, Actions
     {
 	if (!modified)
 	{
-	    luwrain.message(stringConstructor.noModificationsToSave());
+	    luwrain.message(strings.noModificationsToSave());
 	    return true;
 	}
 	if (fileName == null || fileName.isEmpty())
@@ -84,10 +84,10 @@ public class NotepadApp implements Application, Actions
 	    if (base.save(fileName, area.getContent(), ENCODING))
 	    {
 		modified = false;
-		luwrain.message(stringConstructor.fileIsSaved());
+		luwrain.message(strings.fileIsSaved());
 		return true;
 	    }
-	luwrain.message(stringConstructor.errorSavingFile());
+	luwrain.message(strings.errorSavingFile());
 	return false;
     }
 
@@ -98,8 +98,7 @@ public class NotepadApp implements Application, Actions
 	File dir = null;
 	if (fileName == null || fileName.isEmpty())
 	{
-	    SystemDirs systemDirs = new SystemDirs(luwrain.getRegistry());
-	    dir = systemDirs.userHomeAsFile();
+	    dir = luwrain.launchContext().userHomeDirAsFile();
 	} else
 	{
 	    File f = new File(fileName);
@@ -111,7 +110,7 @@ public class NotepadApp implements Application, Actions
 	String[] lines = base.read(chosenFile.getAbsolutePath(), ENCODING);
 	if (lines == null)
 	{
-	    luwrain.message(stringConstructor.errorOpeningFile());
+	    luwrain.message(strings.errorOpeningFile());
 	    return;
 	}
 	area.setContent(lines);
@@ -141,7 +140,7 @@ public class NotepadApp implements Application, Actions
 			actions.close();
 			return true;
 		    case EnvironmentEvent.INTRODUCE:
-			Speech.say(stringConstructor.introduction() + " " + getName()); 
+			luwrain.say(strings.introduction() + " " + getName()); 
 			return true;
 		    case EnvironmentEvent.SAVE:
 			actions.save();
@@ -173,7 +172,7 @@ public class NotepadApp implements Application, Actions
     {
 	if (!modified)
 	    return true;
-	YesNoPopup popup = new YesNoPopup(luwrain, stringConstructor.saveChangesPopupName(), stringConstructor.saveChangesPopupQuestion(), false);
+	YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), false);
 	luwrain.popup(popup);
 	if (popup.closing.cancelled())
 	    return false;
@@ -186,11 +185,10 @@ public class NotepadApp implements Application, Actions
     //null means user cancelled file name popup
     private String askFileNameToSave()
     {
-	SystemDirs systemDirs = new SystemDirs(luwrain.getRegistry());
-	final File dir = systemDirs.userHomeAsFile();
-	final File chosenFile = luwrain.openPopup(stringConstructor.savePopupName(),
-						  stringConstructor.savePopupPrefix(),
-						  new File(dir, stringConstructor.newFileName()));
+	final File dir = luwrain.launchContext().userHomeDirAsFile();
+	final File chosenFile = luwrain.openPopup(strings.savePopupName(),
+						  strings.savePopupPrefix(),
+						  new File(dir, strings.newFileName()));
 	if (chosenFile == null)
 	    return null;
 	//FIXME:Is a valid file;
