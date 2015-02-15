@@ -19,7 +19,6 @@
     <mkdir dir="jar"/>
     <jar jarfile="jar/luwrain-app-notepad.jar">
       <manifest>
-        <attribute name="Main-Class" value="org.luwrain.core.Init"/>
         <section name="org/luwrain">
           <attribute name="Extensions" value="org.luwrain.app.notepad.Extension"/>
         </section>

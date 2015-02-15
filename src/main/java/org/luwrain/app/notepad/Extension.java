@@ -8,9 +8,15 @@ import org.luwrain.core.Application;
 import org.luwrain.core.Shortcut;
 import org.luwrain.core.Command;
 import org.luwrain.core.Luwrain;
+import org.luwrain.core.Registry;
 
 class Extension implements org.luwrain.core.Extension
 {
+    @Override public String init(String[] args, Registry registry)
+    {
+	return null;
+    }
+
     @Override public Command[] getCommands()
     {
 	Command[] res = new Command[1];
