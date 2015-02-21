@@ -7,17 +7,21 @@ import java.util.*;
 import org.luwrain.core.Application;
 import org.luwrain.core.Shortcut;
 import org.luwrain.core.Command;
+import org.luwrain.core.CommandEnvironment;
+import org.luwrain.core.Worker;
+import org.luwrain.core.SharedObject;
+import org.luwrain.core.I18nExtension;
 import org.luwrain.core.Luwrain;
 import org.luwrain.core.Registry;
 
-class Extension implements org.luwrain.core.Extension
+public class Extension implements org.luwrain.core.Extension
 {
     @Override public String init(String[] args, Registry registry)
     {
 	return null;
     }
 
-    @Override public Command[] getCommands()
+    @Override public Command[] getCommands(CommandEnvironment env)
     {
 	Command[] res = new Command[1];
 	res[0] = new Command(){
@@ -25,9 +29,9 @@ class Extension implements org.luwrain.core.Extension
 		{
 		    return "notepad";
 		}
-		@Override public void onCommand(Luwrain luwrain)
+		@Override public void onCommand(CommandEnvironment env)
 		{
-		    luwrain.launchApp("notepad");
+		    env.launchApp("notepad");
 		}
 	    };
 	return res;
@@ -63,5 +67,27 @@ class Extension implements org.luwrain.core.Extension
 		}
 	    };
 	return res;
+    }
+
+    @Override public Worker[] getWorkers()
+    {
+	return new Worker[0];
+    }
+
+    @Override public SharedObject[] getSharedObjects()
+    {
+	return new SharedObject[0];
+    }
+
+    @Override public void i18nExtension(I18nExtension i18nExt)
+    {
+	i18nExt.addCommandTitle("en", "notepad", "Notepad");
+	i18nExt.addCommandTitle("ru", "notepad", "Блокнот");
+	i18nExt.addStrings("ru", NotepadApp.STRINGS_NAME, new org.luwrain.app.notepad.i18n.Ru());
+    }
+
+    @Override public org.luwrain.mainmenu.Item[] getMainMenuItems(CommandEnvironment env)
+    {
+	return new org.luwrain.mainmenu.Item[0];
     }
 }

@@ -16,7 +16,6 @@
 
 package org.luwrain.app.notepad;
 
-
 import java.io.*;
 import java.nio.charset.*;
 import org.luwrain.core.*;
@@ -24,8 +23,9 @@ import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.*;
 
-public class NotepadApp implements Application, Actions
+class NotepadApp implements Application, Actions
 {
+static public final String STRINGS_NAME = "luwrain.notepad";
     static private final Charset ENCODING = StandardCharsets.UTF_8;
 
     private Luwrain luwrain;
@@ -46,8 +46,8 @@ public class NotepadApp implements Application, Actions
 
     public boolean onLaunch(Luwrain luwrain)
     {
-	Object o = Langs.requestStringConstructor("notepad");
-	if (o == null)
+	final Object o = luwrain.i18n().getStrings(STRINGS_NAME);
+	if (o == null || !(o instanceof Strings))
 	    return false;
 	strings = (Strings)o;
 	this.luwrain = luwrain;
@@ -104,7 +104,7 @@ public class NotepadApp implements Application, Actions
 	    File f = new File(fileName);
 	    dir = f.getParentFile();
 	}
-	File chosenFile = luwrain.openPopup(null, null, dir);
+	File chosenFile = null;//FIXME:luwrain.openPopup(null, null, dir);
 	if (chosenFile == null)
 	    return;
 	String[] lines = base.read(chosenFile.getAbsolutePath(), ENCODING);
@@ -186,9 +186,9 @@ public class NotepadApp implements Application, Actions
     private String askFileNameToSave()
     {
 	final File dir = luwrain.launchContext().userHomeDirAsFile();
-	final File chosenFile = luwrain.openPopup(strings.savePopupName(),
-						  strings.savePopupPrefix(),
-						  new File(dir, strings.newFileName()));
+	final File chosenFile = null;//FIXME:luwrain.openPopup(strings.savePopupName(),
+	//						  strings.savePopupPrefix(),
+	//						  new File(dir, strings.newFileName()));
 	if (chosenFile == null)
 	    return null;
 	//FIXME:Is a valid file;
