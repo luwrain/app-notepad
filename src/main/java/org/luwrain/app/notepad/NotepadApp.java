@@ -42,9 +42,11 @@ static public final String STRINGS_NAME = "luwrain.notepad";
     public NotepadApp(String arg)
     {
 	this.fileName = arg;
+	if (fileName == null)
+	    throw new NullPointerException("fileName may not be null"); 
     }
 
-    public boolean onLaunch(Luwrain luwrain)
+    @Override public boolean onLaunch(Luwrain luwrain)
     {
 	final Object o = luwrain.i18n().getStrings(STRINGS_NAME);
 	if (o == null || !(o instanceof Strings))
@@ -54,19 +56,23 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	createArea();
 	if (fileName != null && !fileName.isEmpty())
 	{
-	    String[] lines = base.read(fileName, ENCODING);
-
-	    File f = new File(fileName);
+	    final File f = new File(fileName);
+	    final String[] lines = base.read(fileName, ENCODING);
 	    area.setName(f.getName());
 	    if (lines == null)
-		luwrain.message(strings.errorOpeningFile()); else 
-		area.setContent(lines);
+		area.setContent(lines); else
+	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
 	} else
 	    area.setName(strings.newFileName());
 	return true;
     }
 
-    public boolean save()
+    @Override public String getAppName()
+    {
+	return strings.appName();
+    }
+
+    @Override public boolean save()
     {
 	if (!modified)
 	{
@@ -84,41 +90,45 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	    if (base.save(fileName, area.getContent(), ENCODING))
 	    {
 		modified = false;
-		luwrain.message(strings.fileIsSaved());
+		luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
 		return true;
 	    }
-	luwrain.message(strings.errorSavingFile());
+	luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
 	return false;
     }
 
-    public void open()
+    @Override public void open()
     {
+	/*
 	if (!checkIfUnsaved())
 	    return;
+	*/
 	File dir = null;
-	if (fileName == null || fileName.isEmpty())
+	if (fileName != null && !fileName.isEmpty())
 	{
-	    dir = luwrain.launchContext().userHomeDirAsFile();
-	} else
-	{
-	    File f = new File(fileName);
-	    dir = f.getParentFile();
+	    dir = new File(fileName);
+	    dir = dir.getParentFile();
 	}
-	File chosenFile = null;//FIXME:luwrain.openPopup(null, null, dir);
-	if (chosenFile == null)
+	final File res = Popups.open(luwrain, dir, Popup.WEAK);
+	if (res == null)
 	    return;
-	String[] lines = base.read(chosenFile.getAbsolutePath(), ENCODING);
+	if (modified || (fileName != null && !fileName.isEmpty()))//We are not in initial scratch state
+	{
+	    luwrain.openFile(res.getAbsolutePath());
+	    return;
+	}
+	String[] lines = base.read(res.getAbsolutePath(), ENCODING);
 	if (lines == null)
 	{
-	    luwrain.message(strings.errorOpeningFile());
+	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
+	    fileName = res.getAbsolutePath();
 	area.setContent(lines);
-	    fileName = chosenFile.getAbsolutePath();
-	    area.setName(chosenFile.getName());
+	    area.setName(res.getName());
     }
 
-    public void markAsModified()
+    @Override public void markAsModified()
     {
 	modified = true;
     }
@@ -140,6 +150,7 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 			actions.close();
 			return true;
 		    case EnvironmentEvent.INTRODUCE:
+			luwrain.playSound(Sounds.INTRO_REGULAR);
 			luwrain.say(strings.introduction() + " " + getName()); 
 			return true;
 		    case EnvironmentEvent.SAVE:
@@ -176,7 +187,7 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	luwrain.popup(popup);
 	if (popup.closing.cancelled())
 	    return false;
-	if ( popup.getResult() && !save())
+	if ( popup.result() && !save())
 	    return false;
 	modified = false;
 	return true;
