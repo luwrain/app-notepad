@@ -90,4 +90,9 @@ public class Extension implements org.luwrain.core.Extension
     {
 	return new org.luwrain.mainmenu.Item[0];
     }
+
+    @Override public void close()
+    {
+	//Nothing here;
+    }
 }
