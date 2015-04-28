@@ -74,4 +74,19 @@ public class Ru implements org.luwrain.app.notepad.Strings
     {
 	return "Нет изменений для сохранения";
     }
+
+    @Override public String charsetPopupName()
+    {
+	return "Смена кодировки";
+    }
+
+    @Override public String charsetPopupPrefix()
+    {
+	return "Введите новую кодировку:";
+    }
+
+    @Override public String invalidCharset()
+    {
+	return "Введено недопустимое значение";
+    }
 }

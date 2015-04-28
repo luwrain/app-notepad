@@ -16,6 +16,7 @@
 
 package org.luwrain.app.notepad;
 
+import java.util.*;
 import java.io.*;
 import java.nio.charset.*;
 
@@ -27,25 +28,28 @@ import org.luwrain.popups.*;
 class NotepadApp implements Application, Actions
 {
 static public final String STRINGS_NAME = "luwrain.notepad";
-    static private final Charset ENCODING = StandardCharsets.UTF_8;
+    static private final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+    static public final SortedMap<String, Charset> AVAILABLE_CHARSETS = Charset.availableCharsets(); 
 
     private Luwrain luwrain;
     private Base base = new Base();
     private Strings strings;
     private EditArea area;
-    private String fileName = "";
-    private boolean modified = false; 
+    private Document doc = null;
+
+    private String arg = null;
 
     public NotepadApp()
     {
+	doc = null;
+	arg = null;
     }
 
     public NotepadApp(String arg)
     {
-	this.fileName = arg;
-	if (fileName == null)
+	this.arg = arg;
+	if (arg == null)
 	    throw new NullPointerException("fileName may not be null"); 
-	System.out.println("notepad " + fileName);
     }
 
     @Override public boolean onLaunch(Luwrain luwrain)
@@ -56,17 +60,72 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	strings = (Strings)o;
 	this.luwrain = luwrain;
 	createArea();
-	if (fileName != null && !fileName.isEmpty())
-	{
-	    final File f = new File(fileName);
-	    final String[] lines = base.read(fileName, ENCODING);
-	    area.setName(f.getName());
-	    if (lines != null)
-		area.setContent(lines); else
-	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
-	} else
-	    area.setName(strings.newFileName());
+	prepareDocument();
 	return true;
+    }
+
+    private void prepareDocument()
+    {
+	if (arg == null || arg.isEmpty())
+	{
+	    doc = new Document(new File(luwrain.launchContext().userHomeDirAsFile(), strings.newFileName()),
+			       DEFAULT_CHARSET, true);
+	    area.setName(doc.file.getName());
+	    return;
+	}
+	final File f = new File(arg);
+	doc = new Document(f.isAbsolute()?f:new File(luwrain.launchContext().userHomeDirAsFile(), f.getPath()),
+			   DEFAULT_CHARSET, false);
+	final String[] lines = base.read(doc.file.getAbsolutePath(), doc.charset);
+	area.setName(doc.file.getName());
+	if (lines != null)
+	    area.setContent(lines); else
+	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
+    }
+
+    @Override public boolean anotherCharset()
+    {
+	if (doc == null)
+	    return false;
+	if (!checkIfUnsaved())
+	    return true;
+	if (doc.defaultDoc)
+	    return false;
+	final Charset charset = charsetPopup();
+	if (charset == null)
+	    return true;
+	final String[] lines = base.read(doc.file.getAbsolutePath(), charset);
+	if (lines == null)
+	{
+	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
+	    return true;
+	}
+	area.setContent(lines);
+	doc.modified = false;
+	doc.charset = charset;
+	return true;
+    }
+
+    private Charset charsetPopup()
+    {
+	LinkedList<String> names = new LinkedList<String>();
+	for(Map.Entry<String, Charset>  ent: AVAILABLE_CHARSETS.entrySet())
+	    names.add(ent.getKey());
+	EditListPopup popup = new EditListPopup(luwrain,
+						new FixedListPopupModel(names.toArray(new String[names.size()])),
+						strings.charsetPopupName(),
+						strings.charsetPopupPrefix(),
+						(doc != null && doc.charset != null)?doc.charset.displayName():"");
+	luwrain.popup(popup);
+	if (popup.closing.cancelled())
+	    return null;
+	final String text = popup.text().trim();
+	if (text == null || text.isEmpty() || !AVAILABLE_CHARSETS.containsKey(text))
+	{
+	    luwrain.message(strings.invalidCharset(), Luwrain.MESSAGE_ERROR);
+	    return null;
+	}
+	return AVAILABLE_CHARSETS.get(text);
     }
 
     @Override public String getAppName()
@@ -76,76 +135,91 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 
     @Override public boolean save()
     {
-	if (!modified)
+	if (doc == null || doc.file == null)
+	    return false;
+	if (!doc.modified)
 	{
 	    luwrain.message(strings.noModificationsToSave());
 	    return true;
 	}
-	if (fileName == null || fileName.isEmpty())
+	if (doc.defaultDoc)
 	{
-	    String newFileName = askFileNameToSave();
+	    final String newFileName = askFileNameToSave();
 	    if (newFileName == null || newFileName.isEmpty())
 		return false;
-	    fileName = newFileName;
+	    final File f = new File(newFileName);
+	    doc.file = f.isAbsolute()?f:new File(luwrain.launchContext().userHomeDirAsFile(), f.getPath());
+	    doc.defaultDoc = false;
 	}
-	if (area.getContent() != null)
-	    if (base.save(fileName, area.getContent(), ENCODING))
-	    {
-		modified = false;
-		luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
-		return true;
-	    }
+	if (area.getContent() != null && base.save(doc.file.getAbsolutePath(), area.getContent(), doc.charset))
+	{
+	    doc.modified = false;
+	    luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
+	    return true;
+	}
 	luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
 	return false;
     }
 
     @Override public void open()
     {
-	/*
-	if (!checkIfUnsaved())
+	if (doc == null || doc.file == null)
 	    return;
-	*/
-	File dir = null;
-	if (fileName != null && !fileName.isEmpty())
-	{
-	    dir = new File(fileName);
-	    dir = dir.getParentFile();
-	}
+	final File dir = doc.file.getParentFile();
 	final File res = Popups.open(luwrain, dir, Popup.WEAK);
 	if (res == null)
 	    return;
-	if (modified || (fileName != null && !fileName.isEmpty()))//We are not in initial scratch state
+	if (doc.modified || !doc.defaultDoc)
 	{
 	    luwrain.openFile(res.getAbsolutePath());
 	    return;
 	}
-	String[] lines = base.read(res.getAbsolutePath(), ENCODING);
+	final Document newDoc = new Document(res, DEFAULT_CHARSET, false);
+	final String[] lines = base.read(res.getAbsolutePath(), newDoc.charset);
 	if (lines == null)
 	{
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
-	    fileName = res.getAbsolutePath();
+	doc = newDoc;
 	area.setContent(lines);
 	    area.setName(res.getName());
     }
 
     @Override public void markAsModified()
     {
-	modified = true;
+	if (doc == null)
+	    return;
+	doc.modified = true;
     }
 
     private void createArea()
     {
 	final Actions a = this;
-	area = new EditArea(new DefaultControlEnvironment(luwrain), fileName){
+	area = new EditArea(new DefaultControlEnvironment(luwrain),"" ){
 		private Actions actions = a;
-		public void onChange()
+		@Override public void onChange()
 		{
 		    actions.markAsModified();
 		}
-		public boolean onEnvironmentEvent(EnvironmentEvent event)
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
+		    if (event == null)
+			throw new NullPointerException("event may not be null");
+		    if (!event.isCommand() || event.isModified())
+			return super.onKeyboardEvent(event);
+		    switch(event.getCommand())
+		    {
+		    case KeyboardEvent.F10:
+			return actions.anotherCharset();
+		    default:
+			return super.onKeyboardEvent(event);
+		    }
+		}
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    if (event == null)
+			throw new NullPointerException("event may not be null");
 		    switch(event.getCode())
 		    {
 		    case EnvironmentEvent.CLOSE:
@@ -177,21 +251,24 @@ static public final String STRINGS_NAME = "luwrain.notepad";
     {
 	if (!checkIfUnsaved())
 	    return;
+	doc.modified = false;
 	luwrain.closeApp();
     }
 
-    //Returns true if there are no more modification user wants to save;
+    //Returns true if there are no more modification which the user would like to save;
     private boolean checkIfUnsaved()
     {
-	if (!modified)
+	if (doc == null)
+	    return false;
+	if (!doc.modified)
 	    return true;
-	YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), false);
+	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), false);
 	luwrain.popup(popup);
 	if (popup.closing.cancelled())
 	    return false;
 	if ( popup.result() && !save())
 	    return false;
-	modified = false;
+	//	doc.modified = false;
 	return true;
     }
 

@@ -29,4 +29,7 @@ public interface Strings
     String saveChangesPopupName();
     String saveChangesPopupQuestion();
     String noModificationsToSave();
+    String charsetPopupName();
+    String charsetPopupPrefix();
+    String invalidCharset();
 }

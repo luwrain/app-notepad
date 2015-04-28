@@ -22,4 +22,5 @@ interface Actions
     boolean save();
     void open();
     void markAsModified();
+    boolean anotherCharset();
 }
