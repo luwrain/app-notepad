@@ -32,4 +32,6 @@ public interface Strings
     String charsetPopupName();
     String charsetPopupPrefix();
     String invalidCharset();
+    String rereadAnotherCharsetPopupName();
+    String rereadAnotherCharsetPopupQuestion();
 }

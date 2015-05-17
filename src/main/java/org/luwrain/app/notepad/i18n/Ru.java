@@ -89,4 +89,15 @@ public class Ru implements org.luwrain.app.notepad.Strings
     {
 	return "Введено недопустимое значение";
     }
+
+    @Override public String rereadAnotherCharsetPopupName()
+    {
+	return "Смена кодировки";
+    }
+
+    @Override public String rereadAnotherCharsetPopupQuestion()
+    {
+	return "Вы хотите перечитать файл с учётом новой кодировки?";
+    }
+
 }

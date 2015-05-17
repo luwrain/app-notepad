@@ -94,6 +94,17 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	final Charset charset = charsetPopup();
 	if (charset == null)
 	    return true;
+
+	final YesNoPopup popup = new YesNoPopup(luwrain, strings.rereadAnotherCharsetPopupName(), strings.rereadAnotherCharsetPopupQuestion(), true);
+	luwrain.popup(popup);
+	if (popup.closing.cancelled())
+	    return true;
+	if (!popup.result())
+	{
+	    doc.modified = true;
+	    doc.charset = charset;
+	    return true;
+	}
 	final String[] lines = base.read(doc.file.getAbsolutePath(), charset);
 	if (lines == null)
 	{
@@ -154,6 +165,7 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	if (area.getContent() != null && base.save(doc.file.getAbsolutePath(), area.getContent(), doc.charset))
 	{
 	    doc.modified = false;
+	    area.setName(doc.file.getName());
 	    luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
 	    return true;
 	}
