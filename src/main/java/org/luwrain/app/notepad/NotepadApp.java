@@ -239,7 +239,7 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 			return true;
 		    case EnvironmentEvent.INTRODUCE:
 			luwrain.playSound(Sounds.INTRO_REGULAR);
-			luwrain.say(strings.introduction() + " " + getName()); 
+			luwrain.say(strings.introduction() + " " + getAreaName()); 
 			return true;
 		    case EnvironmentEvent.SAVE:
 			actions.save();
