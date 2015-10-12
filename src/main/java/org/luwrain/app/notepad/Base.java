@@ -18,28 +18,31 @@ package org.luwrain.app.notepad;
 
 import java.util.*;
 import java.io.*;
+import java.nio.*;
 import java.nio.file.*;
 import java.nio.charset.*;
-import org.luwrain.core.*;
+import org.luwrain.core.;
 
 class Base
 {
-    public String[] read(String fileName, Charset encoding)
+    String[] read(String fileName, Charset encoding)
     {
-	if (fileName == null || fileName.isEmpty())
-	    return null;
+	NullCheck.notNull(fileName);
+	NulCheck.notNull(encoding, "encoding");
 	try {
-	    return readTextFile(fileName, encoding);
-	    }
-	    catch (IOException e)
-	    {
-		Log.error("notepad", fileName + ":" + e.getMessage());
-		e.printStackTrace();
-		return null;
-	    }
+	    Path path = Paths.get(fileName);
+	    final byte[] bytes = Files.readAllBytes(path);
+	    final CharBuffer charBuf = encoding.decode(ByteBuffer.wrap(bytes));
+	    return new String(charBuf.array()).split("\n", -1);
+	}
+	catch (IOException e)
+	{
+	    e.printStackTrace();
+	    return null;
+	}
     }
 
-    public boolean save(String fileName, 
+    boolean save(String fileName, 
 			String[] lines,
 			Charset encoding)
     {
@@ -55,18 +58,6 @@ class Base
 		e.printStackTrace();
 		return false;
 	    }
-    }
-
-    private String[] readTextFile(String fileName, Charset encoding) throws IOException
-    {
-	ArrayList<String> a = new ArrayList<String>();
-	Path path = Paths.get(fileName);
-	try (Scanner scanner =  new Scanner(path, encoding.name()))
-	{
-	    while (scanner.hasNextLine())
-		a.add(scanner.nextLine());
-	    }
-	return a.toArray(new String[a.size()]);
     }
 
     private void saveTextFile(String fileName,
