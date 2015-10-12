@@ -21,14 +21,14 @@ import java.io.*;
 import java.nio.*;
 import java.nio.file.*;
 import java.nio.charset.*;
-import org.luwrain.core.;
+import org.luwrain.core.NullCheck;
 
 class Base
 {
     String[] read(String fileName, Charset encoding)
     {
-	NullCheck.notNull(fileName);
-	NulCheck.notNull(encoding, "encoding");
+	NullCheck.notNull(fileName, "fileName");
+	NullCheck.notNull(encoding, "encoding");
 	try {
 	    Path path = Paths.get(fileName);
 	    final byte[] bytes = Files.readAllBytes(path);
@@ -54,7 +54,6 @@ class Base
 	    }
 	    catch (IOException e)
 	    {
-		Log.error("notepad", fileName + ":" + e.getMessage());
 		e.printStackTrace();
 		return false;
 	    }
