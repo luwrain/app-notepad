@@ -250,14 +250,14 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 		}
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
-		    if (event == null)
-			throw new NullPointerException("event may not be null");
+		    NullCheck.notNull(event, "event");
 		    switch(event.getCode())
 		    {
 		    case EnvironmentEvent.CLOSE:
 			actions.close();
 			return true;
 		    case EnvironmentEvent.INTRODUCE:
+			luwrain.silence();
 			luwrain.playSound(Sounds.INTRO_REGULAR);
 			luwrain.say(strings.introduction() + " " + getAreaName()); 
 			return true;
@@ -267,9 +267,28 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 		    case EnvironmentEvent.OPEN:
 			actions.open();
 			return true;
+		    case EnvironmentEvent.ACTION:
+			if (ActionEvent.isAction(event, "remove-backslash-r"))
+			{
+			    actions.removeBackslashR();
+			    return true;
+			}
+			if (ActionEvent.isAction(event, "add-backslash-r"))
+			{
+			    actions.addBackslashR();
+			    return true;
+			}
+			return false;
 		    default:
 			return super.onEnvironmentEvent(event);
 		    }
+		}
+		@Override public Action[] getAreaActions()
+		{
+		    return new Action[]{
+			new Action("remove-backslash-r", strings.actionTitle("remove-backslash-r")),
+			new Action("add-backslash-r", strings.actionTitle("add-backslash-r")),
+		    };
 		}
 	    };
     }

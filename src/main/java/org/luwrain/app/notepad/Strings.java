@@ -34,4 +34,5 @@ public interface Strings
     String invalidCharset();
     String rereadAnotherCharsetPopupName();
     String rereadAnotherCharsetPopupQuestion();
+    String actionTitle(String name);
 }
