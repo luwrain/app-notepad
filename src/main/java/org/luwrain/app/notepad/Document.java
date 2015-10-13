@@ -21,14 +21,14 @@ import java.nio.charset.Charset;
 
 class Document
 {
-    public File file;
-    public boolean modified = false;
-    public boolean defaultDoc = false;
-    public Charset charset;
+    File file;
+    boolean modified = false;
+    boolean defaultDoc = false;
+    Charset charset;
 
-    public Document(File file,
-		    Charset charset,
-boolean defaultDoc)
+    Document(File file,
+	     Charset charset,
+	     boolean defaultDoc)
     {
 	this.file = file;
 	this.modified = false;

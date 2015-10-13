@@ -32,14 +32,14 @@ static public final String STRINGS_NAME = "luwrain.notepad";
     static public final SortedMap<String, Charset> AVAILABLE_CHARSETS = Charset.availableCharsets(); 
 
     private Luwrain luwrain;
-    private Base base = new Base();
+    private final Base base = new Base();
     private Strings strings;
     private EditArea area;
     private Document doc = null;
 
     private String arg = null;
 
-    public NotepadApp()
+    NotepadApp()
     {
 	doc = null;
 	arg = null;
@@ -82,6 +82,21 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	    area.setContent(lines); else
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
     }
+
+    @Override public void removeBackslashR()
+    {
+	base.removeBackslashR(area);
+	luwrain.onAreaNewContent(area);
+	doc.modified = true;
+    }
+
+    @Override public void addBackslashR()
+    {
+	base.addBackslashR(area);
+	luwrain.onAreaNewContent(area);
+	doc.modified = true;
+    }
+
 
     @Override public boolean anotherCharset()
     {
@@ -216,12 +231,17 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 		}
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
-		    if (event == null)
-			throw new NullPointerException("event may not be null");
+		    NullCheck.notNull(event, "event");
 		    if (!event.isCommand() || event.isModified())
 			return super.onKeyboardEvent(event);
 		    switch(event.getCommand())
 		    {
+		    case KeyboardEvent.F7:
+			actions.removeBackslashR();
+			return true;
+		    case KeyboardEvent.F8:
+			actions.addBackslashR();
+			return true;
 		    case KeyboardEvent.F10:
 			return actions.anotherCharset();
 		    default:

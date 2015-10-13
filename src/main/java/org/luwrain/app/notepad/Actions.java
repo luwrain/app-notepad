@@ -23,4 +23,6 @@ interface Actions
     void open();
     void markAsModified();
     boolean anotherCharset();
+    void removeBackslashR();
+    void addBackslashR();
 }

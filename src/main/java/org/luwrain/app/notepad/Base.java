@@ -21,7 +21,9 @@ import java.io.*;
 import java.nio.*;
 import java.nio.file.*;
 import java.nio.charset.*;
-import org.luwrain.core.NullCheck;
+
+import org.luwrain.core.*;
+import org.luwrain.controls.*;
 
 class Base
 {
@@ -72,6 +74,32 @@ class Base
 		if (i + 1 < lines.length)
 		    writer.newLine();
 	    }
+	}
+    }
+
+    void removeBackslashR(EditArea area)
+    {
+	for(int i = 0;i < area.getLineCount();++i)
+	{
+	    final String line = area.getLine(i);
+	    if (line == null || line.isEmpty())
+		continue;
+	    final StringBuilder b = new StringBuilder();
+	    for(int k = 0;k < line.length();++k)
+		if (line.charAt(k) != '\r')
+		    b.append(line.charAt(k));
+	    area.getEditContent().setLine(i, b.toString());
+	}
+    }
+
+    void addBackslashR(EditArea area)
+    {
+	for(int i = 0;i < area.getLineCount();++i)
+	{
+	    final String line = area.getLine(i);
+	    if (line == null)
+		continue;
+	    area.getEditContent().setLine(i, line + '\r');
 	}
     }
 }
