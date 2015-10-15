@@ -21,6 +21,7 @@ import java.io.*;
 import java.nio.*;
 import java.nio.file.*;
 import java.nio.charset.*;
+import java.nio.channels.*;
 
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
@@ -32,10 +33,10 @@ class Base
 	NullCheck.notNull(fileName, "fileName");
 	NullCheck.notNull(encoding, "encoding");
 	try {
-	    Path path = Paths.get(fileName);
+	    final Path path = Paths.get(fileName);
 	    final byte[] bytes = Files.readAllBytes(path);
 	    final CharBuffer charBuf = encoding.decode(ByteBuffer.wrap(bytes));
-	    return new String(charBuf.array()).split("\n", -1);
+	    return new String(charBuf.array(), charBuf.arrayOffset(), charBuf.length()).split("\n", -1);
 	}
 	catch (IOException e)
 	{
@@ -44,14 +45,25 @@ class Base
 	}
     }
 
-    boolean save(String fileName, 
-			String[] lines,
-			Charset encoding)
+    boolean save(String fileName, String[] lines,
+		 Charset charset)
     {
-	if (fileName == null || fileName.isEmpty())
-	    return false;
+	NullCheck.notNull(fileName, "fileName");
+	NullCheck.notNull(lines, "lines");
+	NullCheck.notNull(charset, "charset");
 	try {
-	    saveTextFile(fileName, lines, encoding);
+	    final Path path = Paths.get(fileName);
+	    final StringBuilder b = new StringBuilder();
+	    if (lines.length > 0)
+	    {
+		b.append(lines[0]);
+		for(int i = 1;i < lines.length;++i)
+		    b.append("\n" + lines[i]);
+	    }
+	    final ByteBuffer buf = charset.encode(CharBuffer.wrap(b.toString()));
+	    final FileChannel chan = new FileOutputStream(fileName).getChannel();
+	    chan.write(buf);
+	    chan.close();
 	    return true;
 	    }
 	    catch (IOException e)
@@ -59,22 +71,6 @@ class Base
 		e.printStackTrace();
 		return false;
 	    }
-    }
-
-    private void saveTextFile(String fileName,
-			       String[] lines,
-			       Charset encoding) throws IOException
-    {
-	Path path = Paths.get(fileName);
-	try (BufferedWriter writer = Files.newBufferedWriter(path, encoding))
-	{
-	    for(int i = 0;i < lines.length;i++)
-	    {
-		writer.write(lines[i]);
-		if (i + 1 < lines.length)
-		    writer.newLine();
-	    }
-	}
     }
 
     void removeBackslashR(EditArea area)
