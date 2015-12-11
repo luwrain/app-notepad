@@ -79,7 +79,7 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	final String[] lines = base.read(doc.file.getAbsolutePath(), doc.charset);
 	area.setName(doc.file.getName());
 	if (lines != null)
-	    area.setContent(lines); else
+	    area.setLines(lines); else
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
     }
 
@@ -126,7 +126,7 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
 	    return true;
 	}
-	area.setContent(lines);
+	area.setLines(lines);
 	doc.modified = false;
 	doc.charset = charset;
 	return true;
@@ -177,7 +177,7 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	    doc.file = f.isAbsolute()?f:new File(luwrain.launchContext().userHomeDirAsFile(), f.getPath());
 	    doc.defaultDoc = false;
 	}
-	if (area.getContent() != null && base.save(doc.file.getAbsolutePath(), area.getContent(), doc.charset))
+	if (area.getLines() != null && base.save(doc.file.getAbsolutePath(), area.getLines(), doc.charset))
 	{
 	    doc.modified = false;
 	    area.setName(doc.file.getName());
@@ -209,7 +209,7 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	    return;
 	}
 	doc = newDoc;
-	area.setContent(lines);
+	area.setLines(lines);
 	    area.setName(res.getName());
     }
 

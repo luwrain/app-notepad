@@ -75,6 +75,7 @@ class Base
 
     void removeBackslashR(EditArea area)
     {
+	area.beginLinesTrans();
 	for(int i = 0;i < area.getLineCount();++i)
 	{
 	    final String line = area.getLine(i);
@@ -84,18 +85,21 @@ class Base
 	    for(int k = 0;k < line.length();++k)
 		if (line.charAt(k) != '\r')
 		    b.append(line.charAt(k));
-	    area.getEditContent().setLine(i, b.toString());
+	    area.setLine(i, b.toString());
 	}
+	area.endLinesTrans();
     }
 
     void addBackslashR(EditArea area)
     {
+	area.beginLinesTrans();
 	for(int i = 0;i < area.getLineCount();++i)
 	{
 	    final String line = area.getLine(i);
 	    if (line == null)
 		continue;
-	    area.getEditContent().setLine(i, line + '\r');
+	    area.setLine(i, line + '\r');
 	}
+	area.endLinesTrans();
     }
 }
