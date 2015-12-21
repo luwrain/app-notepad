@@ -17,7 +17,8 @@
 package org.luwrain.app.notepad;
 
 import java.util.*;
-import java.io.*;
+//import java.io.*;
+import java.nio.file.*;
 import java.nio.charset.*;
 
 import org.luwrain.core.*;
@@ -27,7 +28,7 @@ import org.luwrain.popups.*;
 
 class NotepadApp implements Application, Actions
 {
-static public final String STRINGS_NAME = "luwrain.notepad";
+static private final String STRINGS_NAME = "luwrain.notepad";
     static private final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     static public final SortedMap<String, Charset> AVAILABLE_CHARSETS = Charset.availableCharsets(); 
 
@@ -35,21 +36,20 @@ static public final String STRINGS_NAME = "luwrain.notepad";
     private final Base base = new Base();
     private Strings strings;
     private EditArea area;
-    private Document doc = null;
+    //    private Document doc = null;
+    private boolean modified = false;
+    private Path path = null;
 
     private String arg = null;
 
     NotepadApp()
     {
-	doc = null;
-	arg = null;
     }
 
     public NotepadApp(String arg)
     {
 	this.arg = arg;
-	if (arg == null)
-	    throw new NullPointerException("fileName may not be null"); 
+	NullCheck.notNull(arg, "arg");
     }
 
     @Override public boolean onLaunch(Luwrain luwrain)
@@ -66,18 +66,14 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 
     private void prepareDocument()
     {
+	area.setName(strings.initialTitle());
 	if (arg == null || arg.isEmpty())
-	{
-	    doc = new Document(new File(luwrain.launchContext().userHomeDirAsFile(), strings.newFileName()),
-			       DEFAULT_CHARSET, true);
-	    area.setName(doc.file.getName());
 	    return;
-	}
-	final File f = new File(arg);
-	doc = new Document(f.isAbsolute()?f:new File(luwrain.launchContext().userHomeDirAsFile(), f.getPath()),
-			   DEFAULT_CHARSET, false);
-	final String[] lines = base.read(doc.file.getAbsolutePath(), doc.charset);
-	area.setName(doc.file.getName());
+	path = Paths.get(arg);
+	if (path == null)
+	    return;
+	final String[] lines = base.read(path.toString(), DEFAULT_CHARSET);
+	area.setName(path.getFileName().toString());
 	if (lines != null)
 	    area.setLines(lines); else
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
@@ -87,153 +83,109 @@ static public final String STRINGS_NAME = "luwrain.notepad";
     {
 	base.removeBackslashR(area);
 	luwrain.onAreaNewContent(area);
-	doc.modified = true;
+	modified = true;
     }
 
     @Override public void addBackslashR()
     {
 	base.addBackslashR(area);
 	luwrain.onAreaNewContent(area);
-	doc.modified = true;
+	modified = true;
     }
 
-
-    @Override public boolean anotherCharset()
-    {
-	if (doc == null)
-	    return false;
-	if (!checkIfUnsaved())
-	    return true;
-	if (doc.defaultDoc)
-	    return false;
-	final Charset charset = charsetPopup();
-	if (charset == null)
-	    return true;
-
-	final YesNoPopup popup = new YesNoPopup(luwrain, strings.rereadAnotherCharsetPopupName(), strings.rereadAnotherCharsetPopupQuestion(), true);
-	luwrain.popup(popup);
-	if (popup.closing.cancelled())
-	    return true;
-	if (!popup.result())
-	{
-	    doc.modified = true;
-	    doc.charset = charset;
-	    return true;
-	}
-	final String[] lines = base.read(doc.file.getAbsolutePath(), charset);
-	if (lines == null)
-	{
-	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
-	    return true;
-	}
-	area.setLines(lines);
-	doc.modified = false;
-	doc.charset = charset;
-	return true;
-    }
-
-    private Charset charsetPopup()
-    {
-	LinkedList<String> names = new LinkedList<String>();
-	for(Map.Entry<String, Charset>  ent: AVAILABLE_CHARSETS.entrySet())
-	    names.add(ent.getKey());
-	EditListPopup popup = new EditListPopup(luwrain,
-						new FixedListPopupModel(names.toArray(new String[names.size()])),
-						strings.charsetPopupName(),
-						strings.charsetPopupPrefix(),
-						(doc != null && doc.charset != null)?doc.charset.displayName():"");
-	luwrain.popup(popup);
-	if (popup.closing.cancelled())
-	    return null;
-	final String text = popup.text().trim();
-	if (text == null || text.isEmpty() || !AVAILABLE_CHARSETS.containsKey(text))
-	{
-	    luwrain.message(strings.invalidCharset(), Luwrain.MESSAGE_ERROR);
-	    return null;
-	}
-	return AVAILABLE_CHARSETS.get(text);
-    }
-
-    @Override public String getAppName()
-    {
-	return strings.appName();
-    }
-
+    //Returns false if there are still unsaved changes
     @Override public boolean save()
     {
-	if (doc == null || doc.file == null)
-	    return false;
-	if (!doc.modified)
+	if (!modified)
 	{
 	    luwrain.message(strings.noModificationsToSave());
 	    return true;
 	}
-	if (doc.defaultDoc)
+	if (path == null)
 	{
-	    final String newFileName = askFileNameToSave();
-	    if (newFileName == null || newFileName.isEmpty())
+	    path = savePopup();
+	    if (path == null)
 		return false;
-	    final File f = new File(newFileName);
-	    doc.file = f.isAbsolute()?f:new File(luwrain.launchContext().userHomeDirAsFile(), f.getPath());
-	    doc.defaultDoc = false;
 	}
-	if (area.getLines() != null && base.save(doc.file.getAbsolutePath(), area.getLines(), doc.charset))
+	if (!base.save(path.toString(), area.getLines(), DEFAULT_CHARSET))
 	{
-	    doc.modified = false;
-	    area.setName(doc.file.getName());
-	    luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
-	    return true;
+	    luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
+	    return false;
 	}
-	luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
-	return false;
+	modified = false;
+	area.setName(path.getFileName().toString());
+	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
+	return true;
     }
 
-    @Override public void open()
+    @Override public void saveAnotherCharset()
     {
-	if (doc == null || doc.file == null)
+	final Charset charset = charsetPopup();
+	if (charset == null)
 	    return;
-	final File dir = doc.file.getParentFile();
-	final File res = Popups.open(luwrain, dir, Popup.WEAK);
-	if (res == null)
+	final Path p = savePopup();
+	if (p == null)
 	    return;
-	if (doc.modified || !doc.defaultDoc)
+	if (!base.save(p.toString(), area.getLines(), charset))
 	{
-	    luwrain.openFile(res.getAbsolutePath());
+	    luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
-	final Document newDoc = new Document(res, DEFAULT_CHARSET, false);
-	final String[] lines = base.read(res.getAbsolutePath(), newDoc.charset);
+	modified = false;
+	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
+    }
+
+    @Override public boolean open(String fileName)
+    {
+	if (modified || path != null)
+	    return false;
+	final String[] lines = base.read(fileName, DEFAULT_CHARSET);
+	if (lines == null)
+	{
+	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
+	    return false;
+	}
+	area.setLines(lines);
+	area.setName(path.getFileName().toString());
+	return true;
+    }
+
+    @Override public void openAnotherCharset()
+    {
+	if (!checkIfUnsaved())
+	    return;
+	final Charset charset = charsetPopup();
+	if (charset == null)
+	    return;
+	final Path home = luwrain.launchContext().userHomeDirAsPath();
+	final Path p = Popups.open(luwrain, path != null?path:home, home);
+	if (p == null)
+	    return;
+	final String[] lines = base.read(p.toString(), charset);
 	if (lines == null)
 	{
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
-	doc = newDoc;
+	path = p;
 	area.setLines(lines);
-	    area.setName(res.getName());
+	area.setName(path.getFileName().toString());
     }
 
     @Override public void markAsModified()
     {
-	if (doc == null)
-	    return;
-	doc.modified = true;
+	modified = true;
     }
 
     private void createArea()
     {
-	final Actions a = this;
-	area = new EditArea(new DefaultControlEnvironment(luwrain),"" ){
-		private Actions actions = a;
-		@Override public void onChange()
-		{
-		    actions.markAsModified();
-		}
+	final Actions actions = this;
+	area = new EditArea(new DefaultControlEnvironment(luwrain),"",
+			    new String[0], ()->actions.markAsModified()){
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
-		    if (!event.isCommand() || event.isModified())
-			return super.onKeyboardEvent(event);
+		    if (event.isCommand() && !event.isModified())
 		    switch(event.getCommand())
 		    {
 		    case KeyboardEvent.F7:
@@ -242,32 +194,51 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 		    case KeyboardEvent.F8:
 			actions.addBackslashR();
 			return true;
+			/*
 		    case KeyboardEvent.F10:
 			return actions.anotherCharset();
-		    default:
-			return super.onKeyboardEvent(event);
+			*/
 		    }
-		}
+			return super.onKeyboardEvent(event);
+		    		}
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    switch(event.getCode())
 		    {
 		    case EnvironmentEvent.CLOSE:
-			actions.close();
+			actions.closeApp();
 			return true;
+			/*
 		    case EnvironmentEvent.INTRODUCE:
 			luwrain.silence();
 			luwrain.playSound(Sounds.INTRO_REGULAR);
 			luwrain.say(strings.introduction() + " " + getAreaName()); 
 			return true;
+			*/
 		    case EnvironmentEvent.SAVE:
 			actions.save();
 			return true;
 		    case EnvironmentEvent.OPEN:
-			actions.open();
-			return true;
+			if (!(event instanceof OpenEvent))
+			    return false;
+			return actions.open(((OpenEvent)event).path());
 		    case EnvironmentEvent.ACTION:
+			if (ActionEvent.isAction(event, "save"))
+			{
+			    actions.save();
+			    return true;
+			}
+			if (ActionEvent.isAction(event, "open-another-charset"))
+			{
+			    actions.openAnotherCharset();
+			    return true;
+			}
+			if (ActionEvent.isAction(event, "save-another-charset"))
+			{
+			    actions.saveAnotherCharset();
+			    return true;
+			}
 			if (ActionEvent.isAction(event, "remove-backslash-r"))
 			{
 			    actions.removeBackslashR();
@@ -286,6 +257,9 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 		@Override public Action[] getAreaActions()
 		{
 		    return new Action[]{
+			new Action("save", strings.actionTitle("save")),
+			new Action("open-another-charset", strings.actionTitle("open-another-charset")),
+			new Action("save-another-charset", strings.actionTitle("save-another-charset")),
 			new Action("remove-backslash-r", strings.actionTitle("remove-backslash-r")),
 			new Action("add-backslash-r", strings.actionTitle("add-backslash-r")),
 		    };
@@ -298,20 +272,23 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	return new AreaLayout(area);
     }
 
-    @Override public void close()
+    @Override public void closeApp()
     {
 	if (!checkIfUnsaved())
 	    return;
-	doc.modified = false;
+	modified = false;
 	luwrain.closeApp();
+    }
+
+    @Override public String getAppName()
+    {
+	return strings.appName();
     }
 
     //Returns true if there are no more modification which the user would like to save;
     private boolean checkIfUnsaved()
     {
-	if (doc == null)
-	    return false;
-	if (!doc.modified)
+	if (!modified)
 	    return true;
 	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), false);
 	luwrain.popup(popup);
@@ -319,19 +296,37 @@ static public final String STRINGS_NAME = "luwrain.notepad";
 	    return false;
 	if ( popup.result() && !save())
 	    return false;
-	//	doc.modified = false;
 	return true;
     }
 
     //null means user cancelled file name popup
-    private String askFileNameToSave()
+    private Path savePopup()
     {
-	final File dir = luwrain.launchContext().userHomeDirAsFile();
-	final File chosenFile = Popups.file(luwrain, strings.savePopupName(),
-					    strings.savePopupPrefix(),
-					    new File(dir, strings.newFileName()), FilePopup.ANY, Popup.WEAK);
-	if (chosenFile == null)
+	final Path dir = luwrain.launchContext().userHomeDirAsPath();
+return Popups.chooseFile(luwrain, 
+strings.savePopupName(), strings.savePopupPrefix(),
+			 path != null?path:dir, dir,
+			 DefaultFileAcceptance.Type.ANY);
+    }
+
+    private Charset charsetPopup()
+    {
+	final LinkedList<String> names = new LinkedList<String>();
+	for(Map.Entry<String, Charset>  ent: AVAILABLE_CHARSETS.entrySet())
+	    names.add(ent.getKey());
+	final EditListPopup popup = new EditListPopup(luwrain,
+						new FixedEditListPopupModel(names.toArray(new String[names.size()])),
+						strings.charsetPopupName(), strings.charsetPopupPrefix(),
+						      "");
+	luwrain.popup(popup);
+	if (popup.closing.cancelled())
 	    return null;
-	return chosenFile.getAbsolutePath();
+	final String text = popup.text().trim();
+	if (text == null || text.isEmpty() || !AVAILABLE_CHARSETS.containsKey(text))
+	{
+	    luwrain.message(strings.invalidCharset(), Luwrain.MESSAGE_ERROR);
+	    return null;
+	}
+	return AVAILABLE_CHARSETS.get(text);
     }
 }

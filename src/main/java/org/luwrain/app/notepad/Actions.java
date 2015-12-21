@@ -18,11 +18,12 @@ package org.luwrain.app.notepad;
 
 interface Actions
 {
-    void close();
+    void closeApp();
     boolean save();
-    void open();
+    boolean open(String fileName);
     void markAsModified();
-    boolean anotherCharset();
     void removeBackslashR();
     void addBackslashR();
+    void openAnotherCharset();
+    void saveAnotherCharset();
 }
