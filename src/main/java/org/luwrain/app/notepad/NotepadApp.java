@@ -206,7 +206,7 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 		    NullCheck.notNull(event, "event");
 		    switch(event.getCode())
 		    {
-		    case EnvironmentEvent.CLOSE:
+		    case CLOSE:
 			actions.closeApp();
 			return true;
 			/*
@@ -216,14 +216,14 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 			luwrain.say(strings.introduction() + " " + getAreaName()); 
 			return true;
 			*/
-		    case EnvironmentEvent.SAVE:
+		    case SAVE:
 			actions.save();
 			return true;
-		    case EnvironmentEvent.OPEN:
+		    case OPEN:
 			if (!(event instanceof OpenEvent))
 			    return false;
 			return actions.open(((OpenEvent)event).path());
-		    case EnvironmentEvent.ACTION:
+		    case ACTION:
 			if (ActionEvent.isAction(event, "save"))
 			{
 			    actions.save();
