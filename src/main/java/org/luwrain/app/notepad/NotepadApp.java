@@ -185,13 +185,13 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
-		    if (event.isCommand() && !event.isModified())
-		    switch(event.getCommand())
+		    if (event.isSpecial() && !event.isModified())
+		    switch(event.getSpecial())
 		    {
-		    case KeyboardEvent.F7:
+		    case F7:
 			actions.removeBackslashR();
 			return true;
-		    case KeyboardEvent.F8:
+		    case F8:
 			actions.addBackslashR();
 			return true;
 			/*
