@@ -16,14 +16,15 @@
 
 package org.luwrain.app.notepad;
 
+import org.luwrain.core.*;
+import org.luwrain.core.events.*;
+
 interface Actions
 {
     void closeApp();
+    Action[] getEditAreaActions();
+    boolean onEditActionEvent(EnvironmentEvent event);
     boolean save();
     boolean open(String fileName);
     void markAsModified();
-    void removeBackslashR();
-    void addBackslashR();
-    void openAnotherCharset();
-    void saveAnotherCharset();
 }

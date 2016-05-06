@@ -35,7 +35,9 @@ static private final String STRINGS_NAME = "luwrain.notepad";
     private Luwrain luwrain;
     private final Base base = new Base();
     private Strings strings;
-    private EditArea area;
+    private EditArea editArea;
+    private SimpleArea infoArea;
+    private AreaLayoutSwitch layouts;
     //    private Document doc = null;
     private boolean modified = false;
     private Path path = null;
@@ -59,38 +61,122 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 	    return false;
 	strings = (Strings)o;
 	this.luwrain = luwrain;
-	createArea();
+	createAreas();
+	layouts = new AreaLayoutSwitch(luwrain);
+	layouts.add(new AreaLayout(editArea));
+	layouts.add(new AreaLayout(infoArea));
 	prepareDocument();
 	return true;
     }
 
+    private void createAreas()
+    {
+	final Actions actions = this;
+
+	editArea = new EditArea(new DefaultControlEnvironment(luwrain),"",
+			    new String[0], ()->actions.markAsModified()){
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    switch(event.getCode())
+		    {
+		    case CLOSE:
+			actions.closeApp();
+			return true;
+		    case SAVE:
+			actions.save();
+			return true;
+		    case OPEN:
+			if (!(event instanceof OpenEvent))
+			    return false;
+			return actions.open(((OpenEvent)event).path());
+		    case ACTION:
+			return actions.onEditActionEvent(event);
+		    default:
+			return super.onEnvironmentEvent(event);
+		    }
+		}
+		@Override public Action[] getAreaActions()
+		{
+		    return actions.getEditAreaActions();
+		}
+	    };
+
+	infoArea = new SimpleArea(new DefaultControlEnvironment(luwrain), strings.infoAreaName()){
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    switch(event.getCode())
+		    {
+		    case CLOSE:
+			actions.closeApp();
+			return true;
+		    default:
+			return super.onEnvironmentEvent(event);
+		    }
+		}
+	    };
+    }
+
+    @Override public Action[] getEditAreaActions()
+    {
+		    return new Action[]{
+			new Action("save", strings.actionTitle("save")),
+			new Action("open-another-charset", strings.actionTitle("open-another-charset")),
+			new Action("save-another-charset", strings.actionTitle("save-another-charset")),
+			new Action("remove-backslash-r", strings.actionTitle("remove-backslash-r")),
+			new Action("add-backslash-r", strings.actionTitle("add-backslash-r")),
+			new Action("info", strings.actionTitle("info")),
+		    };
+    }
+
+    @Override public boolean onEditActionEvent(EnvironmentEvent event)
+    {
+	NullCheck.notNull(event, "event");
+			if (ActionEvent.isAction(event, "save"))
+			    return save();
+			if (ActionEvent.isAction(event, "open-another-charset"))
+			    return openAnotherCharset();
+			if (ActionEvent.isAction(event, "save-another-charset"))
+			    return saveAnotherCharset();
+			if (ActionEvent.isAction(event, "remove-backslash-r"))
+			    return removeBackslashR();
+			if (ActionEvent.isAction(event, "add-backslash-r"))
+			    return addBackslashR();
+			if (ActionEvent.isAction(event, "info"))
+			    return info();
+			return false;
+    }
+
     private void prepareDocument()
     {
-	area.setName(strings.initialTitle());
+	editArea.setName(strings.initialTitle());
 	if (arg == null || arg.isEmpty())
 	    return;
 	path = Paths.get(arg);
 	if (path == null)
 	    return;
 	final String[] lines = base.read(path.toString(), DEFAULT_CHARSET);
-	area.setName(path.getFileName().toString());
+	editArea.setName(path.getFileName().toString());
 	if (lines != null)
-	    area.setLines(lines); else
+	    editArea.setLines(lines); else
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
     }
 
-    @Override public void removeBackslashR()
+private boolean removeBackslashR()
     {
-	base.removeBackslashR(area);
-	luwrain.onAreaNewContent(area);
+	base.removeBackslashR(editArea);
+	luwrain.onAreaNewContent(editArea);
 	modified = true;
+	return true;
     }
 
-    @Override public void addBackslashR()
+    private boolean addBackslashR()
     {
-	base.addBackslashR(area);
-	luwrain.onAreaNewContent(area);
+	base.addBackslashR(editArea);
+	luwrain.onAreaNewContent(editArea);
 	modified = true;
+	return true;
     }
 
     //Returns false if there are still unsaved changes
@@ -107,32 +193,33 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 	    if (path == null)
 		return false;
 	}
-	if (!base.save(path.toString(), area.getLines(), DEFAULT_CHARSET))
+	if (!base.save(path.toString(), editArea.getLines(), DEFAULT_CHARSET))
 	{
 	    luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
 	    return false;
 	}
 	modified = false;
-	area.setName(path.getFileName().toString());
+	editArea.setName(path.getFileName().toString());
 	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
 	return true;
     }
 
-    @Override public void saveAnotherCharset()
+    private boolean saveAnotherCharset()
     {
 	final Charset charset = charsetPopup();
 	if (charset == null)
-	    return;
+	    return true;
 	final Path p = savePopup();
 	if (p == null)
-	    return;
-	if (!base.save(p.toString(), area.getLines(), charset))
+	    return true;
+	if (!base.save(p.toString(), editArea.getLines(), charset))
 	{
 	    luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
-	    return;
+	    return true;
 	}
 	modified = false;
 	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
+	return true;
     }
 
     @Override public boolean open(String fileName)
@@ -145,31 +232,32 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
 	    return false;
 	}
-	area.setLines(lines);
-	area.setName(path.getFileName().toString());
+	editArea.setLines(lines);
+	editArea.setName(path.getFileName().toString());
 	return true;
     }
 
-    @Override public void openAnotherCharset()
+    private boolean openAnotherCharset()
     {
 	if (!checkIfUnsaved())
-	    return;
+	    return true;
 	final Charset charset = charsetPopup();
 	if (charset == null)
-	    return;
+	    return true;
 	final Path home = luwrain.launchContext().userHomeDirAsPath();
 	final Path p = Popups.open(luwrain, path != null?path:home, home);
 	if (p == null)
-	    return;
+	    return true;
 	final String[] lines = base.read(p.toString(), charset);
 	if (lines == null)
 	{
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
-	    return;
+	    return true;
 	}
 	path = p;
-	area.setLines(lines);
-	area.setName(path.getFileName().toString());
+	editArea.setLines(lines);
+	editArea.setName(path.getFileName().toString());
+	return true;
     }
 
     @Override public void markAsModified()
@@ -177,99 +265,14 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 	modified = true;
     }
 
-    private void createArea()
+    private boolean info()
     {
-	final Actions actions = this;
-	area = new EditArea(new DefaultControlEnvironment(luwrain),"",
-			    new String[0], ()->actions.markAsModified()){
-		@Override public boolean onKeyboardEvent(KeyboardEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.isSpecial() && !event.isModified())
-		    switch(event.getSpecial())
-		    {
-		    case F7:
-			actions.removeBackslashR();
-			return true;
-		    case F8:
-			actions.addBackslashR();
-			return true;
-			/*
-		    case KeyboardEvent.F10:
-			return actions.anotherCharset();
-			*/
-		    }
-			return super.onKeyboardEvent(event);
-		    		}
-		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    switch(event.getCode())
-		    {
-		    case CLOSE:
-			actions.closeApp();
-			return true;
-			/*
-		    case EnvironmentEvent.INTRODUCE:
-			luwrain.silence();
-			luwrain.playSound(Sounds.INTRO_REGULAR);
-			luwrain.say(strings.introduction() + " " + getAreaName()); 
-			return true;
-			*/
-		    case SAVE:
-			actions.save();
-			return true;
-		    case OPEN:
-			if (!(event instanceof OpenEvent))
-			    return false;
-			return actions.open(((OpenEvent)event).path());
-		    case ACTION:
-			if (ActionEvent.isAction(event, "save"))
-			{
-			    actions.save();
-			    return true;
-			}
-			if (ActionEvent.isAction(event, "open-another-charset"))
-			{
-			    actions.openAnotherCharset();
-			    return true;
-			}
-			if (ActionEvent.isAction(event, "save-another-charset"))
-			{
-			    actions.saveAnotherCharset();
-			    return true;
-			}
-			if (ActionEvent.isAction(event, "remove-backslash-r"))
-			{
-			    actions.removeBackslashR();
-			    return true;
-			}
-			if (ActionEvent.isAction(event, "add-backslash-r"))
-			{
-			    actions.addBackslashR();
-			    return true;
-			}
-			return false;
-		    default:
-			return super.onEnvironmentEvent(event);
-		    }
-		}
-		@Override public Action[] getAreaActions()
-		{
-		    return new Action[]{
-			new Action("save", strings.actionTitle("save")),
-			new Action("open-another-charset", strings.actionTitle("open-another-charset")),
-			new Action("save-another-charset", strings.actionTitle("save-another-charset")),
-			new Action("remove-backslash-r", strings.actionTitle("remove-backslash-r")),
-			new Action("add-backslash-r", strings.actionTitle("add-backslash-r")),
-		    };
-		}
-	    };
+	return false;
     }
 
     @Override public AreaLayout getAreasToShow()
     {
-	return new AreaLayout(area);
+	return layouts.getCurrentLayout();
     }
 
     @Override public void closeApp()

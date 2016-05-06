@@ -34,4 +34,5 @@ public interface Strings
     String rereadAnotherCharsetPopupName();
     String rereadAnotherCharsetPopupQuestion();
     String actionTitle(String name);
+    String infoAreaName();
 }
