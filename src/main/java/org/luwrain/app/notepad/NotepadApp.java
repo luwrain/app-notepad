@@ -293,7 +293,7 @@ private boolean removeBackslashR()
     {
 	if (!modified)
 	    return true;
-	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), false);
+	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), false, Popups.DEFAULT_POPUP_FLAGS);
 	luwrain.popup(popup);
 	if (popup.closing.cancelled())
 	    return false;
@@ -320,7 +320,7 @@ strings.savePopupName(), strings.savePopupPrefix(),
 	final EditListPopup popup = new EditListPopup(luwrain,
 						new FixedEditListPopupModel(names.toArray(new String[names.size()])),
 						strings.charsetPopupName(), strings.charsetPopupPrefix(),
-						      "");
+						      "", Popups.DEFAULT_POPUP_FLAGS);
 	luwrain.popup(popup);
 	if (popup.closing.cancelled())
 	    return null;
