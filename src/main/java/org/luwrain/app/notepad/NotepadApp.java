@@ -244,8 +244,8 @@ private boolean removeBackslashR()
 	final Charset charset = charsetPopup();
 	if (charset == null)
 	    return true;
-	final Path home = luwrain.launchContext().userHomeDirAsPath();
-	final Path p = Popups.open(luwrain, path != null?path:home, home);
+	final Path home = luwrain.getPathProperty("luwrain.dir.userhome");
+	final Path p = null;//Popups.open(luwrain, path != null?path:home, home);
 	if (p == null)
 	    return true;
 	final String[] lines = base.read(p.toString(), charset);
@@ -305,11 +305,12 @@ private boolean removeBackslashR()
     //null means user cancelled file name popup
     private Path savePopup()
     {
-	final Path dir = luwrain.launchContext().userHomeDirAsPath();
-return Popups.chooseFile(luwrain, 
+	final Path homeDir = luwrain.getPathProperty("luwrain.dir.userhome");
+return Popups.path(luwrain, 
 strings.savePopupName(), strings.savePopupPrefix(),
-			 path != null?path:dir, dir,
-			 DefaultFileAcceptance.Type.ANY);
+			 path != null?path:homeDir, homeDir,
+		   (path)->{return true;},
+		   Popups.loadFilePopupFlags(luwrain), Popups.DEFAULT_POPUP_FLAGS);
     }
 
     private Charset charsetPopup()
@@ -318,7 +319,7 @@ strings.savePopupName(), strings.savePopupPrefix(),
 	for(Map.Entry<String, Charset>  ent: AVAILABLE_CHARSETS.entrySet())
 	    names.add(ent.getKey());
 	final EditListPopup popup = new EditListPopup(luwrain,
-						new FixedEditListPopupModel(names.toArray(new String[names.size()])),
+						new EditListPopupUtils.FixedModel(names.toArray(new String[names.size()])),
 						strings.charsetPopupName(), strings.charsetPopupPrefix(),
 						      "", Popups.DEFAULT_POPUP_FLAGS);
 	luwrain.popup(popup);
