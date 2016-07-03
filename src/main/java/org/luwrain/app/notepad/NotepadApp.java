@@ -28,44 +28,45 @@ import org.luwrain.popups.*;
 
 class NotepadApp implements Application, Actions
 {
-static private final String STRINGS_NAME = "luwrain.notepad";
-    static private final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+    static private final int NORMAL_LAYOUT_INDEX = 0;
+    static private final int PROPERTIES_LAYOUT_INDEX = 1;
+
     static public final SortedMap<String, Charset> AVAILABLE_CHARSETS = Charset.availableCharsets(); 
 
     private Luwrain luwrain;
     private final Base base = new Base();
     private Strings strings;
     private EditArea editArea;
-    private SimpleArea infoArea;
+    private SimpleArea propertiesArea;
     private AreaLayoutSwitch layouts;
-    //    private Document doc = null;
-    private boolean modified = false;
-    private Path path = null;
 
     private String arg = null;
 
     NotepadApp()
     {
+	arg = null;
     }
 
     public NotepadApp(String arg)
     {
-	this.arg = arg;
 	NullCheck.notNull(arg, "arg");
+	this.arg = arg;
     }
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
-	final Object o = luwrain.i18n().getStrings(STRINGS_NAME);
+	final Object o = luwrain.i18n().getStrings(Strings.NAME);
 	if (o == null || !(o instanceof Strings))
 	    return false;
 	strings = (Strings)o;
 	this.luwrain = luwrain;
+	if (!base.init(luwrain, strings))
+	    return false;
 	createAreas();
 	layouts = new AreaLayoutSwitch(luwrain);
 	layouts.add(new AreaLayout(editArea));
-	layouts.add(new AreaLayout(infoArea));
-	prepareDocument();
+	layouts.add(new AreaLayout(propertiesArea));
+	base.prepareDocument(arg, editArea);
 	return true;
     }
 
@@ -74,42 +75,55 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 	final Actions actions = this;
 
 	editArea = new EditArea(new DefaultControlEnvironment(luwrain),"",
-			    new String[0], ()->actions.markAsModified()){
+			    new String[0], ()->markAsModified()){
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    switch(event.getCode())
 		    {
 		    case CLOSE:
-			actions.closeApp();
+			closeApp();
 			return true;
 		    case SAVE:
-			actions.save();
+			save();
 			return true;
+		    case PROPERTIES:
+			return onShowProperties();
 		    case OPEN:
 			if (!(event instanceof OpenEvent))
 			    return false;
-			return actions.open(((OpenEvent)event).path());
+			return base.open(((OpenEvent)event).path(), this);
 		    case ACTION:
-			return actions.onEditActionEvent(event);
+			return onEditAction(event);
 		    default:
 			return super.onEnvironmentEvent(event);
 		    }
 		}
 		@Override public Action[] getAreaActions()
 		{
-		    return actions.getEditAreaActions();
+		    return getEditAreaActions();
 		}
 	    };
 
-	infoArea = new SimpleArea(new DefaultControlEnvironment(luwrain), strings.infoAreaName()){
+	propertiesArea = new SimpleArea(new DefaultControlEnvironment(luwrain), strings.infoAreaName()){
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial() && !event.isModified())
+			switch(event.getSpecial())
+			{
+			case ESCAPE:
+			    return onCloseProperties();
+			}
+		    return super.onKeyboardEvent(event);
+		}
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    switch(event.getCode())
 		    {
 		    case CLOSE:
-			actions.closeApp();
+			closeApp();
 			return true;
 		    default:
 			return super.onEnvironmentEvent(event);
@@ -118,7 +132,7 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 	    };
     }
 
-    @Override public Action[] getEditAreaActions()
+    private Action[] getEditAreaActions()
     {
 		    return new Action[]{
 			new Action("save", strings.actionTitle("save")),
@@ -130,7 +144,7 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 		    };
     }
 
-    @Override public boolean onEditActionEvent(EnvironmentEvent event)
+    private boolean onEditAction(EnvironmentEvent event)
     {
 	NullCheck.notNull(event, "event");
 			if (ActionEvent.isAction(event, "save"))
@@ -148,16 +162,32 @@ static private final String STRINGS_NAME = "luwrain.notepad";
 			return false;
     }
 
+    private boolean onShowProperties()
+    {
+	base.fillProperties(propertiesArea, editArea);
+	layouts.show(PROPERTIES_LAYOUT_INDEX);
+	luwrain.announceActiveArea();
+	return true;
+    }
+
+    private boolean onCloseProperties()
+    {
+	layouts.show(NORMAL_LAYOUT_INDEX);
+	luwrain.announceActiveArea();
+	return true;
+    }
+
+
     private void prepareDocument()
     {
 	editArea.setName(strings.initialTitle());
 	if (arg == null || arg.isEmpty())
 	    return;
-	path = Paths.get(arg);
-	if (path == null)
+	base.path = Paths.get(arg);
+	if (base.path == null)
 	    return;
-	final String[] lines = base.read(path.toString(), DEFAULT_CHARSET);
-	editArea.setName(path.getFileName().toString());
+	final String[] lines = base.read(base.path, base.DEFAULT_CHARSET);
+	editArea.setName(base.path.getFileName().toString());
 	if (lines != null)
 	    editArea.setLines(lines); else
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
@@ -167,7 +197,7 @@ private boolean removeBackslashR()
     {
 	base.removeBackslashR(editArea);
 	luwrain.onAreaNewContent(editArea);
-	modified = true;
+	base.modified = true;
 	return true;
     }
 
@@ -175,31 +205,31 @@ private boolean removeBackslashR()
     {
 	base.addBackslashR(editArea);
 	luwrain.onAreaNewContent(editArea);
-	modified = true;
+	base.modified = true;
 	return true;
     }
 
     //Returns false if there are still unsaved changes
-    @Override public boolean save()
+    private boolean save()
     {
-	if (!modified)
+	if (!base.modified)
 	{
 	    luwrain.message(strings.noModificationsToSave());
 	    return true;
 	}
-	if (path == null)
+	if (base.path == null)
 	{
-	    path = savePopup();
-	    if (path == null)
+	    base.path = savePopup();
+	    if (base.path == null)
 		return false;
 	}
-	if (!base.save(path.toString(), editArea.getLines(), DEFAULT_CHARSET))
+	if (!base.save(base.path.toString(), editArea.getLines(), base.DEFAULT_CHARSET))
 	{
 	    luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
 	    return false;
 	}
-	modified = false;
-	editArea.setName(path.getFileName().toString());
+	base.modified = false;
+	editArea.setName(base.path.getFileName().toString());
 	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
 	return true;
     }
@@ -217,23 +247,8 @@ private boolean removeBackslashR()
 	    luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
 	    return true;
 	}
-	modified = false;
+	base.modified = false;
 	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
-	return true;
-    }
-
-    @Override public boolean open(String fileName)
-    {
-	if (modified || path != null)
-	    return false;
-	final String[] lines = base.read(fileName, DEFAULT_CHARSET);
-	if (lines == null)
-	{
-	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
-	    return false;
-	}
-	editArea.setLines(lines);
-	editArea.setName(path.getFileName().toString());
 	return true;
     }
 
@@ -248,21 +263,21 @@ private boolean removeBackslashR()
 	final Path p = null;//Popups.open(luwrain, path != null?path:home, home);
 	if (p == null)
 	    return true;
-	final String[] lines = base.read(p.toString(), charset);
+	final String[] lines = base.read(p, charset);
 	if (lines == null)
 	{
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
 	    return true;
 	}
-	path = p;
+	base.path = p;
 	editArea.setLines(lines);
-	editArea.setName(path.getFileName().toString());
+	editArea.setName(base.path.getFileName().toString());
 	return true;
     }
 
-    @Override public void markAsModified()
+    private void markAsModified()
     {
-	modified = true;
+	base.modified = true;
     }
 
     private boolean info()
@@ -270,28 +285,10 @@ private boolean removeBackslashR()
 	return false;
     }
 
-    @Override public AreaLayout getAreasToShow()
-    {
-	return layouts.getCurrentLayout();
-    }
-
-    @Override public void closeApp()
-    {
-	if (!checkIfUnsaved())
-	    return;
-	modified = false;
-	luwrain.closeApp();
-    }
-
-    @Override public String getAppName()
-    {
-	return strings.appName();
-    }
-
     //Returns true if there are no more modification which the user would like to save;
     private boolean checkIfUnsaved()
     {
-	if (!modified)
+	if (!base.modified)
 	    return true;
 	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), false, Popups.DEFAULT_POPUP_FLAGS);
 	luwrain.popup(popup);
@@ -308,7 +305,7 @@ private boolean removeBackslashR()
 	final Path homeDir = luwrain.getPathProperty("luwrain.dir.userhome");
 return Popups.path(luwrain, 
 strings.savePopupName(), strings.savePopupPrefix(),
-			 path != null?path:homeDir, homeDir,
+			 base.path != null?base.path:homeDir, homeDir,
 		   (path)->{return true;},
 		   Popups.loadFilePopupFlags(luwrain), Popups.DEFAULT_POPUP_FLAGS);
     }
@@ -332,5 +329,23 @@ strings.savePopupName(), strings.savePopupPrefix(),
 	    return null;
 	}
 	return AVAILABLE_CHARSETS.get(text);
+    }
+
+    @Override public AreaLayout getAreasToShow()
+    {
+	return layouts.getCurrentLayout();
+    }
+
+    @Override public void closeApp()
+    {
+	if (!checkIfUnsaved())
+	    return;
+	base.modified = false;
+	luwrain.closeApp();
+    }
+
+    @Override public String getAppName()
+    {
+	return base.path == null?strings.appName():base.path.getFileName().toString();
     }
 }

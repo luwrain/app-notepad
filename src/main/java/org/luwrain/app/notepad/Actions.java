@@ -22,9 +22,4 @@ import org.luwrain.core.events.*;
 interface Actions
 {
     void closeApp();
-    Action[] getEditAreaActions();
-    boolean onEditActionEvent(EnvironmentEvent event);
-    boolean save();
-    boolean open(String fileName);
-    void markAsModified();
 }

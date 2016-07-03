@@ -18,6 +18,8 @@ package org.luwrain.app.notepad;
 
 public interface Strings
 {
+static final String NAME = "luwrain.notepad";
+
     String appName();
     String initialTitle();
     String errorOpeningFile();
@@ -35,4 +37,11 @@ public interface Strings
     String rereadAnotherCharsetPopupQuestion();
     String actionTitle(String name);
     String infoAreaName();
+
+    String propertiesFileName();
+    String propertiesModified();
+    String propertiesYes();
+    String propertiesNo();
+    String propertiesCurrentLine();
+    String propertiesLinesTotal();
 }

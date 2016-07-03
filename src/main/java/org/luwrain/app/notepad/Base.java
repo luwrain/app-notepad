@@ -28,12 +28,83 @@ import org.luwrain.controls.*;
 
 class Base
 {
-    String[] read(String fileName, Charset encoding)
+    static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+
+    private Luwrain luwrain;
+    private Strings strings;
+
+    boolean modified = false;
+    Path path = null;
+
+    boolean init(Luwrain luwrain, Strings strings)
+    {
+	NullCheck.notNull(luwrain, "luwrain");
+	NullCheck.notNull(strings, "strings");
+	this.luwrain = luwrain;
+	this.strings = strings;
+	return true;
+    }
+
+    void prepareDocument(String arg, EditArea area)
+    {
+	NullCheck.notNull(area, "area");
+	area.setName(strings.initialTitle());
+	if (arg == null || arg.isEmpty())
+	    return;
+	path = Paths.get(arg);
+	if (path == null)
+	    return;
+	final String[] lines = read(path, DEFAULT_CHARSET);
+	area.setName(path.getFileName().toString());
+	if (lines != null)
+	    area.setLines(lines); else
+	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
+    }
+
+    //For EnvironmentEvent.OPEN:
+    boolean open(String fileName, EditArea area)
     {
 	NullCheck.notNull(fileName, "fileName");
+	NullCheck.notNull(area, "area");
+	if (modified || path != null)
+	    return false;
+	final Path newPath = Paths.get(fileName);
+	if (newPath == null || Files.isDirectory(newPath))
+	    return false;
+	final String[] lines = read(newPath, DEFAULT_CHARSET);
+	if (lines == null)
+	{
+	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
+	    return false;
+	}
+	path = newPath;
+	area.setLines(lines);
+	area.setName(path.getFileName().toString());
+	return true;
+    }
+
+    void fillProperties(SimpleArea area, EditArea editArea)
+    {
+	NullCheck.notNull(area, "area");
+	NullCheck.notNull(editArea, "editArea");
+	area.beginLinesTrans();
+	area.clear();
+	area.addLine(strings.propertiesFileName() + " " + (path != null?path.toString():""));
+	area.addLine(strings.propertiesModified() + " " + (modified?strings.propertiesYes():strings.propertiesNo()));
+	area.addLine(strings.propertiesCurrentLine() + " " + (editArea.getHotPointY() + 1));
+	area.addLine(strings.propertiesLinesTotal() + " " + editArea.getLines().length);
+
+
+	area.addLine("");
+	area.endLinesTrans();
+
+    }
+
+    String[] read(Path path, Charset encoding)
+    {
+	NullCheck.notNull(path, "path");
 	NullCheck.notNull(encoding, "encoding");
 	try {
-	    final Path path = Paths.get(fileName);
 	    final byte[] bytes = Files.readAllBytes(path);
 	    final CharBuffer charBuf = encoding.decode(ByteBuffer.wrap(bytes));
 	    return new String(charBuf.array(), charBuf.arrayOffset(), charBuf.length()).split("\n", -1);
