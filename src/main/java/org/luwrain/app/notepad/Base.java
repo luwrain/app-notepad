@@ -97,6 +97,7 @@ class Base
 
 	area.addLine("");
 	area.endLinesTrans();
+	area.reset(false);
 
     }
 
