@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2015 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of the LUWRAIN.
 
@@ -145,33 +145,9 @@ class Base
 	    }
     }
 
-    void removeBackslashR(EditArea area)
+    void markAsModified()
     {
-	area.beginLinesTrans();
-	for(int i = 0;i < area.getLineCount();++i)
-	{
-	    final String line = area.getLine(i);
-	    if (line == null || line.isEmpty())
-		continue;
-	    final StringBuilder b = new StringBuilder();
-	    for(int k = 0;k < line.length();++k)
-		if (line.charAt(k) != '\r')
-		    b.append(line.charAt(k));
-	    area.setLine(i, b.toString());
-	}
-	area.endLinesTrans();
+	modified = true;
     }
 
-    void addBackslashR(EditArea area)
-    {
-	area.beginLinesTrans();
-	for(int i = 0;i < area.getLineCount();++i)
-	{
-	    final String line = area.getLine(i);
-	    if (line == null)
-		continue;
-	    area.setLine(i, line + '\r');
-	}
-	area.endLinesTrans();
-    }
 }

@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2015 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of the LUWRAIN.
 
@@ -26,7 +26,7 @@ import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.*;
 
-class NotepadApp implements Application, Actions
+class NotepadApp implements Application
 {
     static private final int NORMAL_LAYOUT_INDEX = 0;
     static private final int PROPERTIES_LAYOUT_INDEX = 1;
@@ -35,12 +35,13 @@ class NotepadApp implements Application, Actions
 
     private Luwrain luwrain;
     private final Base base = new Base();
+    private Actions actions;
     private Strings strings;
     private EditArea editArea;
     private SimpleArea propertiesArea;
     private AreaLayoutSwitch layouts;
 
-    private String arg = null;
+    private final String arg;
 
     NotepadApp()
     {
@@ -55,6 +56,7 @@ class NotepadApp implements Application, Actions
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
+	NullCheck.notNull(luwrain, "luwrain");
 	final Object o = luwrain.i18n().getStrings(Strings.NAME);
 	if (o == null || !(o instanceof Strings))
 	    return false;
@@ -62,6 +64,7 @@ class NotepadApp implements Application, Actions
 	this.luwrain = luwrain;
 	if (!base.init(luwrain, strings))
 	    return false;
+	actions = new Actions(luwrain, strings);
 	createAreas();
 	layouts = new AreaLayoutSwitch(luwrain);
 	layouts.add(new AreaLayout(editArea));
@@ -72,21 +75,21 @@ class NotepadApp implements Application, Actions
 
     private void createAreas()
     {
-	final Actions actions = this;
-
 	editArea = new EditArea(new DefaultControlEnvironment(luwrain),"",
-			    new String[0], ()->markAsModified()){
+			    new String[0], ()->base.markAsModified()){
+
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
 		    switch(event.getCode())
 		    {
 		    case CLOSE:
 			closeApp();
 			return true;
 		    case SAVE:
-			save();
-			return true;
+			return actions.onSave(base, editArea);
 		    case PROPERTIES:
 			return onShowProperties();
 		    case OPEN:
@@ -99,13 +102,15 @@ class NotepadApp implements Application, Actions
 			return super.onEnvironmentEvent(event);
 		    }
 		}
+
 		@Override public Action[] getAreaActions()
 		{
-		    return getEditAreaActions();
+		    return actions.getEditAreaActions();
 		}
 	    };
 
 	propertiesArea = new SimpleArea(new DefaultControlEnvironment(luwrain), strings.infoAreaName()){
+
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -117,9 +122,12 @@ class NotepadApp implements Application, Actions
 			}
 		    return super.onKeyboardEvent(event);
 		}
+
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
 		    switch(event.getCode())
 		    {
 		    case CLOSE:
@@ -132,31 +140,21 @@ class NotepadApp implements Application, Actions
 	    };
     }
 
-    private Action[] getEditAreaActions()
-    {
-		    return new Action[]{
-			new Action("save", strings.actionTitle("save")),
-			new Action("open-another-charset", strings.actionTitle("open-another-charset")),
-			new Action("save-another-charset", strings.actionTitle("save-another-charset")),
-			new Action("remove-backslash-r", strings.actionTitle("remove-backslash-r")),
-			new Action("add-backslash-r", strings.actionTitle("add-backslash-r")),
-			new Action("info", strings.actionTitle("info")),
-		    };
-    }
-
     private boolean onEditAction(EnvironmentEvent event)
     {
 	NullCheck.notNull(event, "event");
+	/*
 			if (ActionEvent.isAction(event, "save"))
 			    return save();
+	*/
 			if (ActionEvent.isAction(event, "open-another-charset"))
 			    return openAnotherCharset();
 			if (ActionEvent.isAction(event, "save-another-charset"))
 			    return saveAnotherCharset();
 			if (ActionEvent.isAction(event, "remove-backslash-r"))
-			    return removeBackslashR();
+			    return actions.removeBackslashR(base, editArea);
 			if (ActionEvent.isAction(event, "add-backslash-r"))
-			    return addBackslashR();
+			    return actions.addBackslashR(base, editArea);
 			if (ActionEvent.isAction(event, "info"))
 			    return info();
 			return false;
@@ -177,7 +175,6 @@ class NotepadApp implements Application, Actions
 	return true;
     }
 
-
     private void prepareDocument()
     {
 	editArea.setName(strings.initialTitle());
@@ -193,49 +190,11 @@ class NotepadApp implements Application, Actions
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
     }
 
-private boolean removeBackslashR()
-    {
-	base.removeBackslashR(editArea);
-	luwrain.onAreaNewContent(editArea);
-	base.modified = true;
-	return true;
-    }
 
-    private boolean addBackslashR()
-    {
-	base.addBackslashR(editArea);
-	luwrain.onAreaNewContent(editArea);
-	base.modified = true;
-	return true;
-    }
-
-    //Returns false if there are still unsaved changes
-    private boolean save()
-    {
-	if (!base.modified)
-	{
-	    luwrain.message(strings.noModificationsToSave());
-	    return true;
-	}
-	if (base.path == null)
-	{
-	    base.path = savePopup();
-	    if (base.path == null)
-		return false;
-	}
-	if (!base.save(base.path.toString(), editArea.getLines(), base.DEFAULT_CHARSET))
-	{
-	    luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
-	    return false;
-	}
-	base.modified = false;
-	editArea.setName(base.path.getFileName().toString());
-	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
-	return true;
-    }
 
     private boolean saveAnotherCharset()
     {
+	/*
 	final Charset charset = charsetPopup();
 	if (charset == null)
 	    return true;
@@ -249,6 +208,7 @@ private boolean removeBackslashR()
 	}
 	base.modified = false;
 	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
+	*/
 	return true;
     }
 
@@ -275,11 +235,6 @@ private boolean removeBackslashR()
 	return true;
     }
 
-    private void markAsModified()
-    {
-	base.modified = true;
-    }
-
     private boolean info()
     {
 	return false;
@@ -290,24 +245,14 @@ private boolean removeBackslashR()
     {
 	if (!base.modified)
 	    return true;
-	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), false, Popups.DEFAULT_POPUP_FLAGS);
+	//Popups.confirmDefaultNo() isn't applicable here
+	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), true, Popups.DEFAULT_POPUP_FLAGS);
 	luwrain.popup(popup);
 	if (popup.closing.cancelled())
 	    return false;
-	if ( popup.result() && !save())
-	    return false;
-	return true;
-    }
-
-    //null means user cancelled file name popup
-    private Path savePopup()
-    {
-	final Path homeDir = luwrain.getPathProperty("luwrain.dir.userhome");
-return Popups.path(luwrain, 
-strings.savePopupName(), strings.savePopupPrefix(),
-			 base.path != null?base.path:homeDir, homeDir,
-		   (path)->{return true;},
-		   Popups.loadFilePopupFlags(luwrain), Popups.DEFAULT_POPUP_FLAGS);
+	if (! popup.result())
+	    return true;
+	return actions.save(base, editArea);
     }
 
     private Charset charsetPopup()
@@ -336,11 +281,10 @@ strings.savePopupName(), strings.savePopupPrefix(),
 	return layouts.getCurrentLayout();
     }
 
-    @Override public void closeApp()
+    private void closeApp()
     {
 	if (!checkIfUnsaved())
 	    return;
-	base.modified = false;
 	luwrain.closeApp();
     }
 
