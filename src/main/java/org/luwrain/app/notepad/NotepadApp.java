@@ -17,7 +17,7 @@
 package org.luwrain.app.notepad;
 
 import java.util.*;
-//import java.io.*;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.charset.*;
 
@@ -62,8 +62,7 @@ class NotepadApp implements Application
 	    return false;
 	strings = (Strings)o;
 	this.luwrain = luwrain;
-	if (!base.init(luwrain, strings))
-	    return false;
+	base.init(luwrain, strings);
 	actions = new Actions(luwrain, strings);
 	createAreas();
 	layouts = new AreaLayoutSwitch(luwrain);
@@ -95,7 +94,7 @@ class NotepadApp implements Application
 		    case OPEN:
 			if (!(event instanceof OpenEvent))
 			    return false;
-			return base.open(((OpenEvent)event).path(), this);
+			return actions.onOpenEvent(base, ((OpenEvent)event).path(), this);
 		    case ACTION:
 			return onEditAction(event);
 		    default:
@@ -175,6 +174,7 @@ class NotepadApp implements Application
 	return true;
     }
 
+    /*
     private void prepareDocument()
     {
 	editArea.setName(strings.initialTitle());
@@ -189,6 +189,7 @@ class NotepadApp implements Application
 	    editArea.setLines(lines); else
 	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
     }
+    */
 
 
 
@@ -223,12 +224,15 @@ class NotepadApp implements Application
 	final Path p = null;//Popups.open(luwrain, path != null?path:home, home);
 	if (p == null)
 	    return true;
-	final String[] lines = base.read(p, charset);
-	if (lines == null)
-	{
-	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
-	    return true;
+	final String[] lines;
+	try {
+ lines = base.read(p, charset);
 	}
+	catch(IOException e)
+	{
+	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
+	    return true;
+    }
 	base.path = p;
 	editArea.setLines(lines);
 	editArea.setName(base.path.getFileName().toString());
@@ -243,7 +247,7 @@ class NotepadApp implements Application
     //Returns true if there are no more modification which the user would like to save;
     private boolean checkIfUnsaved()
     {
-	if (!base.modified)
+	if (!base.isModified())
 	    return true;
 	//Popups.confirmDefaultNo() isn't applicable here
 	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), true, Popups.DEFAULT_POPUP_FLAGS);

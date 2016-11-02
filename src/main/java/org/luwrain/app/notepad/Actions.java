@@ -67,7 +67,7 @@ class Actions
 	}
 	area.endLinesTrans();
 	luwrain.onAreaNewContent(area);
-	base.modified = true;
+	base.markAsModified();
 	return true;
     }
 
@@ -84,7 +84,7 @@ class Actions
 	}
 	area.endLinesTrans();
 	luwrain.onAreaNewContent(area);
-	base.modified = true;
+	base.markAsModified();
 	return true;
     }
 
@@ -97,7 +97,7 @@ class Actions
     {
 	NullCheck.notNull(base, "base");
 	NullCheck.notNull(area, "area");
-	if (!base.modified)
+	if (!base.isModified())
 	{
 	    luwrain.message(strings.noModificationsToSave());
 	    return true;
@@ -108,12 +108,15 @@ class Actions
 	    if (base.path == null)
 		return false;
 	}
-	if (!base.save(base.path.toString(), area.getLines(), base.DEFAULT_CHARSET))
+	try {
+	    base.save(base.path, area.getLines(), base.DEFAULT_CHARSET);
+	}
+	catch(IOException e)
 	{
-	    luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
+	    luwrain.message(strings.errorSavingFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
 	    return false;
 	}
-	base.modified = false;
+	base.markNoModifications();
 	area.setName(base.path.getFileName().toString());
 	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
 	return true;
@@ -126,6 +129,35 @@ class Actions
 	save(base, area);
 	return true;
     }
+
+    boolean onOpenEvent(Base base, String fileName, EditArea area)
+    {
+	NullCheck.notNull(base, "base");
+	NullCheck.notNull(fileName, "fileName");
+	NullCheck.notNull(area, "area");
+	if (fileName.isEmpty())
+	    return false;
+	if (base.isModified() || base.path != null)
+	    return false;
+	final Path newPath = Paths.get(fileName);
+	if (Files.isDirectory(newPath))
+	    return false;
+	final String[] lines;
+	try {
+	    lines = base.read(newPath, Base.DEFAULT_CHARSET);
+	}
+	catch(IOException e)
+	{
+	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
+	    return true;
+	}
+	base.path = newPath;
+	area.setLines(lines);
+	area.setName(base.path.getFileName().toString());
+	base.markNoModifications();
+	return true;
+    }
+
 
     private Path savePopup(Base base)
     {

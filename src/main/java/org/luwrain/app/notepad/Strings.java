@@ -22,8 +22,8 @@ static final String NAME = "luwrain.notepad";
 
     String appName();
     String initialTitle();
-    String errorOpeningFile();
-    String errorSavingFile();
+    String errorOpeningFile(String comment);
+    String errorSavingFile(String comment);
     String fileIsSaved();
     String savePopupName();
     String savePopupPrefix();

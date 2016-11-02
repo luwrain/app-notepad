@@ -33,16 +33,15 @@ class Base
     private Luwrain luwrain;
     private Strings strings;
 
-    boolean modified = false;
+    private boolean modified = false;
     Path path = null;
 
-    boolean init(Luwrain luwrain, Strings strings)
+    void init(Luwrain luwrain, Strings strings)
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
 	this.strings = strings;
-	return true;
     }
 
     void prepareDocument(String arg, EditArea area)
@@ -54,34 +53,49 @@ class Base
 	path = Paths.get(arg);
 	if (path == null)
 	    return;
-	final String[] lines = read(path, DEFAULT_CHARSET);
+	final String[] lines;
+	try {
+	    lines = read(path, DEFAULT_CHARSET);
+	}
+	catch(IOException e)
+	{
+	    area.setName(path.getFileName().toString());
+	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	area.setLines(lines);
 	area.setName(path.getFileName().toString());
-	if (lines != null)
-	    area.setLines(lines); else
-	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
     }
 
     //For EnvironmentEvent.OPEN:
+    /*
     boolean open(String fileName, EditArea area)
     {
 	NullCheck.notNull(fileName, "fileName");
 	NullCheck.notNull(area, "area");
+	if (fileName.isEmpty())
+	    return false;
 	if (modified || path != null)
 	    return false;
 	final Path newPath = Paths.get(fileName);
-	if (newPath == null || Files.isDirectory(newPath))
+	if (Files.isDirectory(newPath))
 	    return false;
-	final String[] lines = read(newPath, DEFAULT_CHARSET);
-	if (lines == null)
+	final String[] lines;
+	try {
+	    lines = read(newPath, DEFAULT_CHARSET);
+	}
+	catch(IOException e)
 	{
-	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
-	    return false;
+	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
+	    return true;
 	}
 	path = newPath;
 	area.setLines(lines);
 	area.setName(path.getFileName().toString());
+	modified = false;
 	return true;
     }
+    */
 
     void fillProperties(SimpleArea area, EditArea editArea)
     {
@@ -93,56 +107,14 @@ class Base
 	area.addLine(strings.propertiesModified() + " " + (modified?strings.propertiesYes():strings.propertiesNo()));
 	area.addLine(strings.propertiesCurrentLine() + " " + (editArea.getHotPointY() + 1));
 	area.addLine(strings.propertiesLinesTotal() + " " + editArea.getLines().length);
-
-
 	area.addLine("");
 	area.endLinesTrans();
 	area.reset(false);
-
     }
 
-    String[] read(Path path, Charset encoding)
+    void markNoModifications()
     {
-	NullCheck.notNull(path, "path");
-	NullCheck.notNull(encoding, "encoding");
-	try {
-	    final byte[] bytes = Files.readAllBytes(path);
-	    final CharBuffer charBuf = encoding.decode(ByteBuffer.wrap(bytes));
-	    return new String(charBuf.array(), charBuf.arrayOffset(), charBuf.length()).split("\n", -1);
-	}
-	catch (IOException e)
-	{
-	    e.printStackTrace();
-	    return null;
-	}
-    }
-
-    boolean save(String fileName, String[] lines,
-		 Charset charset)
-    {
-	NullCheck.notNull(fileName, "fileName");
-	NullCheck.notNull(lines, "lines");
-	NullCheck.notNull(charset, "charset");
-	try {
-	    final Path path = Paths.get(fileName);
-	    final StringBuilder b = new StringBuilder();
-	    if (lines.length > 0)
-	    {
-		b.append(lines[0]);
-		for(int i = 1;i < lines.length;++i)
-		    b.append("\n" + lines[i]);
-	    }
-	    final ByteBuffer buf = charset.encode(CharBuffer.wrap(b.toString()));
-	    final FileChannel chan = new FileOutputStream(fileName).getChannel();
-	    chan.write(buf);
-	    chan.close();
-	    return true;
-	    }
-	    catch (IOException e)
-	    {
-		e.printStackTrace();
-		return false;
-	    }
+	modified = false;
     }
 
     void markAsModified()
@@ -150,4 +122,39 @@ class Base
 	modified = true;
     }
 
+    boolean isModified()
+    {
+ return modified;
+ }
+
+    static String[] read(Path path, Charset encoding) throws IOException
+    {
+	NullCheck.notNull(path, "path");
+	NullCheck.notNull(encoding, "encoding");
+	    final byte[] bytes = Files.readAllBytes(path);
+	    final CharBuffer charBuf = encoding.decode(ByteBuffer.wrap(bytes));
+	    return new String(charBuf.array(), charBuf.arrayOffset(), charBuf.length()).split("\n", -1);
+    }
+
+    static void save(Path path, String[] lines, Charset charset) throws IOException
+    {
+	NullCheck.notNull(path, "path");
+	NullCheck.notNullItems(lines, "lines");
+	NullCheck.notNull(charset, "charset");
+	final StringBuilder b = new StringBuilder();
+	if (lines.length > 0)
+	{
+	    b.append(lines[0]);
+	    for(int i = 1;i < lines.length;++i)
+		b.append("\n" + lines[i]);
+	}
+	final ByteBuffer buf = charset.encode(CharBuffer.wrap(b.toString()));
+	final FileChannel chan = new FileOutputStream(path.toString()).getChannel();
+	try {
+	chan.write(buf);
+	}
+	finally {
+	chan.close();
+	}
+    }
 }
