@@ -39,12 +39,12 @@ class Actions
     Action[] getEditAreaActions()
     {
 	return new Action[]{
-	    new Action("save", strings.actionTitle("save")),
-	    new Action("open-another-charset", strings.actionTitle("open-another-charset")),
-	    new Action("save-another-charset", strings.actionTitle("save-another-charset")),
-	    new Action("remove-backslash-r", strings.actionTitle("remove-backslash-r")),
-	    new Action("add-backslash-r", strings.actionTitle("add-backslash-r")),
-	    new Action("info", strings.actionTitle("info")),
+	    new Action("save", strings.actionSave()),
+	    new Action("open-another-charset", strings.actionOpenAnotherCharset()),
+	    new Action("save-another-charset", strings.actionSaveAnotherCharset()),
+	    new Action("remove-backslash-r", strings.actionRemoveBackslashR()),
+		       new Action("add-backslash-r", strings.actionAddBackslashR()),
+	    new Action("info", strings.actionInfo()),
 	};
     }
 

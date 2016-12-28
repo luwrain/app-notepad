@@ -35,7 +35,12 @@ static final String NAME = "luwrain.notepad";
     String invalidCharset();
     String rereadAnotherCharsetPopupName();
     String rereadAnotherCharsetPopupQuestion();
-    String actionTitle(String name);
+    String actionSave();
+    String actionOpenAnotherCharset();
+    String actionSaveAnotherCharset();
+    String actionRemoveBackslashR();
+    String actionAddBackslashR();
+    String actionInfo();
     String infoAreaName();
 
     String propertiesFileName();
