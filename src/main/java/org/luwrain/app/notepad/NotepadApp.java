@@ -1,7 +1,7 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the LUWRAIN.
+   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -28,18 +28,16 @@ import org.luwrain.popups.*;
 
 class NotepadApp implements Application
 {
-    static private final int NORMAL_LAYOUT_INDEX = 0;
-    static private final int PROPERTIES_LAYOUT_INDEX = 1;
-
     static public final SortedMap<String, Charset> AVAILABLE_CHARSETS = Charset.availableCharsets(); 
 
-    private Luwrain luwrain;
-    private final Base base = new Base();
-    private Actions actions;
-    private Strings strings;
+    private Luwrain luwrain = null;
+    private Strings strings = null;
+    private Base base = null;
+    private Actions actions = null;
+    private Conversations conversations = null;
+
     private EditArea editArea;
-    private SimpleArea propertiesArea;
-    private AreaLayoutSwitch layouts;
+    private AreaLayoutHelper layout = null;
 
     private final String arg;
 
@@ -62,12 +60,11 @@ class NotepadApp implements Application
 	    return false;
 	strings = (Strings)o;
 	this.luwrain = luwrain;
-	base.init(luwrain, strings);
-	actions = new Actions(luwrain, strings);
+	this.base = new Base(luwrain, strings);
+	this.actions = new Actions(luwrain, strings);
+	this.conversations = new Conversations(luwrain, strings);
 	createAreas();
-	layouts = new AreaLayoutSwitch(luwrain);
-	layouts.add(new AreaLayout(editArea));
-	layouts.add(new AreaLayout(propertiesArea));
+	this.layout = new AreaLayoutHelper(luwrain, editArea);
 	base.prepareDocument(arg, editArea);
 	return true;
     }
@@ -108,35 +105,6 @@ class NotepadApp implements Application
 		}
 	    };
 
-	propertiesArea = new SimpleArea(new DefaultControlEnvironment(luwrain), strings.infoAreaName()){
-
-		@Override public boolean onKeyboardEvent(KeyboardEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.isSpecial() && !event.isModified())
-			switch(event.getSpecial())
-			{
-			case ESCAPE:
-			    return onCloseProperties();
-			}
-		    return super.onKeyboardEvent(event);
-		}
-
-		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onEnvironmentEvent(event);
-		    switch(event.getCode())
-		    {
-		    case CLOSE:
-			closeApp();
-			return true;
-		    default:
-			return super.onEnvironmentEvent(event);
-		    }
-		}
-	    };
     }
 
     private boolean onEditAction(EnvironmentEvent event)
@@ -161,37 +129,42 @@ class NotepadApp implements Application
 
     private boolean onShowProperties()
     {
+
+	final SimpleArea propertiesArea = new SimpleArea(new DefaultControlEnvironment(luwrain), strings.infoAreaName()){
+
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial() && !event.isModified())
+			switch(event.getSpecial())
+			{
+			case ESCAPE:
+			    layout.closeTempArea();
+			    return true;
+			}
+		    return super.onKeyboardEvent(event);
+		}
+
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
+		    switch(event.getCode())
+		    {
+		    case CLOSE:
+			closeApp();
+			return true;
+		    default:
+			return super.onEnvironmentEvent(event);
+		    }
+		}
+	    };
+
 	base.fillProperties(propertiesArea, editArea);
-	layouts.show(PROPERTIES_LAYOUT_INDEX);
-	luwrain.announceActiveArea();
+	layout.openTempArea(propertiesArea);
 	return true;
     }
-
-    private boolean onCloseProperties()
-    {
-	layouts.show(NORMAL_LAYOUT_INDEX);
-	luwrain.announceActiveArea();
-	return true;
-    }
-
-    /*
-    private void prepareDocument()
-    {
-	editArea.setName(strings.initialTitle());
-	if (arg == null || arg.isEmpty())
-	    return;
-	base.path = Paths.get(arg);
-	if (base.path == null)
-	    return;
-	final String[] lines = base.read(base.path, base.DEFAULT_CHARSET);
-	editArea.setName(base.path.getFileName().toString());
-	if (lines != null)
-	    editArea.setLines(lines); else
-	    luwrain.message(strings.errorOpeningFile(), Luwrain.MESSAGE_ERROR);
-    }
-    */
-
-
 
     private boolean saveAnotherCharset()
     {
@@ -217,7 +190,7 @@ class NotepadApp implements Application
     {
 	if (!checkIfUnsaved())
 	    return true;
-	final Charset charset = charsetPopup();
+	final Charset charset = conversations.charsetPopup();
 	if (charset == null)
 	    return true;
 	final Path home = luwrain.getPathProperty("luwrain.dir.userhome");
@@ -259,37 +232,16 @@ class NotepadApp implements Application
 	return actions.save(base, editArea);
     }
 
-    private Charset charsetPopup()
-    {
-	final LinkedList<String> names = new LinkedList<String>();
-	for(Map.Entry<String, Charset>  ent: AVAILABLE_CHARSETS.entrySet())
-	    names.add(ent.getKey());
-	final EditListPopup popup = new EditListPopup(luwrain,
-						new EditListPopupUtils.FixedModel(names.toArray(new String[names.size()])),
-						strings.charsetPopupName(), strings.charsetPopupPrefix(),
-						      "", Popups.DEFAULT_POPUP_FLAGS);
-	luwrain.popup(popup);
-	if (popup.closing.cancelled())
-	    return null;
-	final String text = popup.text().trim();
-	if (text == null || text.isEmpty() || !AVAILABLE_CHARSETS.containsKey(text))
-	{
-	    luwrain.message(strings.invalidCharset(), Luwrain.MESSAGE_ERROR);
-	    return null;
-	}
-	return AVAILABLE_CHARSETS.get(text);
-    }
-
-    @Override public AreaLayout getAreasToShow()
-    {
-	return layouts.getCurrentLayout();
-    }
-
     private void closeApp()
     {
 	if (!checkIfUnsaved())
 	    return;
 	luwrain.closeApp();
+    }
+
+    @Override public AreaLayout getAreasToShow()
+    {
+	return layout.getLayout();
     }
 
     @Override public String getAppName()

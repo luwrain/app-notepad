@@ -1,7 +1,7 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the LUWRAIN.
+   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -23,6 +23,8 @@ import java.nio.file.*;
 import java.nio.charset.*;
 import java.nio.channels.*;
 
+import org.apache.commons.io.*;
+
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
@@ -30,13 +32,13 @@ class Base
 {
     static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
-    private Luwrain luwrain;
-    private Strings strings;
+    private final Luwrain luwrain;
+    private final Strings strings;
 
     private boolean modified = false;
     Path path = null;
 
-    void init(Luwrain luwrain, Strings strings)
+    Base(Luwrain luwrain, Strings strings)
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(strings, "strings");
@@ -67,36 +69,6 @@ class Base
 	area.setName(path.getFileName().toString());
     }
 
-    //For EnvironmentEvent.OPEN:
-    /*
-    boolean open(String fileName, EditArea area)
-    {
-	NullCheck.notNull(fileName, "fileName");
-	NullCheck.notNull(area, "area");
-	if (fileName.isEmpty())
-	    return false;
-	if (modified || path != null)
-	    return false;
-	final Path newPath = Paths.get(fileName);
-	if (Files.isDirectory(newPath))
-	    return false;
-	final String[] lines;
-	try {
-	    lines = read(newPath, DEFAULT_CHARSET);
-	}
-	catch(IOException e)
-	{
-	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
-	    return true;
-	}
-	path = newPath;
-	area.setLines(lines);
-	area.setName(path.getFileName().toString());
-	modified = false;
-	return true;
-    }
-    */
-
     void fillProperties(SimpleArea area, EditArea editArea)
     {
 	NullCheck.notNull(area, "area");
@@ -126,6 +98,26 @@ class Base
     {
  return modified;
  }
+
+    static String[] read2(FileParams fileParams) throws IOException
+    {
+	NullCheck.notNull(fileParams, "fileParams");
+	final InputStream is = new FileInputStream(fileParams.file);
+	try {
+	    final byte[] bytes = IOUtils.toByteArray(is);
+	    if (bytes.length == 0)
+		return new String[0];
+	    final String text = new String(bytes, fileParams.charset);
+	    if (text.isEmpty())
+		return new String[0];
+	    return text.split(fileParams.lineSeparator, -1);
+	}
+	finally {
+	    is.close();
+	}
+	}
+
+
 
     static String[] read(Path path, Charset encoding) throws IOException
     {
