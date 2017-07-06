@@ -61,8 +61,8 @@ class CustomFilePopup extends FilePopup
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(strings, "strings");
-	return (path)->{
-	    if (Files.isDirectory(path))
+	return (fileToCheck, announce)->{
+	    if (fileToCheck.isDirectory())
 		return false;
 	    return true;
 	};

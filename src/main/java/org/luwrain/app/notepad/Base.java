@@ -36,7 +36,7 @@ class Base
     private final Strings strings;
 
     private boolean modified = false;
-    Path path = null;
+    File file = null;
 
     Base(Luwrain luwrain, Strings strings)
     {
@@ -52,21 +52,21 @@ class Base
 	area.setName(strings.initialTitle());
 	if (arg == null || arg.isEmpty())
 	    return;
-	path = Paths.get(arg);
-	if (path == null)
+	file = new File(arg);
+	if (file == null)
 	    return;
 	final String[] lines;
 	try {
-	    lines = read(path, DEFAULT_CHARSET);
+	    lines = read(file.toPath(), DEFAULT_CHARSET);
 	}
 	catch(IOException e)
 	{
-	    area.setName(path.getFileName().toString());
+	    area.setName(file.getName());
 	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
 	area.setLines(lines);
-	area.setName(path.getFileName().toString());
+	area.setName(file.getName());
     }
 
     void fillProperties(SimpleArea area, EditArea editArea)
@@ -75,7 +75,7 @@ class Base
 	NullCheck.notNull(editArea, "editArea");
 	area.beginLinesTrans();
 	area.clear();
-	area.addLine(strings.propertiesFileName() + " " + (path != null?path.toString():""));
+	area.addLine(strings.propertiesFileName() + " " + (file != null?file.getAbsolutePath():""));
 	area.addLine(strings.propertiesModified() + " " + (modified?strings.propertiesYes():strings.propertiesNo()));
 	area.addLine(strings.propertiesCurrentLine() + " " + (editArea.getHotPointY() + 1));
 	area.addLine(strings.propertiesLinesTotal() + " " + editArea.getLines().length);

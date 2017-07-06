@@ -102,14 +102,14 @@ class Actions
 	    luwrain.message(strings.noModificationsToSave());
 	    return true;
 	}
-	if (base.path == null)
+	if (base.file == null)
 	{
-	    base.path = savePopup(base);
-	    if (base.path == null)
+	    base.file = savePopup(base);
+	    if (base.file == null)
 		return false;
 	}
 	try {
-	    base.save(base.path, area.getLines(), base.DEFAULT_CHARSET);
+	    base.save(base.file.toPath(), area.getLines(), base.DEFAULT_CHARSET);
 	}
 	catch(IOException e)
 	{
@@ -117,7 +117,7 @@ class Actions
 	    return false;
 	}
 	base.markNoModifications();
-	area.setName(base.path.getFileName().toString());
+	area.setName(base.file.getName());
 	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
 	return true;
     }
@@ -137,7 +137,7 @@ class Actions
 	NullCheck.notNull(area, "area");
 	if (fileName.isEmpty())
 	    return false;
-	if (base.isModified() || base.path != null)
+	if (base.isModified() || base.file != null)
 	    return false;
 	final Path newPath = Paths.get(fileName);
 	if (Files.isDirectory(newPath))
@@ -151,24 +151,25 @@ class Actions
 	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
 	    return true;
 	}
-	base.path = newPath;
+	base.file = newPath.toFile();
 	area.setLines(lines);
-	area.setName(base.path.getFileName().toString());
+	area.setName(base.file.getName());
 	base.markNoModifications();
 	return true;
     }
 
 
-    private Path savePopup(Base base)
+    private File savePopup(Base base)
     {
 	NullCheck.notNull(base, "base");
 	return Popups.path(luwrain, 
 			   strings.savePopupName(), strings.savePopupPrefix(),
-			   base.path != null?base.path:luwrain.getPathProperty("luwrain.dir.userhome"), luwrain.getPathProperty("luwrain.dir.userhome"),
-			   (path)->{
-			       if (Files.isDirectory(path))
+			   base.file != null?base.file.toPath():luwrain.getPathProperty("luwrain.dir.userhome"), luwrain.getPathProperty("luwrain.dir.userhome"),
+			   (fileToCheck, announce)->{
+			       if (fileToCheck.isDirectory())
 			       {
-				   luwrain.message(strings.enteredPathMayNotBeDir(path.toString()), Luwrain.MESSAGE_ERROR);
+				   if (announce)
+				   luwrain.message(strings.enteredPathMayNotBeDir(fileToCheck.getAbsolutePath()), Luwrain.MESSAGE_ERROR);
 				   return false;
 			       }
 			       return true;

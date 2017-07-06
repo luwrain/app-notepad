@@ -206,9 +206,9 @@ class NotepadApp implements Application
 	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
 	    return true;
     }
-	base.path = p;
+	base.file = p.toFile();
 	editArea.setLines(lines);
-	editArea.setName(base.path.getFileName().toString());
+	editArea.setName(base.file.getName());
 	return true;
     }
 
@@ -246,6 +246,6 @@ class NotepadApp implements Application
 
     @Override public String getAppName()
     {
-	return base.path == null?strings.appName():base.path.getFileName().toString();
+	return base.file == null?strings.appName():base.file.getName();
     }
 }
