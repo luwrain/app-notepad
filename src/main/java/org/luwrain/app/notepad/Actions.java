@@ -164,7 +164,7 @@ class Actions
 	NullCheck.notNull(base, "base");
 	return Popups.path(luwrain, 
 			   strings.savePopupName(), strings.savePopupPrefix(),
-			   base.file != null?base.file.toPath():luwrain.getPathProperty("luwrain.dir.userhome"), luwrain.getPathProperty("luwrain.dir.userhome"),
+			   base.file != null?base.file:luwrain.getFileProperty("luwrain.dir.userhome"), luwrain.getFileProperty("luwrain.dir.userhome"),
 			   (fileToCheck, announce)->{
 			       if (fileToCheck.isDirectory())
 			       {

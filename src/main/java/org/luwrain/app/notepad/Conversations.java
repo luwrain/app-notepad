@@ -48,7 +48,7 @@ class Conversations
 						      strings.charsetPopupName(), strings.charsetPopupPrefix(),
 						      "", Popups.DEFAULT_POPUP_FLAGS);
 	luwrain.popup(popup);
-	if (popup.closing.cancelled())
+	if (popup.wasCancelled())
 	    return null;
 	final String text = popup.text().trim();
 	if (text == null || text.isEmpty() || !AVAILABLE_CHARSETS.containsKey(text))

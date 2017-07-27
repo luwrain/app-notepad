@@ -52,21 +52,21 @@ class NotepadApp implements Application
 	this.arg = arg;
     }
 
-    @Override public boolean onLaunch(Luwrain luwrain)
+    @Override public InitResult onLaunchApp(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	final Object o = luwrain.i18n().getStrings(Strings.NAME);
 	if (o == null || !(o instanceof Strings))
-	    return false;
+	    return new InitResult(InitResult.Type.NO_STRINGS_OBJ, Strings.NAME);
 	strings = (Strings)o;
 	this.luwrain = luwrain;
 	this.base = new Base(luwrain, strings);
 	this.actions = new Actions(luwrain, strings);
 	this.conversations = new Conversations(luwrain, strings);
 	createAreas();
-	this.layout = new AreaLayoutHelper(luwrain, editArea);
+	this.layout = new AreaLayoutHelper(()->luwrain.onNewAreaLayout(), editArea);
 	base.prepareDocument(arg, editArea);
-	return true;
+	return new InitResult();
     }
 
     private void createAreas()
@@ -193,7 +193,7 @@ class NotepadApp implements Application
 	final Charset charset = conversations.charsetPopup();
 	if (charset == null)
 	    return true;
-	final Path home = luwrain.getPathProperty("luwrain.dir.userhome");
+	final File home = luwrain.getFileProperty("luwrain.dir.userhome");
 	final Path p = null;//Popups.open(luwrain, path != null?path:home, home);
 	if (p == null)
 	    return true;
@@ -225,21 +225,21 @@ class NotepadApp implements Application
 	//Popups.confirmDefaultNo() isn't applicable here
 	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), true, Popups.DEFAULT_POPUP_FLAGS);
 	luwrain.popup(popup);
-	if (popup.closing.cancelled())
+	if (popup.wasCancelled())
 	    return false;
 	if (! popup.result())
 	    return true;
 	return actions.save(base, editArea);
     }
 
-    private void closeApp()
+    @Override public void closeApp()
     {
 	if (!checkIfUnsaved())
 	    return;
 	luwrain.closeApp();
     }
 
-    @Override public AreaLayout getAreasToShow()
+    @Override public AreaLayout getAreaLayout()
     {
 	return layout.getLayout();
     }

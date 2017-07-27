@@ -39,7 +39,7 @@ class CustomFilePopup extends FilePopup
     {
 	super(luwrain, name, prefix, 
 	      createAcceptance(luwrain, strings),
-	      startingValue.toPath(), luwrain.getPathProperty("luwrain.dir.userhome"),
+	      startingValue, luwrain.getFileProperty("luwrain.dir.userhome"),
 	      Popups.loadFilePopupFlags(luwrain), Popups.DEFAULT_POPUP_FLAGS);
 	NullCheck.notNull(actions, "actions");
 	this.actions = actions;
