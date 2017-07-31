@@ -139,7 +139,7 @@ class NotepadApp implements Application
 			switch(event.getSpecial())
 			{
 			case ESCAPE:
-			    layout.closeTempArea();
+			    layout.closeTempLayout();
 			    return true;
 			}
 		    return super.onKeyboardEvent(event);
