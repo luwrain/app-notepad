@@ -50,4 +50,14 @@ static final String NAME = "luwrain.notepad";
     String propertiesCurrentLine();
     String propertiesLinesTotal();
     String enteredPathMayNotBeDir(String fileName);
+
+    String noTextToSynth();
+    String noChannelToSynth();
+    String targetDirPopupName();
+    String targetDirPopupPrefix();
+    String noSupportedAudioFormats();
+    String done();
+    String compressing(String file);
+    String settingsFormName();
+    String settingsFormLameCommand();
 }

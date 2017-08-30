@@ -16,36 +16,18 @@
 
 package org.luwrain.app.notepad;
 
-import java.util.*;
-import java.io.*;
-import java.util.concurrent.*;
-
-import org.apache.commons.io.*;
-
 import org.luwrain.core.*;
-import org.luwrain.speech.*;
-import org.luwrain.controls.*;
 
-class Base
+interface Settings
 {
-    final Executor executor = Executors.newSingleThreadExecutor();
+    static public final String REGISTRY_PATH = "/org/luwrain/app/narrator";
 
+    String getLameCommand(String defValue);
+    void setLameCommand(String command);
 
-    private final Luwrain luwrain;
-    private final Strings strings;
-
-boolean modified = false;
-    FileParams file = null;
-
-//for narrating
-    FutureTask futureTask = null; 
-    Task task = null;
-
-    Base(Luwrain luwrain, Strings strings)
+    static Settings create(Registry registry)
     {
-	NullCheck.notNull(luwrain, "luwrain");
-	NullCheck.notNull(strings, "strings");
-	this.luwrain = luwrain;
-	this.strings = strings;
+	NullCheck.notNull(registry, "registry");
+	return 	RegistryProxy.create(registry, REGISTRY_PATH, Settings.class);
     }
 }

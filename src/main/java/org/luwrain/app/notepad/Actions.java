@@ -16,12 +16,14 @@
 
 package org.luwrain.app.notepad;
 
+import java.util.*;
+import java.util.concurrent.*;
 import java.io.*;
-import java.nio.file.*;
 
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.Popups;
+import org.luwrain.speech.*;
 
 class Actions
 {
@@ -116,4 +118,43 @@ final FileParams fp = new FileParams(f);
 			       return true;
 			   });
     }
+
+    boolean startNarrating(ProgressArea destArea, String text)
+    {
+	NullCheck.notNull(destArea, "destArea");
+	NullCheck.notNull(text, "text");
+	if (base.futureTask != null && !base.futureTask.isDone())
+	    return false;
+	if (text.trim().isEmpty())
+	{
+	    luwrain.message(strings.noTextToSynth(), Luwrain.MessageType.ERROR);
+	    return true;
+	}
+	final Channel channel = luwrain.getAnySpeechChannelByCond(EnumSet.of(Channel.Features.CAN_SYNTH_TO_STREAM));
+	if (channel == null)
+	{
+	    luwrain.message(strings.noChannelToSynth(), Luwrain.MessageType.ERROR);
+	    return true;
+	}
+	final File homeDir = luwrain.getFileProperty("luwrain.dir.userhome");
+	final File res = Popups.path(luwrain, 
+					    strings.targetDirPopupName(), strings.targetDirPopupPrefix(), homeDir,
+				      (fileToCheck, announce)->{return true;});
+	if (res == null)
+	    return true;
+	base.task = new Task(strings, text, res.toPath(), 
+			luwrain.getFileProperty("luwrain.dir.scripts").toPath().resolve("lwr-audio-compress").toString(), channel){
+		@Override protected void progressLine(String text, boolean doneMessage)
+		{
+		    luwrain.runInMainThread(()->destArea.addProgressLine(text));
+		    if (doneMessage)
+			luwrain.runInMainThread(()->luwrain.message(text, Luwrain.MESSAGE_DONE));
+		}
+	    };
+	base.futureTask = new FutureTask(base.task, null);
+	base.executor.execute(base.futureTask);
+	return true;
+    }
+
+
 }
