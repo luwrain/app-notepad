@@ -36,7 +36,7 @@ class NotepadApp implements Application
     private Actions actions = null;
     private Conversations conversations = null;
 
-    private EditArea editArea;
+    private EditArea editArea = null;
     private AreaLayoutHelper layout = null;
 
     private final String arg;
@@ -87,7 +87,7 @@ class NotepadApp implements Application
 		    case SAVE:
 			return actions.onSave(base, editArea);
 		    case PROPERTIES:
-			return onShowProperties();
+			return showProps();
 		    case OPEN:
 			if (!(event instanceof OpenEvent))
 			    return false;
@@ -118,16 +118,12 @@ class NotepadApp implements Application
 			    return actions.removeBackslashR(base, editArea);
 			if (ActionEvent.isAction(event, "add-backslash-r"))
 			    return actions.addBackslashR(base, editArea);
-			if (ActionEvent.isAction(event, "info"))
-			    return info();
 			return false;
     }
 
-    private boolean onShowProperties()
+    private boolean showProps()
     {
-
-	final SimpleArea propertiesArea = new SimpleArea(new DefaultControlEnvironment(luwrain), strings.infoAreaName()){
-
+	final SimpleArea propsArea = new SimpleArea(new DefaultControlEnvironment(luwrain), "Информация") {
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -140,7 +136,6 @@ class NotepadApp implements Application
 			}
 		    return super.onKeyboardEvent(event);
 		}
-
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -156,15 +151,15 @@ class NotepadApp implements Application
 		    }
 		}
 	    };
-
-	base.fillProperties(propertiesArea, editArea);
-	layout.openTempArea(propertiesArea);
+	propsArea.beginLinesTrans();
+	propsArea.addLine(strings.propertiesFileName() + " " + (base.file != null?base.file.file.getAbsolutePath():""));
+	propsArea.addLine(strings.propertiesModified() + " " + (base.modified?strings.propertiesYes():strings.propertiesNo()));
+	propsArea.addLine(strings.propertiesCurrentLine() + " " + (editArea.getHotPointY() + 1));
+	propsArea.addLine(strings.propertiesLinesTotal() + " " + editArea.getLines().length);
+	propsArea.addLine("");
+	propsArea.endLinesTrans();
+	layout.openTempArea(propsArea);
 	return true;
-    }
-
-    private boolean info()
-    {
-	return false;
     }
 
     //Returns true if there are no more modification which the user would like to save;

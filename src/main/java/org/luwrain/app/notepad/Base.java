@@ -30,7 +30,7 @@ import org.luwrain.controls.*;
 
 class Base
 {
-    static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+    //    static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
     private final Luwrain luwrain;
     private final Strings strings;
@@ -65,20 +65,5 @@ boolean modified = false;
 	}
 	area.setLines(lines);
 	area.setName(file.getName());
-    }
-
-    void fillProperties(SimpleArea area, EditArea editArea)
-    {
-	NullCheck.notNull(area, "area");
-	NullCheck.notNull(editArea, "editArea");
-	area.beginLinesTrans();
-	area.clear();
-	area.addLine(strings.propertiesFileName() + " " + (file != null?file.file.getAbsolutePath():""));
-	area.addLine(strings.propertiesModified() + " " + (modified?strings.propertiesYes():strings.propertiesNo()));
-	area.addLine(strings.propertiesCurrentLine() + " " + (editArea.getHotPointY() + 1));
-	area.addLine(strings.propertiesLinesTotal() + " " + editArea.getLines().length);
-	area.addLine("");
-	area.endLinesTrans();
-	area.reset(false);
     }
 }
