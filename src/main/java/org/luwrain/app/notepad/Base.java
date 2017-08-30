@@ -30,8 +30,6 @@ import org.luwrain.controls.*;
 
 class Base
 {
-    //    static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-
     private final Luwrain luwrain;
     private final Strings strings;
 
@@ -44,26 +42,5 @@ boolean modified = false;
 	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
 	this.strings = strings;
-    }
-
-    void prepareDocument(String arg, EditArea area)
-    {
-	NullCheck.notNull(area, "area");
-	area.setName(strings.initialTitle());
-	if (arg == null || arg.isEmpty())
-	    return;
-	file = new FileParams(new File(arg));
-	final String[] lines;
-	try {
-	    lines = file.read();
-	}
-	catch(IOException e)
-	{
-	    area.setName(file.getName());
-	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
-	    return;
-	}
-	area.setLines(lines);
-	area.setName(file.getName());
     }
 }

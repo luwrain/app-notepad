@@ -27,75 +27,23 @@ class Actions
 {
     private final Luwrain luwrain;
     private final Strings strings;
+    private final Base base;
+    final Conversations conv;
 
-    Actions(Luwrain luwrain, Strings strings)
+    Actions(Luwrain luwrain, Strings strings, Base base)
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(strings, "strings");
+	NullCheck.notNull(base, "base");
 	this.luwrain = luwrain;
 	this.strings = strings;
+	this.base = base;
+	this.conv = new Conversations(luwrain, strings);
     }
 
-    Action[] getEditAreaActions()
+    //Returns True if everything saved, false otherwise
+    boolean onSave(EditArea area)
     {
-	return new Action[]{
-	    new Action("save", strings.actionSave()),
-	    new Action("open-another-charset", strings.actionOpenAnotherCharset()),
-	    new Action("save-another-charset", strings.actionSaveAnotherCharset()),
-	    new Action("remove-backslash-r", strings.actionRemoveBackslashR()),
-		       new Action("add-backslash-r", strings.actionAddBackslashR()),
-	    new Action("info", strings.actionInfo()),
-	};
-    }
-
-    boolean removeBackslashR(Base base, EditArea area)
-    {
-	NullCheck.notNull(base, "base");
-	NullCheck.notNull(area, "area");
-	area.beginLinesTrans();
-	for(int i = 0;i < area.getLineCount();++i)
-	{
-	    final String line = area.getLine(i);
-	    NullCheck.notNull(line, "line");
-	    if (line.isEmpty())
-		continue;
-	    final StringBuilder b = new StringBuilder();
-	    for(int k = 0;k < line.length();++k)
-		if (line.charAt(k) != '\r')
-		    b.append(line.charAt(k));
-	    area.setLine(i, b.toString());
-	}
-	area.endLinesTrans();
-	luwrain.onAreaNewContent(area);
-	base.modified = true;
-	return true;
-    }
-
-    boolean addBackslashR(Base base, EditArea area)
-    {
-	NullCheck.notNull(base, "base");
-	NullCheck.notNull(area, "area");
-	area.beginLinesTrans();
-	for(int i = 0;i < area.getLineCount();++i)
-	{
-	    final String line = area.getLine(i);
-	    NullCheck.notNull(line, "line");
-	    area.setLine(i, line + '\r');
-	}
-	area.endLinesTrans();
-	luwrain.onAreaNewContent(area);
-	base.modified = true;
-	return true;
-    }
-
-    /**
-     * Ensures there is no any unsaved data, so it is safe to proceed.
-     *
-     * \return True if everything saved, false otherwise
-     */
-    boolean save(Base base, EditArea area)
-    {
-	NullCheck.notNull(base, "base");
 	NullCheck.notNull(area, "area");
 	if (!base.modified)
 	{
@@ -120,14 +68,6 @@ final File f = savePopup(base);
 	base.modified = false;
 	area.setName(base.file.getName());
 	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
-	return true;
-    }
-
-    boolean onSave(Base base, EditArea area)
-    {
-	NullCheck.notNull(base, "base");
-	NullCheck.notNull(area, "area");
-	save(base, area);
 	return true;
     }
 

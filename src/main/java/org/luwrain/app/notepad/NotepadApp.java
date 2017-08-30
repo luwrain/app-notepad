@@ -18,23 +18,18 @@ package org.luwrain.app.notepad;
 
 import java.util.*;
 import java.io.*;
-import java.nio.file.*;
 import java.nio.charset.*;
 
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
-import org.luwrain.popups.*;
 
 class NotepadApp implements Application
 {
-    static public final SortedMap<String, Charset> AVAILABLE_CHARSETS = Charset.availableCharsets(); 
-
     private Luwrain luwrain = null;
     private Strings strings = null;
     private Base base = null;
     private Actions actions = null;
-    private Conversations conversations = null;
 
     private EditArea editArea = null;
     private AreaLayoutHelper layout = null;
@@ -61,19 +56,31 @@ class NotepadApp implements Application
 	strings = (Strings)o;
 	this.luwrain = luwrain;
 	this.base = new Base(luwrain, strings);
-	this.actions = new Actions(luwrain, strings);
-	this.conversations = new Conversations(luwrain, strings);
-	createAreas();
-	this.layout = new AreaLayoutHelper(()->luwrain.onNewAreaLayout(), editArea);
-	base.prepareDocument(arg, editArea);
+	this.actions = new Actions(luwrain, strings, base);
+	createArea();
+	this.layout = new AreaLayoutHelper(()->{
+		luwrain.onNewAreaLayout();
+		luwrain.announceActiveArea();
+	    }, editArea);
+	if (arg != null && !arg.isEmpty())
+	{
+	    base.file = new FileParams(new File(arg));
+	    try {
+		final String[] lines = base.file.read();
+		editArea.setLines(lines);
+	    }
+	    catch(IOException e)
+	    {
+		luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+	    }
+	}
 	return new InitResult();
     }
 
-    private void createAreas()
+    private void createArea()
     {
 	editArea = new EditArea(new DefaultControlEnvironment(luwrain),"",
 				new String[0], ()->{base.modified = true;}){
-
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -85,7 +92,7 @@ class NotepadApp implements Application
 			closeApp();
 			return true;
 		    case SAVE:
-			return actions.onSave(base, editArea);
+			return actions.onSave( editArea);
 		    case PROPERTIES:
 			return showProps();
 		    case OPEN:
@@ -93,32 +100,29 @@ class NotepadApp implements Application
 			    return false;
 			return actions.onOpenEvent(base, ((OpenEvent)event).path(), this);
 		    case ACTION:
-			return onEditAction(event);
+			return false;
 		    default:
 			return super.onEnvironmentEvent(event);
 		    }
 		}
-
+		@Override public String getAreaName()
+		{
+		    if (base.file == null)
+			return strings.initialTitle();
+		    return base.file.getName();
+		}
 		@Override public Action[] getAreaActions()
 		{
-		    return actions.getEditAreaActions();
+		    return new Action[]{
+			new Action("save", strings.actionSave()),
+			new Action("open-another-charset", strings.actionOpenAnotherCharset()),
+			new Action("save-another-charset", strings.actionSaveAnotherCharset()),
+			new Action("remove-backslash-r", strings.actionRemoveBackslashR()),
+			new Action("add-backslash-r", strings.actionAddBackslashR()),
+			new Action("info", strings.actionInfo()),
+		    };
 		}
 	    };
-
-    }
-
-    private boolean onEditAction(EnvironmentEvent event)
-    {
-	NullCheck.notNull(event, "event");
-	/*
-			if (ActionEvent.isAction(event, "save"))
-			    return save();
-	*/
-			if (ActionEvent.isAction(event, "remove-backslash-r"))
-			    return actions.removeBackslashR(base, editArea);
-			if (ActionEvent.isAction(event, "add-backslash-r"))
-			    return actions.addBackslashR(base, editArea);
-			return false;
     }
 
     private boolean showProps()
@@ -167,14 +171,16 @@ class NotepadApp implements Application
     {
 	if (!base.modified)
 	    return true;
-	//Popups.confirmDefaultNo() isn't applicable here
-	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), true, Popups.DEFAULT_POPUP_FLAGS);
-	luwrain.popup(popup);
-	if (popup.wasCancelled())
-	    return false;
-	if (! popup.result())
+	switch(actions.conv.unsavedChanges())
+	{
+	case CONTINUE_SAVE:
+	    return actions.onSave(editArea);
+	case CONTINUE_UNSAVED:
 	    return true;
-	return actions.save(base, editArea);
+	case CANCEL:
+	    return false;
+	}
+	return false;
     }
 
     @Override public void closeApp()

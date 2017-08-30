@@ -26,6 +26,8 @@ class Conversations
 {
     static public final SortedMap<String, Charset> AVAILABLE_CHARSETS = Charset.availableCharsets(); 
 
+    enum UnsavedChangesRes {CONTINUE_SAVE, CONTINUE_UNSAVED, CANCEL};
+
 
     private final Luwrain luwrain;
     private final Strings strings;
@@ -59,4 +61,12 @@ class Conversations
 	return AVAILABLE_CHARSETS.get(text);
     }
 
+    UnsavedChangesRes unsavedChanges()
+    {
+	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), true, Popups.DEFAULT_POPUP_FLAGS);
+	luwrain.popup(popup);
+	if (popup.wasCancelled())
+	    return UnsavedChangesRes.CANCEL;
+	return popup.result()?UnsavedChangesRes.CONTINUE_SAVE:UnsavedChangesRes.CONTINUE_UNSAVED;
+    }
 }
