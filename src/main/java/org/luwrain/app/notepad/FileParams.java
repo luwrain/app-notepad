@@ -20,6 +20,7 @@ import java.io.*;
 import java.nio.charset.*;
 
 import org.luwrain.core.*;
+import org.luwrain.util.*;
 
 class FileParams
 {
@@ -34,5 +35,22 @@ class FileParams
 	NullCheck.notNull(file, "file");
 	this.file = file;
     }
+
+    String getName()
+    {
+	return file.getName();
+    }
+
+    String[] read() throws IOException
+    {
+	return FileUtils.readTextFileMultipleStrings(file, charset.toString(), lineSeparator);
+    }
+
+void save(String[] lines) throws IOException
+    {
+	NullCheck.notNullItems(lines, "lines");
+	FileUtils.writeTextFileMultipleStrings(file, lines, charset.toString(), lineSeparator);
+    }
+
 
 }

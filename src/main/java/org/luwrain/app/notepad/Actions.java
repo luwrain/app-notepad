@@ -67,7 +67,7 @@ class Actions
 	}
 	area.endLinesTrans();
 	luwrain.onAreaNewContent(area);
-	base.markAsModified();
+	base.modified = true;
 	return true;
     }
 
@@ -84,7 +84,7 @@ class Actions
 	}
 	area.endLinesTrans();
 	luwrain.onAreaNewContent(area);
-	base.markAsModified();
+	base.modified = true;
 	return true;
     }
 
@@ -97,28 +97,29 @@ class Actions
     {
 	NullCheck.notNull(base, "base");
 	NullCheck.notNull(area, "area");
-	if (!base.isModified())
+	if (!base.modified)
 	{
 	    luwrain.message(strings.noModificationsToSave());
 	    return true;
 	}
 	if (base.file == null)
 	{
-	    base.file = savePopup(base);
-	    if (base.file == null)
+final File f = savePopup(base);
+	    if (f == null)
 		return false;
+	    base.file = new FileParams(f);
 	}
 	try {
-	    base.save(base.file.toPath(), area.getLines(), base.DEFAULT_CHARSET);
+	    base.file.save(area.getLines());
 	}
 	catch(IOException e)
 	{
-	    luwrain.message(strings.errorSavingFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
+	    luwrain.message(strings.errorSavingFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
 	    return false;
 	}
-	base.markNoModifications();
+	base.modified = false;
 	area.setName(base.file.getName());
-	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
+	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
 	return true;
     }
 
@@ -137,34 +138,34 @@ class Actions
 	NullCheck.notNull(area, "area");
 	if (fileName.isEmpty())
 	    return false;
-	if (base.isModified() || base.file != null)
+	if (base.modified || base.file != null)
 	    return false;
-	final Path newPath = Paths.get(fileName);
-	if (Files.isDirectory(newPath))
+final File f = new File(fileName);
+if (f.isDirectory())
 	    return false;
+final FileParams fp = new FileParams(f);
 	final String[] lines;
 	try {
-	    lines = base.read(newPath, Base.DEFAULT_CHARSET);
+	    lines = fp.read();
 	}
 	catch(IOException e)
 	{
-	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
+	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
 	    return true;
 	}
-	base.file = newPath.toFile();
+	base.file = fp;
 	area.setLines(lines);
 	area.setName(base.file.getName());
-	base.markNoModifications();
+	base.modified = false;;
 	return true;
     }
-
 
     private File savePopup(Base base)
     {
 	NullCheck.notNull(base, "base");
 	return Popups.path(luwrain, 
 			   strings.savePopupName(), strings.savePopupPrefix(),
-			   base.file != null?base.file:luwrain.getFileProperty("luwrain.dir.userhome"), luwrain.getFileProperty("luwrain.dir.userhome"),
+			   base.file != null?base.file.file:luwrain.getFileProperty("luwrain.dir.userhome"), luwrain.getFileProperty("luwrain.dir.userhome"),
 			   (fileToCheck, announce)->{
 			       if (fileToCheck.isDirectory())
 			       {

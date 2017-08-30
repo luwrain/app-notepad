@@ -35,8 +35,8 @@ class Base
     private final Luwrain luwrain;
     private final Strings strings;
 
-    private boolean modified = false;
-    File file = null;
+boolean modified = false;
+    FileParams file = null;
 
     Base(Luwrain luwrain, Strings strings)
     {
@@ -52,17 +52,15 @@ class Base
 	area.setName(strings.initialTitle());
 	if (arg == null || arg.isEmpty())
 	    return;
-	file = new File(arg);
-	if (file == null)
-	    return;
+	file = new FileParams(new File(arg));
 	final String[] lines;
 	try {
-	    lines = read(file.toPath(), DEFAULT_CHARSET);
+	    lines = file.read();
 	}
 	catch(IOException e)
 	{
 	    area.setName(file.getName());
-	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
+	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
 	    return;
 	}
 	area.setLines(lines);
@@ -75,78 +73,12 @@ class Base
 	NullCheck.notNull(editArea, "editArea");
 	area.beginLinesTrans();
 	area.clear();
-	area.addLine(strings.propertiesFileName() + " " + (file != null?file.getAbsolutePath():""));
+	area.addLine(strings.propertiesFileName() + " " + (file != null?file.file.getAbsolutePath():""));
 	area.addLine(strings.propertiesModified() + " " + (modified?strings.propertiesYes():strings.propertiesNo()));
 	area.addLine(strings.propertiesCurrentLine() + " " + (editArea.getHotPointY() + 1));
 	area.addLine(strings.propertiesLinesTotal() + " " + editArea.getLines().length);
 	area.addLine("");
 	area.endLinesTrans();
 	area.reset(false);
-    }
-
-    void markNoModifications()
-    {
-	modified = false;
-    }
-
-    void markAsModified()
-    {
-	modified = true;
-    }
-
-    boolean isModified()
-    {
- return modified;
- }
-
-    static String[] read2(FileParams fileParams) throws IOException
-    {
-	NullCheck.notNull(fileParams, "fileParams");
-	final InputStream is = new FileInputStream(fileParams.file);
-	try {
-	    final byte[] bytes = IOUtils.toByteArray(is);
-	    if (bytes.length == 0)
-		return new String[0];
-	    final String text = new String(bytes, fileParams.charset);
-	    if (text.isEmpty())
-		return new String[0];
-	    return text.split(fileParams.lineSeparator, -1);
-	}
-	finally {
-	    is.close();
-	}
-	}
-
-
-
-    static String[] read(Path path, Charset encoding) throws IOException
-    {
-	NullCheck.notNull(path, "path");
-	NullCheck.notNull(encoding, "encoding");
-	    final byte[] bytes = Files.readAllBytes(path);
-	    final CharBuffer charBuf = encoding.decode(ByteBuffer.wrap(bytes));
-	    return new String(charBuf.array(), charBuf.arrayOffset(), charBuf.length()).split("\n", -1);
-    }
-
-    static void save(Path path, String[] lines, Charset charset) throws IOException
-    {
-	NullCheck.notNull(path, "path");
-	NullCheck.notNullItems(lines, "lines");
-	NullCheck.notNull(charset, "charset");
-	final StringBuilder b = new StringBuilder();
-	if (lines.length > 0)
-	{
-	    b.append(lines[0]);
-	    for(int i = 1;i < lines.length;++i)
-		b.append("\n" + lines[i]);
-	}
-	final ByteBuffer buf = charset.encode(CharBuffer.wrap(b.toString()));
-	final FileChannel chan = new FileOutputStream(path.toString()).getChannel();
-	try {
-	chan.write(buf);
-	}
-	finally {
-	chan.close();
-	}
     }
 }

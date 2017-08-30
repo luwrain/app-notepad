@@ -72,7 +72,7 @@ class NotepadApp implements Application
     private void createAreas()
     {
 	editArea = new EditArea(new DefaultControlEnvironment(luwrain),"",
-			    new String[0], ()->base.markAsModified()){
+				new String[0], ()->{base.modified = true;}){
 
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
@@ -114,10 +114,6 @@ class NotepadApp implements Application
 			if (ActionEvent.isAction(event, "save"))
 			    return save();
 	*/
-			if (ActionEvent.isAction(event, "open-another-charset"))
-			    return openAnotherCharset();
-			if (ActionEvent.isAction(event, "save-another-charset"))
-			    return saveAnotherCharset();
 			if (ActionEvent.isAction(event, "remove-backslash-r"))
 			    return actions.removeBackslashR(base, editArea);
 			if (ActionEvent.isAction(event, "add-backslash-r"))
@@ -166,52 +162,6 @@ class NotepadApp implements Application
 	return true;
     }
 
-    private boolean saveAnotherCharset()
-    {
-	/*
-	final Charset charset = charsetPopup();
-	if (charset == null)
-	    return true;
-	final Path p = savePopup();
-	if (p == null)
-	    return true;
-	if (!base.save(p.toString(), editArea.getLines(), charset))
-	{
-	    luwrain.message(strings.errorSavingFile(), Luwrain.MESSAGE_ERROR);
-	    return true;
-	}
-	base.modified = false;
-	luwrain.message(strings.fileIsSaved(), Luwrain.MESSAGE_OK);
-	*/
-	return true;
-    }
-
-    private boolean openAnotherCharset()
-    {
-	if (!checkIfUnsaved())
-	    return true;
-	final Charset charset = conversations.charsetPopup();
-	if (charset == null)
-	    return true;
-	final File home = luwrain.getFileProperty("luwrain.dir.userhome");
-	final Path p = null;//Popups.open(luwrain, path != null?path:home, home);
-	if (p == null)
-	    return true;
-	final String[] lines;
-	try {
- lines = base.read(p, charset);
-	}
-	catch(IOException e)
-	{
-	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MESSAGE_ERROR);
-	    return true;
-    }
-	base.file = p.toFile();
-	editArea.setLines(lines);
-	editArea.setName(base.file.getName());
-	return true;
-    }
-
     private boolean info()
     {
 	return false;
@@ -220,7 +170,7 @@ class NotepadApp implements Application
     //Returns true if there are no more modification which the user would like to save;
     private boolean checkIfUnsaved()
     {
-	if (!base.isModified())
+	if (!base.modified)
 	    return true;
 	//Popups.confirmDefaultNo() isn't applicable here
 	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), true, Popups.DEFAULT_POPUP_FLAGS);
