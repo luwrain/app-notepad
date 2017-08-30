@@ -23,7 +23,7 @@ import javax.sound.sampled.AudioFormat;
 import org.luwrain.core.*;
 import org.luwrain.speech.*;
 
-abstract class Task implements Runnable
+abstract class NarratingTask implements Runnable
 {
     private Strings strings;
     private Path path;
@@ -37,7 +37,7 @@ abstract class Task implements Runnable
     private AudioFormat chosenFormat = null;
     private int lastPercents = 0;
 
-    Task(Strings strings, String text, Path path,
+    NarratingTask(Strings strings, String text, Path path,
 	 String compressorCmd, Channel channel)
     {
 	this.strings = strings;
