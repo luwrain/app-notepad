@@ -18,7 +18,6 @@ package org.luwrain.app.notepad;
 
 import java.util.*;
 import java.io.*;
-import java.nio.charset.*;
 
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;

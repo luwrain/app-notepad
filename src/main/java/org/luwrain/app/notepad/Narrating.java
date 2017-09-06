@@ -17,7 +17,6 @@
 package org.luwrain.app.notepad;
 
 import java.io.*;
-import java.nio.file.*;
 import javax.sound.sampled.AudioFormat;
 
 import org.luwrain.core.*;
@@ -26,27 +25,27 @@ import org.luwrain.speech.*;
 abstract class Narrating implements Runnable
 {
     private final Strings strings;
-    private final Path path;
+    private final File destDir;
     private final String text;
     private final Channel channel;
     private final String compressorCmd;
 
-    private Path currentFile;
+    private File currentFile;
     private OutputStream stream;
     private int fragmentNum = 1;
     private AudioFormat chosenFormat = null;
     private int lastPercents = 0;
 
-    Narrating(Strings strings, String text, Path path, String compressorCmd, Channel channel)
+    Narrating(Strings strings, String text, File destDir, String compressorCmd, Channel channel)
     {
 	NullCheck.notNull(strings, "strings");
 	NullCheck.notNull(text, "text");
-	NullCheck.notNull(path, "path");
+	NullCheck.notNull(destDir, "destDir");
 	NullCheck.notNull(compressorCmd, "compressorCmd");
 	NullCheck.notNull(channel, "channel");
 	this.strings = strings;
 	this.text = text;
-	this.path = path;
+	this.destDir = destDir;
 	this.compressorCmd = compressorCmd;
 	this.channel = channel;
     }
@@ -132,8 +131,8 @@ StringBuilder b = new StringBuilder();
 
     private void openStream() throws IOException
     {
-	currentFile = Files.createTempFile("lwrnarrator", "");
-    stream = Files.newOutputStream(currentFile);
+	currentFile = File.createTempFile("lwrnarrating", ".dat");
+	stream = new FileOutputStream(currentFile);
     }
 
     private void closeStream() throws IOException
@@ -141,32 +140,33 @@ StringBuilder b = new StringBuilder();
 	stream.flush();
 	stream.close();
 	stream = null;
-	String fileName = "" + fragmentNum;
-	++fragmentNum;
-	while(fileName.length() < 3)
-	    fileName = "0" + fileName;
-	fileName += ".mp3";
-	Path compressedFile = path.resolve(fileName);
-	progressLine(strings.compressing(compressedFile.toString()), false);
-	callCompressor(currentFile, compressedFile);
-	Files.delete(currentFile);
+	final String fileName = getNextFragmentFileName() + ".wav";
+	final File targetFile = new File(destDir, fileName);
+	progressLine(strings.compressing(targetFile.getName()), false);
+	callCompressor(currentFile, targetFile);
+	currentFile.delete();
 	currentFile = null;
+    }
+
+    private void saveWavFile()
+    {
+
     }
 
     private void checkSize() throws IOException
     {
 	stream.flush();
-	if (Files.size(currentFile) > timeToBytes(300000))//5 min
+	if (currentFile.length() > timeToBytes(300000))//5 min
 	{
 	    closeStream();
 	    openStream();
 	}
     }
 
-    private void callCompressor(Path inputFile, Path outputFile)
+    private void callCompressor(File inputFile, File outputFile)
     {
 	try {
-	    final Process p = new ProcessBuilder(compressorCmd, inputFile.toString(), outputFile.toString()).start();
+	    final Process p = new ProcessBuilder(compressorCmd, inputFile.getAbsolutePath(), outputFile.getAbsolutePath()).start();
 	    p.waitFor();
 	}
 	catch(IOException e)
@@ -213,5 +213,15 @@ try {
 	value /= 8;//bytes in a second
 	value /= 1000;//bytes in millisecond
 	return (int)(value * msec);
+    }
+
+    private String getNextFragmentFileName()
+    {
+	String fileName = "" + fragmentNum;
+	++fragmentNum;
+	while(fileName.length() < 3)
+	    fileName = "0" + fileName;
+	return fileName;
+
     }
 }
