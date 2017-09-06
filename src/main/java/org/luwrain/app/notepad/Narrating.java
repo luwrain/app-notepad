@@ -23,13 +23,13 @@ import javax.sound.sampled.AudioFormat;
 import org.luwrain.core.*;
 import org.luwrain.speech.*;
 
-abstract class NarratingTask implements Runnable
+abstract class Narrating implements Runnable
 {
-    private Strings strings;
-    private Path path;
-    private String text;
-    private Channel channel;
-    private String compressorCmd = "";
+    private final Strings strings;
+    private final Path path;
+    private final String text;
+    private final Channel channel;
+    private final String compressorCmd;
 
     private Path currentFile;
     private OutputStream stream;
@@ -37,19 +37,18 @@ abstract class NarratingTask implements Runnable
     private AudioFormat chosenFormat = null;
     private int lastPercents = 0;
 
-    NarratingTask(Strings strings, String text, Path path,
-	 String compressorCmd, Channel channel)
+    Narrating(Strings strings, String text, Path path, String compressorCmd, Channel channel)
     {
-	this.strings = strings;
-	this.text = text;
-	this.path = path;
-	this.compressorCmd = compressorCmd;
-	this.channel = channel;
 	NullCheck.notNull(strings, "strings");
 	NullCheck.notNull(text, "text");
 	NullCheck.notNull(path, "path");
 	NullCheck.notNull(compressorCmd, "compressorCmd");
 	NullCheck.notNull(channel, "channel");
+	this.strings = strings;
+	this.text = text;
+	this.path = path;
+	this.compressorCmd = compressorCmd;
+	this.channel = channel;
     }
 
     abstract protected void progressLine(String text, boolean doneMessage);
@@ -57,10 +56,10 @@ abstract class NarratingTask implements Runnable
     @Override public void run()
     {
 	try {
-	    AudioFormat[] formats = channel.getSynthSupportedFormats();
+	    final AudioFormat[] formats = channel.getSynthSupportedFormats();
 	    if (formats == null || formats.length < 0)
 	    {
-		progressLine(strings.noSupportedAudioFormats(), false);
+		progressLine(strings.narratingNoSupportedAudioFormats(), false);
 		return;
 	    }
 	    chosenFormat = formats[0];
@@ -71,13 +70,13 @@ abstract class NarratingTask implements Runnable
 	}
 	catch(Exception e)
 	{
-	    e.printStackTrace();
+	    progressLine(e.getClass() + ":" + e.getMessage(), false);
 	}
     }
 
     private void splitText() throws IOException
     {
-	StringBuilder b = new StringBuilder();
+StringBuilder b = new StringBuilder();
 	for(int i = 0;i < text.length();++i)
 	{
 	    final int percents = (i * 100) / text.length();
@@ -134,7 +133,6 @@ abstract class NarratingTask implements Runnable
     private void openStream() throws IOException
     {
 	currentFile = Files.createTempFile("lwrnarrator", "");
-	Log.debug("narrator", "opening a temporary stream on " + currentFile.toString());
     stream = Files.newOutputStream(currentFile);
     }
 
@@ -151,7 +149,6 @@ abstract class NarratingTask implements Runnable
 	Path compressedFile = path.resolve(fileName);
 	progressLine(strings.compressing(compressedFile.toString()), false);
 	callCompressor(currentFile, compressedFile);
-	Log.debug("narrator", "deleting temporary file " + currentFile.toString());
 	Files.delete(currentFile);
 	currentFile = null;
     }
@@ -168,15 +165,13 @@ abstract class NarratingTask implements Runnable
 
     private void callCompressor(Path inputFile, Path outputFile)
     {
-	Log.debug("narrator", "calling a compressor (" + compressorCmd + ") " + inputFile.toString() + "->" + outputFile.toString());
 	try {
 	    final Process p = new ProcessBuilder(compressorCmd, inputFile.toString(), outputFile.toString()).start();
 	    p.waitFor();
 	}
 	catch(IOException e)
 	{
-	    e.printStackTrace();
-	    progressLine(e.getMessage(), false);
+	    progressLine(e.getClass().getName() + ":" + e.getMessage(), false);
 	}
 	catch(InterruptedException e)
 	{
@@ -187,7 +182,6 @@ abstract class NarratingTask implements Runnable
     private void silence(int delay) throws IOException
     {
 	final int numBytes = timeToBytes(delay);
-	Log.debug("narrator", "writing a silence of " + numBytes + " bytes");
 	final byte[] buf = new byte[numBytes];
 	for(int i = 0;i < buf.length;++i)
 	    buf[i] = 0;

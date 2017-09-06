@@ -17,7 +17,9 @@
 package org.luwrain.app.notepad;
 
 import java.util.*;
+
 import org.luwrain.core.*;
+import org.luwrain.cpanel.*;
 
 public class Extension extends org.luwrain.core.extensions.EmptyExtension
 {
@@ -58,4 +60,12 @@ public class Extension extends org.luwrain.core.extensions.EmptyExtension
 		}
 	    }};
     }
+
+    @Override public Factory[] getControlPanelFactories(Luwrain luwrain)
+    {
+	NullCheck.notNull(luwrain, "luwrain");
+	return new Factory[]{new org.luwrain.app.notepad.ControlPanelFactory(luwrain)};
+    }
+
+
 }

@@ -142,7 +142,7 @@ final FileParams fp = new FileParams(f);
 				      (fileToCheck, announce)->{return true;});
 	if (res == null)
 	    return true;
-	base.task = new NarratingTask(strings, text, res.toPath(), 
+	base.narrating = new Narrating(strings, text, res.toPath(), 
 			luwrain.getFileProperty("luwrain.dir.scripts").toPath().resolve("lwr-audio-compress").toString(), channel){
 		@Override protected void progressLine(String text, boolean doneMessage)
 		{
@@ -151,7 +151,7 @@ final FileParams fp = new FileParams(f);
 			luwrain.runInMainThread(()->luwrain.message(text, Luwrain.MESSAGE_DONE));
 		}
 	    };
-	base.futureTask = new FutureTask(base.task, null);
+	base.futureTask = new FutureTask(base.narrating, null);
 	base.executor.execute(base.futureTask);
 	return true;
     }

@@ -55,7 +55,7 @@ static final String NAME = "luwrain.notepad";
     String noChannelToSynth();
     String targetDirPopupName();
     String targetDirPopupPrefix();
-    String noSupportedAudioFormats();
+    String narratingNoSupportedAudioFormats();
     String done();
     String compressing(String file);
     String settingsFormName();

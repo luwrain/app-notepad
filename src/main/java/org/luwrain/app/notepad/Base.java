@@ -39,7 +39,7 @@ boolean modified = false;
 
 //for narrating
     FutureTask futureTask = null; 
-    NarratingTask task = null;
+    Narrating narrating = null;
 
     Base(Luwrain luwrain, Strings strings)
     {
