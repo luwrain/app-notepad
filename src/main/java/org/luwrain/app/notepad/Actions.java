@@ -43,6 +43,12 @@ class Actions
 	this.conv = new Conversations(luwrain, strings);
     }
 
+    boolean openAs()
+    {
+	conv.openAs();
+	return true;
+    }
+
     //Returns True if everything saved, false otherwise
     boolean onSave(EditArea area)
     {

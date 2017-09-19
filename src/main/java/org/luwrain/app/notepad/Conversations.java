@@ -69,4 +69,10 @@ class Conversations
 	    return UnsavedChangesRes.CANCEL;
 	return popup.result()?UnsavedChangesRes.CONTINUE_SAVE:UnsavedChangesRes.CONTINUE_UNSAVED;
     }
+
+    void openAs()
+    {
+	final CustomFilePopup popup = new CustomFilePopup(luwrain, strings, null, "Открыть файл", "Имя файла:", luwrain.getFileProperty("luwrain.dir.userhome"));
+	luwrain.popup(popup);
+    }
 }

@@ -41,19 +41,21 @@ class CustomFilePopup extends FilePopup
 	      createAcceptance(luwrain, strings),
 	      startingValue, luwrain.getFileProperty("luwrain.dir.userhome"),
 	      Popups.loadFilePopupFlags(luwrain), Popups.DEFAULT_POPUP_FLAGS);
-	NullCheck.notNull(actions, "actions");
+	//	NullCheck.notNull(actions, "actions");
 	this.actions = actions;
     }
 
     @Override public Action[] getAreaActions()
     {
 	final List<Action> res = new LinkedList<Action>();
+	/*
 	for(Action a: actions.getActions())
 	    res.add(a);
 	final Action[] superActions = super.getAreaActions();
 	if (superActions != null)
 	    for(Action a: superActions)
 	    res.add(a);
+	*/
 	return res.toArray(new Action[res.size()]);
     }
 

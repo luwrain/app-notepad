@@ -99,7 +99,8 @@ class NotepadApp implements Application
 			    return false;
 			return actions.onOpenEvent(base, ((OpenEvent)event).path(), this);
 		    case ACTION:
-			return false;
+			if (ActionEvent.isAction(event, "open-as"))
+			    return actions.openAs();
 		    default:
 			return super.onEnvironmentEvent(event);
 		    }
@@ -114,11 +115,7 @@ class NotepadApp implements Application
 		{
 		    return new Action[]{
 			new Action("save", strings.actionSave()),
-			new Action("open-another-charset", strings.actionOpenAnotherCharset()),
-			new Action("save-another-charset", strings.actionSaveAnotherCharset()),
-			new Action("remove-backslash-r", strings.actionRemoveBackslashR()),
-			new Action("add-backslash-r", strings.actionAddBackslashR()),
-			new Action("info", strings.actionInfo()),
+			new Action("open-as", "Открыть как...", new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))),
 		    };
 		}
 	    };
