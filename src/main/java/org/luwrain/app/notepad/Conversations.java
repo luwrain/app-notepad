@@ -55,7 +55,7 @@ class Conversations
 	final String text = popup.text().trim();
 	if (text == null || text.isEmpty() || !AVAILABLE_CHARSETS.containsKey(text))
 	{
-	    luwrain.message(strings.invalidCharset(), Luwrain.MESSAGE_ERROR);
+	    luwrain.message(strings.invalidCharset(), Luwrain.MessageType.ERROR);
 	    return null;
 	}
 	return AVAILABLE_CHARSETS.get(text);

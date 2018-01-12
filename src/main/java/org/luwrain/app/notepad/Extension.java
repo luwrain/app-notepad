@@ -42,7 +42,7 @@ public class Extension extends org.luwrain.core.extensions.EmptyExtension
     {
 	return new Shortcut[]{
 	    new Shortcut() {
-		@Override public String getName()
+		@Override public String getExtObjName()
 		{
 		    return "notepad";
 		}

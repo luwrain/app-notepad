@@ -118,7 +118,7 @@ final FileParams fp = new FileParams(f);
 			       if (fileToCheck.isDirectory())
 			       {
 				   if (announce)
-				   luwrain.message(strings.enteredPathMayNotBeDir(fileToCheck.getAbsolutePath()), Luwrain.MESSAGE_ERROR);
+				   luwrain.message(strings.enteredPathMayNotBeDir(fileToCheck.getAbsolutePath()), Luwrain.MessageType.ERROR);
 				   return false;
 			       }
 			       return true;
@@ -154,7 +154,7 @@ final FileParams fp = new FileParams(f);
 		{
 		    luwrain.runInMainThread(()->destArea.addProgressLine(text));
 		    if (doneMessage)
-			luwrain.runInMainThread(()->luwrain.message(text, Luwrain.MESSAGE_DONE));
+			luwrain.runInMainThread(()->luwrain.message(text, Luwrain.MessageType.DONE));
 		}
 	    };
 	base.futureTask = new FutureTask(base.narrating, null);
