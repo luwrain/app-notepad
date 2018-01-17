@@ -18,6 +18,7 @@ package org.luwrain.app.notepad;
 
 import java.util.*;
 
+import org.luwrain.base.*;
 import org.luwrain.core.*;
 import org.luwrain.cpanel.*;
 
@@ -38,9 +39,10 @@ public class Extension extends org.luwrain.core.extensions.EmptyExtension
 	    }};
     }
 
-    @Override public Shortcut[] getShortcuts(Luwrain luwrain)
+    @Override public ExtensionObject[] getExtObjects(Luwrain luwrain)
     {
-	return new Shortcut[]{
+	return new ExtensionObject[]{
+	    
 	    new Shortcut() {
 		@Override public String getExtObjName()
 		{
@@ -48,17 +50,19 @@ public class Extension extends org.luwrain.core.extensions.EmptyExtension
 		}
 		@Override public Application[] prepareApp(String[] args)
 		{
-		    if (args == null || args.length < 1)
-			return new Application[]{new NotepadApp()};
-		    final LinkedList<Application> v = new LinkedList<Application>();
+		    NullCheck.notNullItems(args, "args");
+		    if (args.length == 0)
+			return new Application[]{new App()};
+		    final List<Application> v = new LinkedList();
 		    for(String s: args)
-			if (s != null)
-			    v.add(new NotepadApp(s));
+			v.add(new App(s));
 		    if (v.isEmpty())
-			return new Application[]{new NotepadApp()};
+			return new Application[]{new App()};
 		    return v.toArray(new Application[v.size()]);
 		}
-	    }};
+	    },
+
+	};
     }
 
     @Override public Factory[] getControlPanelFactories(Luwrain luwrain)
@@ -66,6 +70,4 @@ public class Extension extends org.luwrain.core.extensions.EmptyExtension
 	NullCheck.notNull(luwrain, "luwrain");
 	return new Factory[]{new org.luwrain.app.notepad.ControlPanelFactory(luwrain)};
     }
-
-
 }

@@ -23,7 +23,7 @@ import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 
-class NotepadApp implements Application
+class App implements Application
 {
     private Luwrain luwrain = null;
     private Strings strings = null;
@@ -35,12 +35,12 @@ class NotepadApp implements Application
 
     private final String arg;
 
-    NotepadApp()
+    App()
     {
 	arg = null;
     }
 
-    public NotepadApp(String arg)
+    App(String arg)
     {
 	NullCheck.notNull(arg, "arg");
 	this.arg = arg;
