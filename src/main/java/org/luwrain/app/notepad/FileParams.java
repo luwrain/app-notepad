@@ -22,7 +22,7 @@ import java.nio.charset.*;
 import org.luwrain.core.*;
 import org.luwrain.util.*;
 
-class FileParams
+final class FileParams
 {
     static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
@@ -46,11 +46,9 @@ class FileParams
 	return FileUtils.readTextFileMultipleStrings(file, charset.toString(), lineSeparator);
     }
 
-void save(String[] lines) throws IOException
+    void save(String[] lines) throws IOException
     {
 	NullCheck.notNullItems(lines, "lines");
 	FileUtils.writeTextFileMultipleStrings(file, lines, charset.toString(), lineSeparator);
     }
-
-
 }

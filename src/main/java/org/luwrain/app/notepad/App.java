@@ -29,6 +29,7 @@ class App implements Application
     private Strings strings = null;
     private Base base = null;
     private Actions actions = null;
+    private ActionLists actionLists = null;
 
     private EditArea editArea = null;
     private AreaLayoutHelper layout = null;
@@ -56,6 +57,7 @@ class App implements Application
 	this.luwrain = luwrain;
 	this.base = new Base(luwrain, strings);
 	this.actions = new Actions(luwrain, strings, base);
+	this.actionLists = new ActionLists(strings);
 	createArea();
 	this.layout = new AreaLayoutHelper(()->{
 		luwrain.onNewAreaLayout();
@@ -113,10 +115,7 @@ class App implements Application
 		}
 		@Override public Action[] getAreaActions()
 		{
-		    return new Action[]{
-			new Action("save", strings.actionSave()),
-			new Action("open-as", "Открыть как...", new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))),
-		    };
+		    return actionLists.getActions();
 		}
 	    };
     }

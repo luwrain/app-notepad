@@ -25,7 +25,7 @@ import org.luwrain.controls.*;
 import org.luwrain.popups.Popups;
 import org.luwrain.speech.*;
 
-class Actions
+final class Actions
 {
     private final Luwrain luwrain;
     private final Strings strings;
@@ -129,7 +129,7 @@ final FileParams fp = new FileParams(f);
     {
 	NullCheck.notNull(destArea, "destArea");
 	NullCheck.notNull(text, "text");
-	if (base.futureTask != null && !base.futureTask.isDone())
+	if (base.narratingTask != null && !base.narratingTask.isDone())
 	    return false;
 	if (text.trim().isEmpty())
 	{
@@ -142,14 +142,14 @@ final FileParams fp = new FileParams(f);
 	    luwrain.message(strings.noChannelToSynth(), Luwrain.MessageType.ERROR);
 	    return true;
 	}
-	final File homeDir = luwrain.getFileProperty("luwrain.dir.userhome");
+	//	final File homeDir = luwrain.getFileProperty("luwrain.dir.userhome");
 	final File res = Popups.path(luwrain, 
-					    strings.targetDirPopupName(), strings.targetDirPopupPrefix(), homeDir,
-				      (fileToCheck, announce)->{return true;});
+				     strings.targetDirPopupName(), strings.targetDirPopupPrefix(), luwrain.getFileProperty("luwrain.dir.userhome"),
+				     (fileToCheck, announce)->{return true;});
 	if (res == null)
 	    return true;
 	base.narrating = new Narrating(strings, text, res, 
-			luwrain.getFileProperty("luwrain.dir.scripts").toPath().resolve("lwr-audio-compress").toString(), channel){
+				       new File(luwrain.getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
 		@Override protected void progressLine(String text, boolean doneMessage)
 		{
 		    luwrain.runInMainThread(()->destArea.addProgressLine(text));
@@ -157,10 +157,8 @@ final FileParams fp = new FileParams(f);
 			luwrain.runInMainThread(()->luwrain.message(text, Luwrain.MessageType.DONE));
 		}
 	    };
-	base.futureTask = new FutureTask(base.narrating, null);
-	base.executor.execute(base.futureTask);
+	base.narratingTask = new FutureTask(base.narrating, null);
+	base.executor.execute(base.narratingTask);
 	return true;
     }
-
-
 }

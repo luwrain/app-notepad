@@ -17,34 +17,26 @@
 package org.luwrain.app.notepad;
 
 import java.util.*;
-import java.io.*;
-import java.util.concurrent.*;
-
-import org.apache.commons.io.*;
 
 import org.luwrain.core.*;
-import org.luwrain.speech.*;
-import org.luwrain.controls.*;
+import org.luwrain.core.events.*;
 
-final class Base
+final class ActionLists
 {
-    final Executor executor = Executors.newSingleThreadExecutor();
-
-    private final Luwrain luwrain;
     private final Strings strings;
 
-    boolean modified = false;
-    FileParams file = null;
-
-//for narrating
-    FutureTask narratingTask = null; 
-    Narrating narrating = null;
-
-    Base(Luwrain luwrain, Strings strings)
+    ActionLists(Strings strings)
     {
-	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(strings, "strings");
-	this.luwrain = luwrain;
 	this.strings = strings;
+    }
+
+    Action[] getActions()
+    {
+	return new Action[]{
+	    new Action("save", strings.actionSave()),
+	    new Action("open-as", "Открыть как...", new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))),
+	    new Action("run", "Запустить как скрипт", new KeyboardEvent(KeyboardEvent.Special.F9)),
+	};
     }
 }
