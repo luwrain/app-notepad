@@ -36,7 +36,7 @@ final class ActionLists
 	return new Action[]{
 	    new Action("open-as", strings.actionOpenAs(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))),
 	    new Action("save", strings.actionSave()),
-		    	    new Action("save-as", strings.actionSaveAs()),
+		    	    new Action("save-as", strings.actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))),
 		    	    new Action("run", "Запустить как скрипт", new KeyboardEvent(KeyboardEvent.Special.F9)),
 	};
     }
