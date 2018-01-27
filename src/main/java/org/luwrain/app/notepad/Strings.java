@@ -18,47 +18,38 @@ package org.luwrain.app.notepad;
 
 public interface Strings
 {
-static final String NAME = "luwrain.notepad";
+    static final String NAME = "luwrain.notepad";
 
     String appName();
-    String initialTitle();
+    String actionOpenAs();
+    String actionSave();
+    String actionSaveAs();
+    String charsetPopupName();
+    String charsetPopupPrefix();
+    String compressing(String file);
+    String done();
+    String enteredPathMayNotBeDir(String fileName);
     String errorOpeningFile(String comment);
     String errorSavingFile(String comment);
     String fileIsSaved();
-    String savePopupName();
-    String savePopupPrefix();
-    String saveChangesPopupName();
-    String saveChangesPopupQuestion();
-    String noModificationsToSave();
-    String charsetPopupName();
-    String charsetPopupPrefix();
+    String initialTitle();
     String invalidCharset();
-    String rereadAnotherCharsetPopupName();
-    String rereadAnotherCharsetPopupQuestion();
-    String actionSave();
-    String actionSaveAs();
-    String actionOpenAnotherCharset();
-    String actionSaveAnotherCharset();
-    String actionRemoveBackslashR();
-    String actionAddBackslashR();
-    String actionInfo();
-    String infoAreaName();
-
+    String narratingNoSupportedAudioFormats();
+    String noTextToSynth();
+    String noChannelToSynth();
+    String noModificationsToSave();
+    String propertiesCurrentLine();
     String propertiesFileName();
+    String propertiesLinesTotal();
     String propertiesModified();
     String propertiesYes();
     String propertiesNo();
-    String propertiesCurrentLine();
-    String propertiesLinesTotal();
-    String enteredPathMayNotBeDir(String fileName);
-
-    String noTextToSynth();
-    String noChannelToSynth();
     String targetDirPopupName();
     String targetDirPopupPrefix();
-    String narratingNoSupportedAudioFormats();
-    String done();
-    String compressing(String file);
+    String saveChangesPopupName();
+    String saveChangesPopupQuestion();
+    String savePopupName();
+    String savePopupPrefix();
     String settingsFormName();
     String settingsFormLameCommand();
 }
