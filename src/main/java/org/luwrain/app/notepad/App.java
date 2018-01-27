@@ -113,6 +113,13 @@ class App implements Application
 			    return false;
 			return actions.onOpenEvent(base, ((OpenEvent)event).path(), this);
 		    case ACTION:
+			if (ActionEvent.isAction(event, "save"))
+			    return actions.onSave(this);
+			if (ActionEvent.isAction(event, "save-as"))
+			{
+			    actions.onSaveAs(this);
+			    return true;
+			}
 			if (ActionEvent.isAction(event, "open-as"))
 			    return actions.openAs();
 		    default:

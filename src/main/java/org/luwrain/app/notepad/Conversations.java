@@ -41,13 +41,14 @@ class Conversations
 	this.strings = strings;
     }
 
-File save(Base base)
+
+    //currentFile may be null
+File save(File currentFile)
     {
-	NullCheck.notNull(base, "base");
 	return Popups.path(luwrain, 
 			   strings.savePopupName(),
 			   strings.savePopupPrefix(),
-			   base.file != null?base.file.file:luwrain.getFileProperty("luwrain.dir.userhome"),
+			   currentFile != null?currentFile:luwrain.getFileProperty("luwrain.dir.userhome"),
 			   luwrain.getFileProperty("luwrain.dir.userhome"),
 			   (fileToCheck, announce)->{
 			       if (fileToCheck.isDirectory())

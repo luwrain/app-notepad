@@ -60,10 +60,11 @@ final class Actions
 	}
 	if (base.file == null)
 	{
-final File f = conv.save(base);
+	    final File f = conv.save(base.file != null?base.file.file:null);
 	    if (f == null)
 		return false;
 	    base.file = new FileParams(f);
+	    base.modified = false;
 	}
 	try {
 	    base.file.save(area.getLines());
@@ -73,10 +74,29 @@ final File f = conv.save(base);
 	    luwrain.message(strings.errorSavingFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
 	    return false;
 	}
-	base.modified = false;
 	luwrain.onAreaNewName(area);
 	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
 	return true;
+    }
+
+void onSaveAs(EditArea area)
+    {
+	NullCheck.notNull(area, "area");
+	final File f = conv.save(base.file != null?base.file.file:null);
+	if (f == null)
+	    return;
+	base.file = new FileParams(f);
+	luwrain.onAreaNewName(area);
+	try {
+	    base.file.save(area.getLines());
+	}
+	catch(IOException e)
+	{
+	    luwrain.message(strings.errorSavingFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+	    return;
+	}
+	base.modified = false;
+	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
     }
 
     boolean onOpenEvent(Base base, String fileName, EditArea area)

@@ -34,9 +34,10 @@ final class ActionLists
     Action[] getActions()
     {
 	return new Action[]{
+	    	    new Action("open-as", "Открыть как...", new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))),
 	    new Action("save", strings.actionSave()),
-	    new Action("open-as", "Открыть как...", new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))),
-	    new Action("run", "Запустить как скрипт", new KeyboardEvent(KeyboardEvent.Special.F9)),
+		    	    new Action("save-as", strings.actionSaveAs()),
+		    	    new Action("run", "Запустить как скрипт", new KeyboardEvent(KeyboardEvent.Special.F9)),
 	};
     }
 }

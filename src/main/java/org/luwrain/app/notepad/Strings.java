@@ -36,6 +36,7 @@ static final String NAME = "luwrain.notepad";
     String rereadAnotherCharsetPopupName();
     String rereadAnotherCharsetPopupQuestion();
     String actionSave();
+    String actionSaveAs();
     String actionOpenAnotherCharset();
     String actionSaveAnotherCharset();
     String actionRemoveBackslashR();
