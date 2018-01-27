@@ -60,7 +60,7 @@ final class Actions
 	}
 	if (base.file == null)
 	{
-final File f = savePopup(base);
+final File f = conv.save(base);
 	    if (f == null)
 		return false;
 	    base.file = new FileParams(f);
@@ -74,7 +74,7 @@ final File f = savePopup(base);
 	    return false;
 	}
 	base.modified = false;
-	area.setName(base.file.getName());
+	luwrain.onAreaNewName(area);
 	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
 	return true;
     }
@@ -108,22 +108,6 @@ final FileParams fp = new FileParams(f);
 	return true;
     }
 
-    private File savePopup(Base base)
-    {
-	NullCheck.notNull(base, "base");
-	return Popups.path(luwrain, 
-			   strings.savePopupName(), strings.savePopupPrefix(),
-			   base.file != null?base.file.file:luwrain.getFileProperty("luwrain.dir.userhome"), luwrain.getFileProperty("luwrain.dir.userhome"),
-			   (fileToCheck, announce)->{
-			       if (fileToCheck.isDirectory())
-			       {
-				   if (announce)
-				   luwrain.message(strings.enteredPathMayNotBeDir(fileToCheck.getAbsolutePath()), Luwrain.MessageType.ERROR);
-				   return false;
-			       }
-			       return true;
-			   });
-    }
 
     boolean startNarrating(ProgressArea destArea, String text)
     {

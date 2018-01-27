@@ -16,6 +16,7 @@
 
 package org.luwrain.app.notepad;
 
+import java.io.*;
 import java.util.*;
 import java.nio.charset.*;
 
@@ -39,6 +40,26 @@ class Conversations
 	this.luwrain = luwrain;
 	this.strings = strings;
     }
+
+File save(Base base)
+    {
+	NullCheck.notNull(base, "base");
+	return Popups.path(luwrain, 
+			   strings.savePopupName(),
+			   strings.savePopupPrefix(),
+			   base.file != null?base.file.file:luwrain.getFileProperty("luwrain.dir.userhome"),
+			   luwrain.getFileProperty("luwrain.dir.userhome"),
+			   (fileToCheck, announce)->{
+			       if (fileToCheck.isDirectory())
+			       {
+				   if (announce)
+				   luwrain.message(strings.enteredPathMayNotBeDir(fileToCheck.getAbsolutePath()), Luwrain.MessageType.ERROR);
+				   return false;
+			       }
+			       return true;
+			   });
+    }
+
 
     Charset charsetPopup()
     {

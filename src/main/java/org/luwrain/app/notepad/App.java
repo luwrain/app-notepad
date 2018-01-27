@@ -82,6 +82,18 @@ class App implements Application
     {
 	editArea = new EditArea(new DefaultControlEnvironment(luwrain),"",
 				new String[0], ()->{base.modified = true;}){
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial() && !event.isModified())
+			switch(event.getSpecial())
+		    {
+		    case ESCAPE:
+			closeApp();
+			return true;
+		    }
+		    return super.onKeyboardEvent(event);
+		}
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -161,8 +173,8 @@ class App implements Application
 	return true;
     }
 
-    //Returns true if there are no more modification which the user would like to save;
-    private boolean checkIfUnsaved()
+    //Returns true, if there are no more modification which the user would like to save
+    private boolean noUnsavedData()
     {
 	if (!base.modified)
 	    return true;
@@ -180,7 +192,7 @@ class App implements Application
 
     @Override public void closeApp()
     {
-	if (!checkIfUnsaved())
+	if (!noUnsavedData())
 	    return;
 	luwrain.closeApp();
     }
