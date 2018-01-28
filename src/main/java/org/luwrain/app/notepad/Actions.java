@@ -64,7 +64,7 @@ final class Actions
 	    if (f == null)
 		return false;
 	    base.file = new FileParams(f);
-	    base.modified = false;
+	    luwrain.onAreaNewName(area);
 	}
 	try {
 	    base.file.save(area.getLines());
@@ -74,7 +74,7 @@ final class Actions
 	    luwrain.message(strings.errorSavingFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
 	    return false;
 	}
-	luwrain.onAreaNewName(area);
+	base.modified = false;
 	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
 	return true;
     }
