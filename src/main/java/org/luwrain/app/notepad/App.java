@@ -119,10 +119,12 @@ class App implements Application
 			{
 			    actions.onSaveAs(this);
 			    return true;
-			}
+			    			}
 			if (ActionEvent.isAction(event, "open-as"))
 			    return actions.openAs();
-		    default:
+						if (ActionEvent.isAction(event, "run"))
+			    return actions.run(editArea);
+								    default:
 			return super.onEnvironmentEvent(event);
 		    }
 		}
