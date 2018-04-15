@@ -80,8 +80,13 @@ class App implements Application
 
     private void createArea()
     {
-	editArea = new EditArea(new DefaultControlEnvironment(luwrain),"",
-				new String[0], ()->{base.modified = true;}){
+	final EditArea.Params params = new EditArea.Params();
+	params.context = new DefaultControlEnvironment(luwrain);
+	params.name = "";
+	params.changeListener = ()->{base.modified = true;};
+	
+	
+	editArea = new EditArea(params) {
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");

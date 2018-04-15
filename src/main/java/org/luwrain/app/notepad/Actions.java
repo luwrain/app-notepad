@@ -123,7 +123,7 @@ final FileParams fp = new FileParams(f);
 	}
 	base.file = fp;
 	area.setLines(lines);
-	area.setName(base.file.getName());
+	area.setAreaName(base.file.getName());
 	base.modified = false;;
 	return true;
     }
