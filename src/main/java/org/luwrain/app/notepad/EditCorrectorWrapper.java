@@ -23,105 +23,130 @@ final class EditCorrectorWrapper implements MultilineEditCorrector
 {
     static private final int ALIGNING_LINE_LEN = 60;
 
-    private MultilineEditCorrector wrappedModel = null;
+    private MultilineEditCorrector wrappedCorrector = null;
 
     private void alignParagraph(int pos, int lineIndex)
     {
-	/*
-	//Doing nothing on empty line
-	if (getLine(lineIndex).trim().isEmpty())
-	    return;
-	//Searching paragraph bounds
-	int paraBegin = lineIndex;
-	int paraEnd = lineIndex;
-	while (paraBegin > 0 && !getLine(paraBegin).trim().isEmpty())
+	doDirectAccessAction((lines,hotPoint)->{
+		//Doing nothing on empty line
+		if (lines.getLine(lineIndex).trim().isEmpty())
+		    return;
+		//Searching paragraph bounds
+		int paraBegin = lineIndex;
+		int paraEnd = lineIndex;
+		while (paraBegin > 0 && !lines.getLine(paraBegin).trim().isEmpty())
 	    	    --paraBegin;
-	if (getLine(paraBegin).trim().isEmpty())
-	    ++paraBegin;
-		while (paraEnd < getLineCount() && !getLine(paraEnd).trim().isEmpty())
-	    ++paraEnd;
+		if (lines.getLine(paraBegin).trim().isEmpty())
+		    ++paraBegin;
+		while (paraEnd < lines.getLineCount() && !lines.getLine(paraEnd).trim().isEmpty())
+		    ++paraEnd;
+		//Looking for the first line where it's necessary to do correction from
 		int startingLine = 0;
 		for(startingLine = paraBegin;startingLine < paraEnd;++startingLine)
-		    if (getLine(startingLine).length() > ALIGNING_MAX_LEN)
+		    if (lines.getLine(startingLine).length() > ALIGNING_LINE_LEN)
 			break;
-		//Stopping, if there are no long lines
+		//Stopping, if there are no long lines at all
 		if (startingLine == paraEnd)
 		    return;
-	*/
+		doAligning(lines, hotPoint, startingLine, paraEnd);
+	    });
     }
+
+    private void doAligning(MutableLines lines, HotPointControl hotPoint, int lineFrom, int lineTo)
+    {
+	/*
+	NullCheck.notNull(lines, "lines");
+	NullCheck.notNull(hotPoint, "hotPoint");
+	if (lineFrom < 0 || lineFrom >= lines.getLineCount())
+	    throw new IllegalArgumentException("lineFrom (" + lineFrom + ") must be less than " + lines.getLineCount() + " and non-negative");
+	if (lineTo < 0 || lineTo >= lines.getLineCount())
+	    throw new IllegalArgumentException("lineTo (" + lineTo + ") must be less than " + lines.getLineCount() + " and non-negative");
+	if (lineFrom >= lineTo)
+	    throw new IllegalArgumentException("lineFrom (" + lineFrom + ") must be less than lineTo (" + lineTo + ")");
+	final hotPointX = hotPoint.getHotPointX();
+	final int hotPointY = hotPoint.getHotPointY();
+	if (hotPointY < lineFrom || hotPointY >= lineTo)
+	{
+	    final StringBuilder b = new StringBuilder();
+	    for(int i = lineFrom;i < lineTo;++i)
+		b.append(lines.getLine(i) + " ");
+	    //FIXME:
+}
+	*/
+	}
 
     void setWrappedCorrector(MultilineEditCorrector corrector)
     {
 	NullCheck.notNull(corrector, "corrector");
-	this.wrappedModel = corrector;
+	this.wrappedCorrector = corrector;
     }
 
     MultilineEditCorrector getWrappedCorrector()
     {
-	return wrappedModel;
+	return wrappedCorrector;
     }
 
     @Override public int getLineCount()
     {
-	return wrappedModel.getLineCount();
+	return wrappedCorrector.getLineCount();
     }
 
     @Override public String getLine(int index)
     {
-	return wrappedModel.getLine(index);
+	return wrappedCorrector.getLine(index);
     }
 
     @Override public int getHotPointX()
     {
-	return wrappedModel.getHotPointX();
+	return wrappedCorrector.getHotPointX();
     }
 
     @Override public int getHotPointY()
     {
-	return wrappedModel.getHotPointY();
+	return wrappedCorrector.getHotPointY();
     }
 
     @Override public String getTabSeq()
     {
-	return wrappedModel.getTabSeq();
+	return wrappedCorrector.getTabSeq();
     }
 
     @Override public char deleteChar(int pos, int lineIndex)
     {
-	return wrappedModel.deleteChar(pos, lineIndex);
+	return wrappedCorrector.deleteChar(pos, lineIndex);
     }
 
     @Override public boolean deleteRegion(int fromX, int fromY, int toX, int toY)
     {
-	return wrappedModel.deleteRegion(fromX, fromY, toX, toY);
+	return wrappedCorrector.deleteRegion(fromX, fromY, toX, toY);
     }
 
     @Override public boolean insertRegion(int x, int y, String[] lines)
     {
 	NullCheck.notNullItems(lines, "lines");
-	return wrappedModel.insertRegion(x, y, lines);
+	return wrappedCorrector.insertRegion(x, y, lines);
     }
 
     @Override public void insertChars(int pos, int lineIndex, String str)
     {
 	NullCheck.notNull(str, "str");
-		    wrappedModel.insertChars(pos, lineIndex, str);
+		    wrappedCorrector.insertChars(pos, lineIndex, str);
 	if (str.equals(" "))
 	    alignParagraph(pos, lineIndex);
     }
 
     @Override public void mergeLines(int firstLineIndex)
     {
-	    wrappedModel.mergeLines(firstLineIndex);
+	    wrappedCorrector.mergeLines(firstLineIndex);
     }
 
     @Override public String splitLines(int pos, int lineIndex)
     {
-	return wrappedModel.splitLines(pos, lineIndex);
+	return wrappedCorrector.splitLines(pos, lineIndex);
     }
 
     @Override public void doDirectAccessAction(DirectAccessAction action)
     {
-	wrappedModel.doDirectAccessAction(action);
+	wrappedCorrector.doDirectAccessAction(action);
     }
 }
