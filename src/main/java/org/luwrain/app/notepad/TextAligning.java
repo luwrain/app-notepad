@@ -74,6 +74,7 @@ final class TextAligning
 
     private void onWord(String word, int hotPointPos)
     {
+	//System.out.println("kaka " + word + " " + hotPointPos);
 	NullCheck.notEmpty(word, "word");
 	if (hotPointPos >= word.length())
 	    throw new IllegalArgumentException("hotPointPos (" + hotPointPos + ") may not be greater than " + word.length());
@@ -88,7 +89,7 @@ final class TextAligning
 	    return;
 	}
 	final int prevLen = res.getLast().length();
-	if (prevLen + word.length() < maxLineLen)
+	if (prevLen + word.length() <= maxLineLen)
 	{
 	    res.add(res.pollLast() + word);
 	    if (hotPointPos >= 0)
@@ -99,6 +100,7 @@ final class TextAligning
 	    return;
 	}
 	//On new line the word must be added anyway regardless its length
+	fixEndingSpace();
 	res.add(word);
 	if (hotPointPos >= 0)
 	{
@@ -109,6 +111,7 @@ final class TextAligning
 
     private void onSpace(boolean withHotPoint)
     {
+	//	System.out.println("kaka space " + withHotPoint);
 	if (res.isEmpty())
 	{
 	    //Adding space only if it is with hot point
@@ -119,7 +122,7 @@ final class TextAligning
 	    hotPointY = 0;
 	    return;
 	}
-	if (res.getLast().length() + 1 < maxLineLen)
+	if (res.getLast().length() + 1 <= maxLineLen)
 	{
 	    res.add(res.pollLast() + " ");
 	    if (withHotPoint)
@@ -129,11 +132,26 @@ final class TextAligning
 	    }
 	    return;
 	}
-	//res is not empty and we may not append space to the last line, doing this only for hot point
+	//res is not empty and we can not append space to the last line, doing this only for hot point
 	if (!withHotPoint)
 	    return;
+	fixEndingSpace();
 	res.add(" ");
 	hotPointX = 0;
 	hotPointY = res.size() - 1;
+    }
+
+    private void fixEndingSpace()
+    {
+	if (res.isEmpty() || res.getLast().isEmpty())
+	    return;
+	final String line = res.getLast();
+	if (!Character.isSpaceChar(line.charAt(line.length() - 1)))
+	    return;
+	//	System.out.println("hotPointX=" + hotPointX);
+	//	System.out.println("hotPointY=" + hotPointY);
+	if (hotPointX == line .length() - 1 && hotPointY == res.size() - 1)
+	    return;
+	res.set(res.size() - 1, line.substring(0, line.length() - 1));
     }
 }
