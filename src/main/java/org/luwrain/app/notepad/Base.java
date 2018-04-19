@@ -33,6 +33,8 @@ final class Base
     private final Luwrain luwrain;
     private final Strings strings;
 
+    final EditCorrectorWrapper editCorrectorWrapper = new EditCorrectorWrapper();
+
     boolean modified = false;
     FileParams file = null;
 

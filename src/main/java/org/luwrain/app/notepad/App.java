@@ -83,6 +83,11 @@ class App implements Application
 	final EditArea.Params params = new EditArea.Params();
 	params.context = new DefaultControlEnvironment(luwrain);
 	params.name = "";
+	params.correctorWrapperFactory = (corrector)->{
+	    NullCheck.notNull(corrector, "corrector");
+	    base.editCorrectorWrapper.setWrappedCorrector(corrector);
+	    return base.editCorrectorWrapper;
+	};
 	params.changeListener = ()->{base.modified = true;};
 	
 	
