@@ -26,7 +26,9 @@ final class TextAligning
     int origHotPointX = -1;
     int origHotPointY = -1;
     String[] origLines = new String[0];
-    String[] result = new String[0];
+    int hotPointX = -1;
+    int hotPointY = -1;
+    final LinkedList<String> res = new LinkedList();
 
     TextAligning(int maxLineLen)
     {
@@ -63,11 +65,8 @@ final class TextAligning
 		if (pos > spaceBeginPos)
 		{
 		    //Handling the space
-		    final int hotPointPos;
-		    if (origHotPointY == lineIndex && origHotPointX >= spaceBeginPos && origHotPointX < pos)
-			hotPointPos = origHotPointX - spaceBeginPos; else
-			hotPointPos = -1;
-		    onSpace(hotPointPos);
+		    final boolean withHotPoint = origHotPointY == lineIndex && origHotPointX >= spaceBeginPos && origHotPointX < pos;
+		    onSpace(withHotPoint);
 		}
 	    }
 	}
@@ -75,9 +74,66 @@ final class TextAligning
 
     private void onWord(String word, int hotPointPos)
     {
+	NullCheck.notEmpty(word, "word");
+	if (hotPointPos >= word.length())
+	    throw new IllegalArgumentException("hotPointPos (" + hotPointPos + ") may not be greater than " + word.length());
+	if (res.isEmpty())
+	{
+	    res.add(word);
+	    if (hotPointPos >= 0)
+	    {
+		hotPointX = hotPointPos;
+		hotPointY = 0;
+	    }
+	    return;
+	}
+	final int prevLen = res.getLast().length();
+	if (prevLen + word.length() < maxLineLen)
+	{
+	    res.add(res.pollLast() + word);
+	    if (hotPointPos >= 0)
+	    {
+		hotPointX = prevLen + hotPointPos;
+		hotPointY = res.size() - 1;
+	    }
+	    return;
+	}
+	//On new line the word must be added anyway regardless its length
+	res.add(word);
+	if (hotPointPos >= 0)
+	{
+	    hotPointX = hotPointPos;
+	    hotPointY = res.size() - 1;
+	}
     }
 
-    private void onSpace(int hotPointPos)
+    private void onSpace(boolean withHotPoint)
     {
+	if (res.isEmpty())
+	{
+	    //Adding space only if it is with hot point
+	    if (!withHotPoint)
+		return;
+	    res.add(" ");
+	    hotPointX = 0;
+	    hotPointY = 0;
+	    return;
+	}
+	if (res.getLast().length() + 1 < maxLineLen)
+	{
+	    res.add(res.pollLast() + " ");
+	    if (withHotPoint)
+	    {
+		hotPointX = res.getLast().length() - 1;
+		hotPointY = res.size() - 1;
+	    }
+	    return;
+	}
+	//res is not empty and we may not append space to the last line, doing this only for hot point
+	if (!withHotPoint)
+	    return;
+	res.add(" ");
+	hotPointX = 0;
+	hotPointY = res.size() - 1;
     }
 }
