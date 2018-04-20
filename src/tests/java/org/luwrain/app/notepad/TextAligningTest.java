@@ -96,4 +96,53 @@ public class TextAligningTest extends Assert
 	    }
 	}
     }
+
+    @Test public void multiline() throws Exception
+    {
+	final TextAligning t = new TextAligning(9);
+	t.origLines = new String[]{"aaa bbb ccc",
+				   "aaa bbb ccc",
+				   "aaa bbb ccc",
+				   "aaa bbb ccc",
+				   "aaa bbb ccc"};
+	t.align();
+	assertTrue(t.res.size() == 8);
+	assertTrue(t.res.get(0).equals("aaa bbb"));
+	assertTrue(t.res.get(1).equals("ccc aaa"));
+	assertTrue(t.res.get(2).equals("bbb ccc"));
+	assertTrue(t.res.get(3).equals("aaa bbb"));
+	assertTrue(t.res.get(4).equals("ccc aaa"));
+	assertTrue(t.res.get(5).equals("bbb ccc"));
+	assertTrue(t.res.get(6).equals("aaa bbb"));
+	assertTrue(t.res.get(7).equals("ccc"));
+	assertTrue(t.hotPointX == -1);
+	assertTrue(t.hotPointY == -1);
+	for(int i = 0;i < 55;++i)
+	{
+	    t.origHotPointX = i % 11;
+	    t.origHotPointY = i / 11;
+	    t.align();
+	    //	    System.out.println("kaka " + t.hotPointX + " " + t.hotPointY);
+	    final int cycle = i / 22;
+	    final int pos = i - (cycle * 22);
+	    if (pos < 8)
+	    {
+		assertTrue(t.hotPointX == pos);
+		assertTrue(t.hotPointY == cycle * 3);
+	    } else
+		if (pos < 15)
+		{
+		    assertFalse(t.hotPointX == 3);
+		    if (pos < 11)
+			assertTrue(t.hotPointX == pos - 8); else
+			assertTrue(t.hotPointX == pos - 7);
+		    assertTrue(t.hotPointY == (cycle * 3) + 1);
+		} else
+		{
+		    assertFalse(t.hotPointX == 7);
+		    assertTrue(t.hotPointX == pos - 15);
+		    assertTrue(t.hotPointY == (cycle * 3) + 2);
+		}
+	}
+    }
 }

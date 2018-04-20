@@ -148,7 +148,7 @@ final class TextAligning
 	    if (hotPointPos >= 0)
 	    {
 		hotPointX = previousLen + hotPointPos;
-		hotPointY = res.size();
+		hotPointY = res.size() - 1;
 	    }
 	    return;
 	}
