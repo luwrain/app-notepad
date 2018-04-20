@@ -74,7 +74,7 @@ final class TextAligning
 		    //Handling the space
 		    wereSpaces = true;
 		    if (origHotPointY == lineIndex && origHotPointX >= spaceBeginPos && origHotPointX < pos)
-wereSpacesWithHotPoint = true;
+			wereSpacesWithHotPoint = true;
 		}
 	    }
 	    wereSpaces = true;
@@ -83,7 +83,7 @@ wereSpacesWithHotPoint = true;
 
     private void onWord(String word, int hotPointPos, boolean wereSpaces, boolean wereSpacesWithHotPoint)
     {
-	System.out.println("onWord(" + word + "," + hotPointPos + "," + wereSpaces + "," + wereSpacesWithHotPoint + ")");
+	//System.out.println("onWord(" + word + "," + hotPointPos + "," + wereSpaces + "," + wereSpacesWithHotPoint + ")");
 	NullCheck.notEmpty(word, "word");
 	if (hotPointPos >= word.length())
 	    throw new IllegalArgumentException("hotPointPos (" + hotPointPos + ") may not be greater than " + word.length());
@@ -93,22 +93,21 @@ wereSpacesWithHotPoint = true;
 	{
 	    if (wereSpacesWithHotPoint)
 	    {
-			    res.add(" " + word);
-			    hotPointX = 0;
-			    hotPointY = 0;
+		res.add(" " + word);
+		hotPointX = 0;
+		hotPointY = 0;
 	    } else
 	    {
-	    res.add(word);
-	    if (hotPointPos >= 0)
-	    {
-		hotPointX = hotPointPos;
-		hotPointY = 0;
-	    }
+		res.add(word);
+		if (hotPointPos >= 0)
+		{
+		    hotPointX = hotPointPos;
+		    hotPointY = 0;
+		}
 	    }
 	    return;
 	}
-
-		//res array is not empty
+	//res array is not empty
 	if (wereSpacesWithHotPoint)
 	{
 	    if (getLastLineSpaceLeft() > 0)
@@ -125,9 +124,8 @@ wereSpacesWithHotPoint = true;
 	    onWord(word, -1, false, false);
 	    return;
 	}
-
 	//res not empty and wereSpacesWithHotPoint guarantly false
-	if (getLastLineSpaceLeft() <= word.length() + (wereSpaces?1:0))
+	if (getLastLineSpaceLeft() >= word.length() + (wereSpaces?1:0))
 	{
 	    if (wereSpaces)
 		addLastLine(" ");
@@ -140,7 +138,6 @@ wereSpacesWithHotPoint = true;
 	    }
 	    return;
 	}
-
 	//The last case with adding new line, wereSpacesWithHotPoint guarantly false
 	res.add(word);
 	if (hotPointPos >= 0)
@@ -150,13 +147,12 @@ wereSpacesWithHotPoint = true;
 	}
     }
 
-        private int getLastLineLen()
+    private int getLastLineLen()
     {
 	if (res.isEmpty())
 	    throw new RuntimeException("res may not be empty");
 	return res.getLast().length();
     }
-
 
     private int getLastLineSpaceLeft()
     {
@@ -171,4 +167,4 @@ wereSpacesWithHotPoint = true;
 	    throw new RuntimeException("res may not be empty");
 	res.set(res.size() - 1, res.getLast() + text);
     }
-    }
+}
