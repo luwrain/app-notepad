@@ -79,6 +79,20 @@ final class TextAligning
 	    }
 	    wereSpaces = true;
 	} //for(lines)
+	if (wereSpaces && wereSpacesWithHotPoint)
+	{
+	    if (res.isEmpty() || getLastLineSpaceLeft() == 0)
+	    {
+		res.add(" ");
+		hotPointX = 0;
+		hotPointY = res.size() - 1;
+	    } else
+	    {
+		addLastLine(" ");
+		hotPointX = getLastLineLen() - 1;
+		hotPointY = res.size() - 1;
+	    }
+	}
     }
 
     private void onWord(String word, int hotPointPos, boolean wereSpaces, boolean wereSpacesWithHotPoint)
