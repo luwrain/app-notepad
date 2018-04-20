@@ -21,7 +21,7 @@ import org.luwrain.controls.*;
 
 final class EditCorrectorWrapper implements MultilineEditCorrector
 {
-    static private final int ALIGNING_LINE_LEN = 60;
+    static private final int ALIGNING_LINE_LEN = 10;
 
     private MultilineEditCorrector wrappedCorrector = null;
 
@@ -54,26 +54,50 @@ final class EditCorrectorWrapper implements MultilineEditCorrector
 
     private void doAligning(MutableLines lines, HotPointControl hotPoint, int lineFrom, int lineTo)
     {
-	/*
 	NullCheck.notNull(lines, "lines");
 	NullCheck.notNull(hotPoint, "hotPoint");
 	if (lineFrom < 0 || lineFrom >= lines.getLineCount())
 	    throw new IllegalArgumentException("lineFrom (" + lineFrom + ") must be less than " + lines.getLineCount() + " and non-negative");
-	if (lineTo < 0 || lineTo >= lines.getLineCount())
+	if (lineTo < 0 || lineTo > lines.getLineCount())
 	    throw new IllegalArgumentException("lineTo (" + lineTo + ") must be less than " + lines.getLineCount() + " and non-negative");
 	if (lineFrom >= lineTo)
 	    throw new IllegalArgumentException("lineFrom (" + lineFrom + ") must be less than lineTo (" + lineTo + ")");
-	final hotPointX = hotPoint.getHotPointX();
+	final int hotPointX = hotPoint.getHotPointX();
 	final int hotPointY = hotPoint.getHotPointY();
 	if (hotPointY < lineFrom || hotPointY >= lineTo)
 	{
-	    final StringBuilder b = new StringBuilder();
+	    final TextAligning t = new TextAligning(ALIGNING_LINE_LEN);
+	    t.origLines = new String[lineTo - lineFrom];
 	    for(int i = lineFrom;i < lineTo;++i)
-		b.append(lines.getLine(i) + " ");
-	    //FIXME:
-}
-	*/
+		t.origLines[i - lineFrom] = lines.getLine(i);
+	    t.align();
+	    //FIXME:do it more effectively
+	    for(int i = lineFrom;i < lineTo;++i)
+		lines.removeLine(lineFrom);
+	    int k = 0;
+	    for(String s: t.res)
+		lines.insertLine(lineFrom + (k++), s);
+	} else
+	{
+	    final TextAligning t = new TextAligning(ALIGNING_LINE_LEN);
+	    t.origLines = new String[lineTo - lineFrom];
+	    for(int i = lineFrom;i < lineTo;++i)
+		t.origLines[i - lineFrom] = lines.getLine(i);
+	    t.origHotPointX = hotPointX;
+	    t.origHotPointY = hotPointY - lineFrom;
+	    Log.debug("proba", "before " + t.origHotPointX + " " + t.origHotPointY);
+	    t.align();
+	    Log.debug("proba", "after " + t.hotPointX + " " + t.hotPointY);
+	    //FIXME:do it more effectively
+	    for(int i = lineFrom;i < lineTo;++i)
+		lines.removeLine(lineFrom);
+	    int k = 0;
+	    for(String s: t.res)
+		lines.insertLine(lineFrom + (k++), s);
+	    hotPoint.setHotPointX(t.hotPointX);
+	    hotPoint.setHotPointY(t.hotPointY + lineFrom);
 	}
+    }
 
     void setWrappedCorrector(MultilineEditCorrector corrector)
     {

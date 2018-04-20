@@ -20,14 +20,37 @@ import java.util.*;
 
 import org.luwrain.core.*;
 
+/**
+ * Splits a text preserving lenth of lines not exceeding some given
+ * number. This class takes a set of lines and makes new dividing trying
+ * to make the length of each line close to some value as much as it is
+ * possible. The dividing is performed only on space characters (
+ * {@code Character.isSpaceChar()}), so in common sense there is no guarantee
+ * that all lines will have the length not greater of the given value,
+ * because very long words go without splitting. If the position of the
+ * hot point is provided, it is moved to the corresponding place in the
+ * new lines.
+ */
 final class TextAligning
 {
     final int maxLineLen;
+
+    /** The original X position of the hot point; must be -1, if there is no hot point*/
     int origHotPointX = -1;
+
+    /** The original Y position of the hot point; must be -1, if there is no hot point*/
     int origHotPointY = -1;
+
+    /** The text to split*/
     String[] origLines = new String[0];
+
+    /** New X position of the hot point*/
     int hotPointX = -1;
+
+        /** New Y position of the hot point*/
     int hotPointY = -1;
+
+    /** The result with new text dividing*/
     final LinkedList<String> res = new LinkedList();
 
     TextAligning(int maxLineLen)
@@ -97,7 +120,6 @@ final class TextAligning
 
     private void onWord(String word, int hotPointPos, boolean wereSpaces, boolean wereSpacesWithHotPoint)
     {
-	//System.out.println("onWord(" + word + "," + hotPointPos + "," + wereSpaces + "," + wereSpacesWithHotPoint + ")");
 	NullCheck.notEmpty(word, "word");
 	if (hotPointPos >= word.length())
 	    throw new IllegalArgumentException("hotPointPos (" + hotPointPos + ") may not be greater than " + word.length());
@@ -141,6 +163,7 @@ final class TextAligning
 	//res not empty and wereSpacesWithHotPoint guarantly false
 	if (getLastLineSpaceLeft() >= word.length() + (wereSpaces?1:0))
 	{
+	    //It looks like wereSpaces is never false at this point, but handling it anyway
 	    if (wereSpaces)
 		addLastLine(" ");
 	    final int previousLen = getLastLineLen();
