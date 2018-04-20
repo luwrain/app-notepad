@@ -39,6 +39,11 @@ final class TextAligning
 
     void align()
     {
+	res.clear();
+	hotPointX = -1;
+	hotPointY = -1;
+	boolean wereSpaces = false;
+	boolean wereSpacesWithHotPoint = false;
 	for(int lineIndex = 0;lineIndex < origLines.length;++lineIndex)
 	{
 	    final String line = origLines[lineIndex];
@@ -57,7 +62,9 @@ final class TextAligning
 		    if (origHotPointY == lineIndex && origHotPointX >= wordBeginPos && origHotPointX < pos)
 			hotPointPos = origHotPointX - wordBeginPos; else
 			hotPointPos = -1;
-		    onWord(line.substring(wordBeginPos, pos), hotPointPos);
+		    onWord(line.substring(wordBeginPos, pos), hotPointPos, wereSpaces, wereSpacesWithHotPoint);
+		    wereSpaces = false;
+		    wereSpacesWithHotPoint = false;
 		}
 		final int spaceBeginPos = pos;
 		while(pos < line.length() && Character.isSpaceChar(line.charAt(pos)))
@@ -65,42 +72,76 @@ final class TextAligning
 		if (pos > spaceBeginPos)
 		{
 		    //Handling the space
-		    final boolean withHotPoint = origHotPointY == lineIndex && origHotPointX >= spaceBeginPos && origHotPointX < pos;
-		    onSpace(withHotPoint);
+		    wereSpaces = true;
+		    if (origHotPointY == lineIndex && origHotPointX >= spaceBeginPos && origHotPointX < pos)
+wereSpacesWithHotPoint = true;
 		}
 	    }
-	}
+	    wereSpaces = true;
+	} //for(lines)
     }
 
-    private void onWord(String word, int hotPointPos)
+    private void onWord(String word, int hotPointPos, boolean wereSpaces, boolean wereSpacesWithHotPoint)
     {
-	//System.out.println("kaka " + word + " " + hotPointPos);
+	System.out.println("onWord(" + word + "," + hotPointPos + "," + wereSpaces + "," + wereSpacesWithHotPoint + ")");
 	NullCheck.notEmpty(word, "word");
 	if (hotPointPos >= word.length())
 	    throw new IllegalArgumentException("hotPointPos (" + hotPointPos + ") may not be greater than " + word.length());
+	if (wereSpacesWithHotPoint && !wereSpaces)
+	    throw new IllegalArgumentException("wereSpacesWithHotPoint can be set only with wereSpaces");
 	if (res.isEmpty())
 	{
+	    if (wereSpacesWithHotPoint)
+	    {
+			    res.add(" " + word);
+			    hotPointX = 0;
+			    hotPointY = 0;
+	    } else
+	    {
 	    res.add(word);
 	    if (hotPointPos >= 0)
 	    {
 		hotPointX = hotPointPos;
 		hotPointY = 0;
 	    }
-	    return;
-	}
-	final int prevLen = res.getLast().length();
-	if (prevLen + word.length() <= maxLineLen)
-	{
-	    res.add(res.pollLast() + word);
-	    if (hotPointPos >= 0)
-	    {
-		hotPointX = prevLen + hotPointPos;
-		hotPointY = res.size() - 1;
 	    }
 	    return;
 	}
-	//On new line the word must be added anyway regardless its length
-	fixEndingSpace();
+
+		//res array is not empty
+	if (wereSpacesWithHotPoint)
+	{
+	    if (getLastLineSpaceLeft() > 0)
+	    {
+		addLastLine(" ");
+		hotPointX = getLastLineLen() - 1;
+		hotPointY = res.size() - 1;
+	    } else
+	    {
+		res.add(" ");
+		hotPointX = 0;
+		hotPointY = res.size() - 1;
+	    }
+	    onWord(word, -1, false, false);
+	    return;
+	}
+
+	//res not empty and wereSpacesWithHotPoint guarantly false
+	if (getLastLineSpaceLeft() <= word.length() + (wereSpaces?1:0))
+	{
+	    if (wereSpaces)
+		addLastLine(" ");
+	    final int previousLen = getLastLineLen();
+	    addLastLine(word);
+	    if (hotPointPos >= 0)
+	    {
+		hotPointX = previousLen + hotPointPos;
+		hotPointY = res.size();
+	    }
+	    return;
+	}
+
+	//The last case with adding new line, wereSpacesWithHotPoint guarantly false
 	res.add(word);
 	if (hotPointPos >= 0)
 	{
@@ -109,49 +150,25 @@ final class TextAligning
 	}
     }
 
-    private void onSpace(boolean withHotPoint)
+        private int getLastLineLen()
     {
-	//	System.out.println("kaka space " + withHotPoint);
 	if (res.isEmpty())
-	{
-	    //Adding space only if it is with hot point
-	    if (!withHotPoint)
-		return;
-	    res.add(" ");
-	    hotPointX = 0;
-	    hotPointY = 0;
-	    return;
-	}
-	if (res.getLast().length() + 1 <= maxLineLen)
-	{
-	    res.add(res.pollLast() + " ");
-	    if (withHotPoint)
-	    {
-		hotPointX = res.getLast().length() - 1;
-		hotPointY = res.size() - 1;
-	    }
-	    return;
-	}
-	//res is not empty and we can not append space to the last line, doing this only for hot point
-	if (!withHotPoint)
-	    return;
-	fixEndingSpace();
-	res.add(" ");
-	hotPointX = 0;
-	hotPointY = res.size() - 1;
+	    throw new RuntimeException("res may not be empty");
+	return res.getLast().length();
     }
 
-    private void fixEndingSpace()
+
+    private int getLastLineSpaceLeft()
     {
-	if (res.isEmpty() || res.getLast().isEmpty())
-	    return;
-	final String line = res.getLast();
-	if (!Character.isSpaceChar(line.charAt(line.length() - 1)))
-	    return;
-	//	System.out.println("hotPointX=" + hotPointX);
-	//	System.out.println("hotPointY=" + hotPointY);
-	if (hotPointX == line .length() - 1 && hotPointY == res.size() - 1)
-	    return;
-	res.set(res.size() - 1, line.substring(0, line.length() - 1));
+	if (res.isEmpty())
+	    throw new RuntimeException("res may not be empty");
+	return maxLineLen - res.getLast().length();
     }
-}
+
+    private void addLastLine(String text)
+    {
+	if (res.isEmpty())
+	    throw new RuntimeException("res may not be empty");
+	res.set(res.size() - 1, res.getLast() + text);
+    }
+    }
