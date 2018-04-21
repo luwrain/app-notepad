@@ -20,14 +20,16 @@ import org.luwrain.core.*;
 
 interface Settings
 {
-    static public final String REGISTRY_PATH = "/org/luwrain/app/narrator";
+    static final String PATH = "/org/luwrain/app/notepad";
 
+    int getAligningLineLen(int defValue);
+    void setAligningLineLen(int value);
     String getLameCommand(String defValue);
     void setLameCommand(String command);
 
     static Settings create(Registry registry)
     {
 	NullCheck.notNull(registry, "registry");
-	return 	RegistryProxy.create(registry, REGISTRY_PATH, Settings.class);
+	return 	RegistryProxy.create(registry, PATH, Settings.class);
     }
 }

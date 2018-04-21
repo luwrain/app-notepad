@@ -40,6 +40,7 @@ class SettingsForm extends FormArea implements SectionArea
 
     private void fillForm()
     {
+		addEdit("aligning-line-len", strings.settingsFormAligningLineLen(), "" + settings.getAligningLineLen(Base.DEFAULT_ALIGNING_LINE_LEN));
 	addEdit("lame-command", strings.settingsFormLameCommand(), settings.getLameCommand(""));
     }
 

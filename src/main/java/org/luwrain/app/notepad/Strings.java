@@ -51,5 +51,6 @@ public interface Strings
     String savePopupName();
     String savePopupPrefix();
     String settingsFormName();
+    String settingsFormAligningLineLen();
     String settingsFormLameCommand();
 }

@@ -28,6 +28,8 @@ import org.luwrain.controls.*;
 
 final class Base
 {
+    static final int DEFAULT_ALIGNING_LINE_LEN = 60;
+    
     final Executor executor = Executors.newSingleThreadExecutor();
 
     private final Luwrain luwrain;

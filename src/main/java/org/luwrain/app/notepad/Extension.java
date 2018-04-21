@@ -22,8 +22,10 @@ import org.luwrain.base.*;
 import org.luwrain.core.*;
 import org.luwrain.cpanel.*;
 
-public class Extension extends org.luwrain.core.extensions.EmptyExtension
+public final class Extension extends org.luwrain.core.extensions.EmptyExtension
 {
+    static private final Element controlPanelElement = new SimpleElement(StandardElements.APPLICATIONS, Extension.class.getName());
+
     @Override public Command[] getCommands(Luwrain luwrain)
     {
 	return new Command[]{
@@ -68,6 +70,25 @@ public class Extension extends org.luwrain.core.extensions.EmptyExtension
     @Override public Factory[] getControlPanelFactories(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
-	return new Factory[]{new org.luwrain.app.notepad.ControlPanelFactory(luwrain)};
+	return new Factory[]{
+	    new Factory() {
+		@Override public Element[] getElements()
+		{
+		    return new Element[]{controlPanelElement};
+		}
+		@Override public Element[] getOnDemandElements(Element parent)
+		{
+		    return new Element[0];
+		}
+		@Override public org.luwrain.cpanel.Section createSection(Element el)
+		{
+		    NullCheck.notNull(el, "el");
+		    final Strings strings = (Strings)luwrain.i18n().getStrings(Strings.NAME);
+		    if (el.equals(controlPanelElement))
+			return new SimpleSection(controlPanelElement, strings.settingsFormName(), (controlPanel)->SettingsForm.create(controlPanel));
+		    return null;
+		}
+	    }
+	};
     }
 }
