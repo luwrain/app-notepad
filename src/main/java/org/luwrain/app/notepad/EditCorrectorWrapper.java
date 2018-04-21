@@ -52,8 +52,10 @@ final class EditCorrectorWrapper implements MultilineEditCorrector
 	    });
     }
 
+    //The fragment of lines between lineFrom and lineTo may not contain empty strings
     private void doAligning(MutableLines lines, HotPointControl hotPoint, int lineFrom, int lineTo)
     {
+	Log.debug("proba", "doAligning(" + lineFrom + "," + lineTo + ")");
 	NullCheck.notNull(lines, "lines");
 	NullCheck.notNull(hotPoint, "hotPoint");
 	if (lineFrom < 0 || lineFrom >= lines.getLineCount())
@@ -85,7 +87,18 @@ final class EditCorrectorWrapper implements MultilineEditCorrector
 		t.origLines[i - lineFrom] = lines.getLine(i);
 	    t.origHotPointX = hotPointX;
 	    t.origHotPointY = hotPointY - lineFrom;
-	    Log.debug("proba", "before " + t.origHotPointX + " " + t.origHotPointY);
+	    	    Log.debug("proba", "before " + t.origHotPointX + " " + t.origHotPointY);
+		    //Taking care of positioning of the hot point outsite of line bounds, may be on one character on the right
+	    final boolean hotPointXShifted;
+	    if (t.origHotPointX >= t.origLines[t.origHotPointY].length())
+	    {
+		if (t.origLines[t.origHotPointY].isEmpty())
+		    throw new IllegalArgumentException("lines array contains the empty string at position " + (t.origHotPointY + lineFrom));
+		--t.origHotPointX;
+		hotPointXShifted = true; 
+	    } else
+		hotPointXShifted = false;
+	    //	    Log.debug("shifted=" + hotPointXShifted);
 	    t.align();
 	    Log.debug("proba", "after " + t.hotPointX + " " + t.hotPointY);
 	    //FIXME:do it more effectively
@@ -94,8 +107,11 @@ final class EditCorrectorWrapper implements MultilineEditCorrector
 	    int k = 0;
 	    for(String s: t.res)
 		lines.insertLine(lineFrom + (k++), s);
-	    hotPoint.setHotPointX(t.hotPointX);
-	    hotPoint.setHotPointY(t.hotPointY + lineFrom);
+	    if (t.hotPointX >= 0 && t.hotPointY >= 0)
+	    {
+			    hotPoint.setHotPointY(t.hotPointY + lineFrom);
+		hotPoint.setHotPointX(t.hotPointX + (hotPointXShifted?1:0));
+	    }
 	}
     }
 
