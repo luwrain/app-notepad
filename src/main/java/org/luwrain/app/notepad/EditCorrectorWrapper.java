@@ -21,7 +21,7 @@ import org.luwrain.controls.*;
 
 final class EditCorrectorWrapper implements MultilineEditCorrector
 {
-    static private final int ALIGNING_LINE_LEN = 10;
+    static private final int ALIGNING_LINE_LEN = 60;
 
     private MultilineEditCorrector wrappedCorrector = null;
 
