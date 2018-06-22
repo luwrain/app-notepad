@@ -134,7 +134,7 @@ final FileParams fp = new FileParams(f);
 	final StringBuilder b = new StringBuilder();
 	for(String s: area.getLines())
 	    b.append(s + System.lineSeparator());
-	luwrain.execScript(new String(b));
+	luwrain.xExecScript(new String(b));
 	return true;
     }
 
@@ -166,9 +166,9 @@ final FileParams fp = new FileParams(f);
 				       new File(luwrain.getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
 		@Override protected void progressLine(String text, boolean doneMessage)
 		{
-		    luwrain.runInMainThread(()->destArea.addProgressLine(text));
+		    luwrain.runUiSafely(()->destArea.addProgressLine(text));
 		    if (doneMessage)
-			luwrain.runInMainThread(()->luwrain.message(text, Luwrain.MessageType.DONE));
+			luwrain.runUiSafely(()->luwrain.message(text, Luwrain.MessageType.DONE));
 		}
 	    };
 	base.narratingTask = new FutureTask(base.narrating, null);
