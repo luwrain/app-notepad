@@ -124,7 +124,7 @@ StringBuilder b = new StringBuilder();
 
     private void onNewPortion(String s, boolean commit) throws IOException
     {
-	channel.synth(s, 0, 0, chosenFormat, stream);
+	//	channel.synth(s, 0, 0, chosenFormat, stream);
 	if (commit)
 	    checkSize();
     }

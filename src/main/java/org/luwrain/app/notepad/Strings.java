@@ -24,6 +24,11 @@ public interface Strings
     String actionOpenAs();
     String actionSave();
     String actionSaveAs();
+
+    String actionReplace();
+    String actionEnableAligning();
+    String actionDisableAligning();
+    
     String charsetPopupName();
     String charsetPopupPrefix();
     String compressing(String file);
