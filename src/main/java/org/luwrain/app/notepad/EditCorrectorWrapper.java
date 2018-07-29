@@ -167,22 +167,24 @@ final class EditCorrectorWrapper implements MultilineEditCorrector
 	return wrappedCorrector.insertRegion(x, y, lines);
     }
 
-    @Override public void insertChars(int pos, int lineIndex, String str)
+    @Override public boolean insertChars(int pos, int lineIndex, String str)
     {
 	NullCheck.notNull(str, "str");
-		    wrappedCorrector.insertChars(pos, lineIndex, str);
+	if (!wrappedCorrector.insertChars(pos, lineIndex, str))
+	    return false;
 	if (str.equals(" "))
 	    alignParagraph(pos, lineIndex);
+	return true;
     }
 
-    @Override public void mergeLines(int firstLineIndex)
+    @Override public boolean mergeLines(int firstLineIndex)
     {
-	    wrappedCorrector.mergeLines(firstLineIndex);
+	    return wrappedCorrector.mergeLines(firstLineIndex);
     }
 
-    @Override public String splitLines(int pos, int lineIndex)
+    @Override public String splitLine(int pos, int lineIndex)
     {
-	return wrappedCorrector.splitLines(pos, lineIndex);
+	return wrappedCorrector.splitLine(pos, lineIndex);
     }
 
     @Override public void doDirectAccessAction(DirectAccessAction action)
