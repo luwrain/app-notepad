@@ -57,7 +57,7 @@ class App implements Application
 	this.luwrain = luwrain;
 	this.base = new Base(luwrain, strings);
 	this.actions = new Actions(luwrain, strings, base);
-	this.actionLists = new ActionLists(strings);
+	this.actionLists = new ActionLists(luwrain, strings, base);
 	createArea();
 	this.layout = new AreaLayoutHelper(()->{
 		luwrain.onNewAreaLayout();
@@ -118,10 +118,6 @@ class App implements Application
 			return actions.onSave( editArea);
 		    case PROPERTIES:
 			return showProps();
-		    case OPEN:
-			if (!(event instanceof OpenEvent))
-			    return false;
-			return actions.onOpenEvent(base, ((OpenEvent)event).path(), this);
 		    case ACTION:
 			if (ActionEvent.isAction(event, "save"))
 			    return actions.onSave(this);
@@ -132,8 +128,34 @@ class App implements Application
 			    			}
 			if (ActionEvent.isAction(event, "open-as"))
 			    return actions.openAs();
+			/*
 						if (ActionEvent.isAction(event, "run"))
 			    return actions.run(editArea);
+			*/
+
+												if (ActionEvent.isAction(event, "spoken-text-none"))
+												{
+												    luwrain.say("none");
+									    return true;
+												}
+
+																								if (ActionEvent.isAction(event, "spoken-text-natural"))
+												{
+												    luwrain.say("natural");
+									    return true;
+												}
+
+																																																if (ActionEvent.isAction(event, "spoken-text-programming"))
+												{
+												    luwrain.say("programming");
+									    return true;
+												}
+
+
+																								
+						return false;
+
+						
 								    default:
 			return super.onSystemEvent(event);
 		    }
@@ -143,6 +165,16 @@ class App implements Application
 		    if (base.file == null)
 			return strings.initialTitle();
 		    return base.file.getName();
+		}
+		@Override public void announceLine(int index, String line)
+		{
+		    NullCheck.notNull(line, "line");
+		    if (line.trim().isEmpty())
+		    {
+			luwrain.setEventResponse(DefaultEventResponse.hint(Hint.EMPTY_LINE));
+			return;
+			}
+		    luwrain.setEventResponse(DefaultEventResponse.text(luwrain.getSpokenText(line, base.spokenTextType)));
 		}
 		@Override public Action[] getAreaActions()
 		{

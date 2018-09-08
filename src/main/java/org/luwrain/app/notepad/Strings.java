@@ -58,4 +58,10 @@ public interface Strings
     String settingsFormName();
     String settingsFormAligningLineLen();
     String settingsFormLameCommand();
+
+    String actionSpokenTextNone();
+    String actionSpokenTextNatural();
+    String actionSpokenTextProgramming();
+    String actionIndents();
+    String actionNoIndents();
 }

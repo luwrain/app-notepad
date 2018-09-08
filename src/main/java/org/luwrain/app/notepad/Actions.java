@@ -99,6 +99,7 @@ void onSaveAs(EditArea area)
 	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
     }
 
+    /*
     boolean onOpenEvent(Base base, String fileName, EditArea area)
     {
 	NullCheck.notNull(base, "base");
@@ -127,6 +128,7 @@ final FileParams fp = new FileParams(f);
 	base.modified = false;;
 	return true;
     }
+    */
 
     boolean run(EditArea area)
     {
@@ -172,7 +174,7 @@ final FileParams fp = new FileParams(f);
 		}
 	    };
 	base.narratingTask = new FutureTask(base.narrating, null);
-	base.executor.execute(base.narratingTask);
+	luwrain.executeBkg(base.narratingTask);
 	return true;
     }
 }
