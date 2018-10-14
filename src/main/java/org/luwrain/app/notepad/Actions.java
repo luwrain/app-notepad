@@ -130,17 +130,6 @@ final FileParams fp = new FileParams(f);
     }
     */
 
-    boolean run(EditArea area)
-    {
-	NullCheck.notNull(area, "area");
-	final StringBuilder b = new StringBuilder();
-	for(String s: area.getLines())
-	    b.append(s + System.lineSeparator());
-	luwrain.xExecScript(new String(b));
-	return true;
-    }
-
-
     boolean startNarrating(ProgressArea destArea, String text)
     {
 	NullCheck.notNull(destArea, "destArea");
