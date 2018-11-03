@@ -141,7 +141,16 @@ final FileParams fp = new FileParams(f);
 	    luwrain.message(strings.noTextToSynth(), Luwrain.MessageType.ERROR);
 	    return true;
 	}
-	final Channel channel = luwrain.getAnySpeechChannelByCond(EnumSet.of(Channel.Features.CAN_SYNTH_TO_STREAM));
+	final Channel channel;
+	try {
+channel = luwrain.loadSpeechChannel("", "");
+	}
+	catch(org.luwrain.speech.SpeechException e)
+	{
+	    luwrain.message(strings.errorLoadingSpeechChannel(e.getMessage()), Luwrain.MessageType.ERROR);
+	    return true;
+	}
+	
 	if (channel == null)
 	{
 	    luwrain.message(strings.noChannelToSynth(), Luwrain.MessageType.ERROR);

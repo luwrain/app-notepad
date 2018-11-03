@@ -64,4 +64,5 @@ public interface Strings
     String actionSpokenTextProgramming();
     String actionIndents();
     String actionNoIndents();
+    String errorLoadingSpeechChannel(String message);
 }
