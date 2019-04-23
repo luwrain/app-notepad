@@ -30,7 +30,7 @@ class SettingsForm extends FormArea implements SectionArea
 
     SettingsForm(ControlPanel controlPanel, Strings strings)
     {
-	super(new DefaultControlEnvironment(controlPanel.getCoreInterface()), strings.settingsFormName());
+	super(new DefaultControlContext(controlPanel.getCoreInterface()), strings.settingsFormName());
 	this.controlPanel = controlPanel;
 	this.luwrain = controlPanel.getCoreInterface();;
 	this.strings = strings;

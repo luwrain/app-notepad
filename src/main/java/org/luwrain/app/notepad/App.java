@@ -66,7 +66,7 @@ class App implements Application
     private void createArea()
     {
 	final EditArea.Params params = new EditArea.Params();
-	params.context = new DefaultControlEnvironment(luwrain);
+	params.context = new DefaultControlContext(luwrain);
 	params.name = "";
 	/*
 	params.correctorFactory = (corrector)->{
@@ -172,7 +172,7 @@ class App implements Application
 
     private boolean showProps()
     {
-	final SimpleArea propsArea = new SimpleArea(new DefaultControlEnvironment(luwrain), "Информация") {
+	final SimpleArea propsArea = new SimpleArea(new DefaultControlContext(luwrain), "Информация") {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
