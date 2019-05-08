@@ -122,19 +122,19 @@ class App implements Application
 
 												if (ActionEvent.isAction(event, "spoken-text-none"))
 												{
-												    luwrain.say("none");
+												    luwrain.speak("none");
 									    return true;
 												}
 
 																								if (ActionEvent.isAction(event, "spoken-text-natural"))
 												{
-												    luwrain.say("natural");
+												    luwrain.speak("natural");
 									    return true;
 												}
 
 																																																if (ActionEvent.isAction(event, "spoken-text-programming"))
 												{
-												    luwrain.say("programming");
+												    luwrain.speak("programming");
 									    return true;
 												}
 
