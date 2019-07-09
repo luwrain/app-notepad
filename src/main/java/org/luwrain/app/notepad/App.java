@@ -16,7 +16,7 @@ class App implements Application
     private Actions actions = null;
     private ActionLists actionLists = null;
 
-    private EditArea editArea = null;
+    private EditArea2 editArea = null;
     private AreaLayoutHelper layout = null;
 
     private final String arg;
@@ -65,7 +65,7 @@ class App implements Application
 
     private void createArea()
     {
-	final EditArea.Params params = new EditArea.Params();
+	final EditArea2.Params params = new EditArea2.Params();
 	params.context = new DefaultControlContext(luwrain);
 	params.name = "";
 	/*
@@ -78,7 +78,7 @@ class App implements Application
 	params.changeListener = ()->{base.modified = true;};
 	
 	
-	editArea = new EditArea(params) {
+	this.editArea = new EditArea2(params) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");

@@ -35,7 +35,7 @@ final class Actions
     }
 
     //Returns True if everything saved, false otherwise
-    boolean onSave(EditArea area)
+    boolean onSave(EditArea2 area)
     {
 	NullCheck.notNull(area, "area");
 	if (!base.modified)
@@ -64,7 +64,7 @@ final class Actions
 	return true;
     }
 
-void onSaveAs(EditArea area)
+void onSaveAs(EditArea2 area)
     {
 	NullCheck.notNull(area, "area");
 	final File f = conv.save(base.file != null?base.file.file:null);

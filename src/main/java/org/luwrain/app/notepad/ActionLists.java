@@ -5,12 +5,15 @@ import java.util.*;
 
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
+import org.luwrain.script.*;
+import org.luwrain.script.hooks.*;
 
 final class ActionLists
 {
     private final Luwrain luwrain;
     private final Strings strings;
     private final Base base;
+    private final Action[] hookActions;
 
     ActionLists(Luwrain luwrain, Strings strings, Base base)
     {
@@ -20,6 +23,25 @@ final class ActionLists
 	this.luwrain = luwrain;
 	this.strings = strings;
 	this.base = base;
+	final CollectorHook hook = new CollectorHook(luwrain);
+	final Object[] res;
+	try {
+	    res = hook.runForArrays("luwrain.notepad.actions", new Object[0]);
+	}
+	catch(RuntimeException e)
+	{
+	    luwrain.crash(e);
+	    this.hookActions = new Action[0];
+	    return;
+	}
+	final List<Action> actions = new LinkedList();
+	for(Object o: res)
+	{
+	    final Action a = ScriptUtils.getAction(o);
+	    if (a != null)
+		actions.add(a);
+	}
+	this.hookActions = actions.toArray(new Action[actions.size()]);
     }
 
     Action[] getActions()
@@ -29,11 +51,8 @@ final class ActionLists
 	res.add(new Action("save", strings.actionSave()));
 	res.add(new Action("save-as", strings.actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
 	//	res.add(new Action("run", "Запустить как скрипт", new KeyboardEvent(KeyboardEvent.Special.F9)),
-
-		if (base.spokenTextType != Luwrain.SpokenTextType.NONE)
-		    res.add(new Action("spoken-text-none", strings.actionSpokenTextNone(), new KeyboardEvent(KeyboardEvent.Special.F1, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
-
-		
+	if (base.spokenTextType != Luwrain.SpokenTextType.NONE)
+	    res.add(new Action("spoken-text-none", strings.actionSpokenTextNone(), new KeyboardEvent(KeyboardEvent.Special.F1, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
 	if (base.spokenTextType != Luwrain.SpokenTextType.NATURAL)
 	    res.add(new Action("spoken-text-natural", strings.actionSpokenTextNatural(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
 	if (base.spokenTextType != Luwrain.SpokenTextType.PROGRAMMING)
@@ -42,6 +61,8 @@ final class ActionLists
 	    res.add(new Action("indent", strings.actionIndents(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
 	if (base.speakIndent)
 	    res.add(new Action("no-indent", strings.actionIndents(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
+	for(Action a: hookActions)
+	    res.add(a);
 	return res.toArray(new Action[res.size()]);
     }
 }
