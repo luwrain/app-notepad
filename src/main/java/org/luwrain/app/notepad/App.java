@@ -2,6 +2,7 @@
 package org.luwrain.app.notepad;
 
 import java.util.*;
+import java.util.concurrent.atomic.*;
 import java.io.*;
 
 import org.luwrain.core.*;
@@ -68,27 +69,19 @@ class App implements Application
 	final EditArea2.Params params = new EditArea2.Params();
 	params.context = new DefaultControlContext(luwrain);
 	params.name = "";
-	/*
-	params.correctorFactory = (corrector)->{
-	    NullCheck.notNull(corrector, "corrector");
-	    base.editCorrectorWrapper.setWrappedCorrector(corrector);
-	    return base.editCorrectorWrapper;
-	};
-	*/
+	params.appearance = new Appearance(params.context);
 	params.changeListener = ()->{base.modified = true;};
-	
-	
 	this.editArea = new EditArea2(params) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.isSpecial() && !event.isModified())
 			switch(event.getSpecial())
-		    {
-		    case ESCAPE:
-			closeApp();
-			return true;
-		    }
+			{
+			case ESCAPE:
+			    closeApp();
+			    return true;
+			}
 		    return super.onInputEvent(event);
 		}
 		@Override public boolean onSystemEvent(EnvironmentEvent event)
@@ -106,44 +99,38 @@ class App implements Application
 		    case PROPERTIES:
 			return showProps();
 		    case ACTION:
+			if (runActionHooks(event))
+			    return true;
 			if (ActionEvent.isAction(event, "save"))
 			    return actions.onSave(this);
 			if (ActionEvent.isAction(event, "save-as"))
 			{
 			    actions.onSaveAs(this);
 			    return true;
-			    			}
+			}
 			if (ActionEvent.isAction(event, "open-as"))
 			    return actions.openAs();
 			/*
-						if (ActionEvent.isAction(event, "run"))
-			    return actions.run(editArea);
+			  if (ActionEvent.isAction(event, "run"))
+			  return actions.run(editArea);
 			*/
-
-												if (ActionEvent.isAction(event, "spoken-text-none"))
-												{
-												    luwrain.speak("none");
+			if (ActionEvent.isAction(event, "spoken-text-none"))
+			{
+			    luwrain.speak("none");
+			    return true;
+			}
+			if (ActionEvent.isAction(event, "spoken-text-natural"))
+			{
+			    luwrain.speak("natural");
 									    return true;
-												}
-
-																								if (ActionEvent.isAction(event, "spoken-text-natural"))
-												{
-												    luwrain.speak("natural");
-									    return true;
-												}
-
-																																																if (ActionEvent.isAction(event, "spoken-text-programming"))
-												{
-												    luwrain.speak("programming");
-									    return true;
-												}
-
-
-																								
-						return false;
-
-						
-								    default:
+			}
+			if (ActionEvent.isAction(event, "spoken-text-programming"))
+			{
+			    luwrain.speak("programming");
+			    return true;
+			}
+			return false;
+		    default:
 			return super.onSystemEvent(event);
 		    }
 		}
@@ -160,7 +147,7 @@ class App implements Application
 		    {
 			luwrain.setEventResponse(DefaultEventResponse.hint(Hint.EMPTY_LINE));
 			return;
-			}
+		    }
 		    luwrain.setEventResponse(DefaultEventResponse.text(luwrain.getSpokenText(line, base.spokenTextType)));
 		}
 		@Override public Action[] getAreaActions()
@@ -168,6 +155,32 @@ class App implements Application
 		    return actionLists.getActions();
 		}
 	    };
+    }
+
+    private boolean runActionHooks(EnvironmentEvent event)
+    {
+	NullCheck.notNull(event, "event");
+	if (!(event instanceof ActionEvent))
+	    return false;
+	final ActionEvent actionEvent = (ActionEvent)event;
+	final MultilineEdit2.Model model = editArea.getEdit().getMultilineEditModel();
+	if (model == null || !(model instanceof MultilineEditCorrector2))
+	    return false;
+	final MultilineEditCorrector2 corrector = (MultilineEditCorrector2)model;
+	final AtomicBoolean res = new AtomicBoolean(false);
+	corrector.doEditAction((lines, hotPoint)->{
+		try {
+		    res.set(luwrain.xRunHooks("luwrain.notepad.action", new Object[]{
+				actionEvent.getActionName(),
+				EditArea2.createHookObject(editArea, lines, hotPoint)
+			    }, Luwrain.HookStrategy.CHAIN_OF_RESPONSIBILITY));
+		}
+		catch(RuntimeException e)
+		{
+		    luwrain.crash(e);
+		}
+	    });
+	return res.get();
     }
 
     private boolean showProps()
