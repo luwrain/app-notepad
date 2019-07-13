@@ -77,7 +77,10 @@ File save(File currentFile)
 
     void openAs()
     {
+	/*
 	final CustomFilePopup popup = new CustomFilePopup(luwrain, strings, null, "Открыть файл", "Имя файла:", luwrain.getFileProperty("luwrain.dir.userhome"));
 	luwrain.popup(popup);
+    }
+	*/
     }
 }
