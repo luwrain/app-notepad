@@ -67,9 +67,9 @@ final class App implements Application
 	    }, editArea);
 	if (arg != null && !arg.isEmpty())
 	{
-	    base.file = new FileParams(new File(arg));
+	    base.file = new File(arg);
 	    try {
-		final String[] lines = base.file.read();
+		final String[] lines = base.read();
 		editArea.setLines(lines);
 	    }
 	    catch(IOException e)
@@ -125,7 +125,7 @@ final class App implements Application
 			    return true;
 			}
 			if (ActionEvent.isAction(event, "open-as"))
-			    return actions.openAs();
+			    return actions.onOpenAs();
 			if (ActionEvent.isAction(event, "charset"))
 			    return actions.onCharset();
 			if (ActionEvent.isAction(event, "mode-none"))
@@ -229,9 +229,9 @@ final class App implements Application
 		    case "lines":
 			return ScriptUtils.createReadOnlyArray(editArea.getLines());
 		    case "fileName":
-			if (base.file == null || base.file.file == null)
+			if (base.file == null)
 			    return "";
-						return base.file.file.getAbsolutePath();
+						return base.file.getAbsolutePath();
 		    case "charset":
 			return base.charset;
 		    default:

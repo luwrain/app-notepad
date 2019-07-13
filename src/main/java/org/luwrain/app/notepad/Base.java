@@ -37,9 +37,10 @@ final class Base
     final Luwrain luwrain;
     final Strings strings;
 
+        File file = null;
     boolean modified = false;
     String charset = "UTF-8";
-    FileParams file = null;
+    String lineSeparator = System.lineSeparator();
     Mode mode = Mode.NONE;
     boolean speakIndent = false;
 
@@ -54,4 +55,18 @@ final class Base
 	this.luwrain = luwrain;
 	this.strings = strings;
     }
+
+        String[] read() throws IOException
+    {
+	final String text = org.luwrain.util.FileUtils.readTextFileSingleString(file, charset);
+	return org.luwrain.util.FileUtils.universalLineSplitting(text);
+    }
+
+    void save(String[] lines) throws IOException
+    {
+	NullCheck.notNullItems(lines, "lines");
+	org.luwrain.util.FileUtils.writeTextFileMultipleStrings(file, lines, charset, lineSeparator);
+    }
+
+    
 }

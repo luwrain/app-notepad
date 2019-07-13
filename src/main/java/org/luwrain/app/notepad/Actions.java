@@ -28,7 +28,7 @@ final class Actions
 	this.conv = new Conversations(luwrain, strings);
     }
 
-    boolean openAs()
+    boolean onOpenAs()
     {
 	conv.openAs();
 	return true;
@@ -45,19 +45,19 @@ final class Actions
 	}
 	if (base.file == null)
 	{
-	    final File f = conv.save(base.file != null?base.file.file:null);
+	    final File f = conv.save(base.file );
 	    if (f == null)
 		return false;
-	    base.file = new FileParams(f);
+	    base.file = f;
 	    luwrain.onAreaNewName(area);
 	}
 	try {
-	    base.file.save(area.getLines());
+	    base.save(area.getLines());
 	}
 	catch(IOException e)
 	{
 	    luwrain.message(strings.errorSavingFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
-	    return false;
+	    return true;
 	}
 	base.modified = false;
 	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
@@ -67,13 +67,13 @@ final class Actions
 void onSaveAs(EditArea2 area)
     {
 	NullCheck.notNull(area, "area");
-	final File f = conv.save(base.file != null?base.file.file:null);
+	final File f = conv.save(base.file);
 	if (f == null)
 	    return;
-	base.file = new FileParams(f);
+	base.file = f;
 	luwrain.onAreaNewName(area);
 	try {
-	    base.file.save(area.getLines());
+	    base.save(area.getLines());
 	}
 	catch(IOException e)
 	{
