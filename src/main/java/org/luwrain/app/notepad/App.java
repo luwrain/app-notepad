@@ -23,6 +23,7 @@ import java.io.*;
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
+import org.luwrain.script.*;
 
 final class App implements Application
 {
@@ -189,7 +190,7 @@ final class App implements Application
 
     private boolean showProps()
     {
-	final SimpleArea propsArea = new SimpleArea(new DefaultControlContext(luwrain), "Информация") {
+	final SimpleArea propsArea = new SimpleArea(new DefaultControlContext(luwrain), strings.propsAreaName()) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -217,11 +218,46 @@ final class App implements Application
 		    }
 		}
 	    };
+	final EmptyHookObject hookObj = new EmptyHookObject(){
+		@Override public Object getMember(String name)
+		{
+		    NullCheck.notEmpty(name, "name");
+		    switch(name)
+		    {
+		    case "lines":
+			return ScriptUtils.createReadOnlyArray(editArea.getLines());
+		    case "fileName":
+			if (base.file == null || base.file.file == null)
+			    return "";
+			return base.file.file.getAbsolutePath();
+		    default:
+			return super.getMember(name);
+		    }
+		}
+	    };
+	final List<String> res = new LinkedList();
+	try {
+	    final Object o = new org.luwrain.script.hooks.ProviderHook(luwrain).run("luwrain.notepad.properties.basic", new Object[]{hookObj});
+	    if (o != null)
+	    {
+		final List r = ScriptUtils.getArray(o);
+		for(Object i: r)
+		{
+		    final String s = ScriptUtils.getStringValue(i);
+		    if (s != null && !s.trim().isEmpty())
+			res.add(s);
+		}
+	    }
+	}
+	catch(RuntimeException e)
+	{
+	    luwrain.crash(e);
+	    return true;
+	}
 	propsArea.beginLinesTrans();
-	propsArea.addLine(strings.propertiesFileName() + " " + (base.file != null?base.file.file.getAbsolutePath():""));
-	propsArea.addLine(strings.propertiesModified() + " " + (base.modified?strings.propertiesYes():strings.propertiesNo()));
-	propsArea.addLine(strings.propertiesCurrentLine() + " " + (editArea.getHotPointY() + 1));
-	propsArea.addLine(strings.propertiesLinesTotal() + " " + editArea.getLines().length);
+	propsArea.addLine("");
+	for(String s: res)
+	    propsArea.addLine(s);
 	propsArea.addLine("");
 	propsArea.endLinesTrans();
 	layout.openTempArea(propsArea);

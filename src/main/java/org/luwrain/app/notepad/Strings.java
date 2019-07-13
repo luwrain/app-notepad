@@ -65,4 +65,5 @@ public interface Strings
     String actionIndents();
     String actionNoIndents();
     String errorLoadingSpeechChannel(String message);
+    String propsAreaName();
 }
