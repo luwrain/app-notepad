@@ -1,3 +1,18 @@
+/*
+   Copyright 2012-2019 Michael Pozhidaev <msp@luwrain.org>
+
+   This file is part of LUWRAIN.
+
+   LUWRAIN is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public
+   License as published by the Free Software Foundation; either
+   version 3 of the License, or (at your option) any later version.
+
+   LUWRAIN is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+*/
 
 package org.luwrain.app.notepad;
 
@@ -9,7 +24,7 @@ import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 
-class App implements Application
+final class App implements Application
 {
     private Luwrain luwrain = null;
     private Strings strings = null;
@@ -110,23 +125,22 @@ class App implements Application
 			}
 			if (ActionEvent.isAction(event, "open-as"))
 			    return actions.openAs();
-			/*
-			  if (ActionEvent.isAction(event, "run"))
-			  return actions.run(editArea);
-			*/
-			if (ActionEvent.isAction(event, "spoken-text-none"))
+			if (ActionEvent.isAction(event, "mode-none"))
 			{
-			    luwrain.speak("none");
+			    base.mode = Base.Mode.NONE;
+			    luwrain.message(strings.modeNone(), Luwrain.MessageType.OK);
 			    return true;
 			}
-			if (ActionEvent.isAction(event, "spoken-text-natural"))
+			if (ActionEvent.isAction(event, "mode-natural"))
 			{
-			    luwrain.speak("natural");
-									    return true;
+			    base.mode = Base.Mode.NATURAL;
+			    luwrain.message(strings.modeNatural(), Luwrain.MessageType.OK);
+			    return true;
 			}
-			if (ActionEvent.isAction(event, "spoken-text-programming"))
+			if (ActionEvent.isAction(event, "mode-programming"))
 			{
-			    luwrain.speak("programming");
+			    base.mode = Base.Mode.PROGRAMMING;
+			    luwrain.message(strings.modeProgramming(), Luwrain.MessageType.OK);
 			    return true;
 			}
 			return false;
@@ -139,16 +153,6 @@ class App implements Application
 		    if (base.file == null)
 			return strings.initialTitle();
 		    return base.file.getName();
-		}
-		@Override public void announceLine(int index, String line)
-		{
-		    NullCheck.notNull(line, "line");
-		    if (line.trim().isEmpty())
-		    {
-			luwrain.setEventResponse(DefaultEventResponse.hint(Hint.EMPTY_LINE));
-			return;
-		    }
-		    luwrain.setEventResponse(DefaultEventResponse.text(luwrain.getSpokenText(line, base.spokenTextType)));
 		}
 		@Override public Action[] getAreaActions()
 		{

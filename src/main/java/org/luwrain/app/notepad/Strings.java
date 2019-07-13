@@ -59,9 +59,9 @@ public interface Strings
     String settingsFormAligningLineLen();
     String settingsFormLameCommand();
 
-    String actionSpokenTextNone();
-    String actionSpokenTextNatural();
-    String actionSpokenTextProgramming();
+    String modeNone();
+    String modeNatural();
+    String modeProgramming();
     String actionIndents();
     String actionNoIndents();
     String errorLoadingSpeechChannel(String message);

@@ -50,13 +50,12 @@ final class ActionLists
 	res.add(new Action("open-as", strings.actionOpenAs(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
 	res.add(new Action("save", strings.actionSave()));
 	res.add(new Action("save-as", strings.actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
-	//	res.add(new Action("run", "Запустить как скрипт", new KeyboardEvent(KeyboardEvent.Special.F9)),
-	if (base.spokenTextType != Luwrain.SpokenTextType.NONE)
-	    res.add(new Action("spoken-text-none", strings.actionSpokenTextNone(), new KeyboardEvent(KeyboardEvent.Special.F1, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
-	if (base.spokenTextType != Luwrain.SpokenTextType.NATURAL)
-	    res.add(new Action("spoken-text-natural", strings.actionSpokenTextNatural(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
-	if (base.spokenTextType != Luwrain.SpokenTextType.PROGRAMMING)
-	    res.add(new Action("spoken-text-programming", strings.actionSpokenTextProgramming(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
+	if (base.mode != Base.Mode.NONE)
+	    res.add(new Action("mode-none", strings.modeNone(), new KeyboardEvent(KeyboardEvent.Special.F1, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
+	if (base.mode != Base.Mode.NATURAL)
+	    res.add(new Action("mode-natural", strings.modeNatural(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
+	if (base.mode != Base.Mode.PROGRAMMING)
+	    res.add(new Action("mode-programming", strings.modeProgramming(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
 	if (!base.speakIndent)
 	    res.add(new Action("indent", strings.actionIndents(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
 	if (base.speakIndent)

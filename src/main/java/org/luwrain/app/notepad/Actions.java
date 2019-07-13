@@ -84,37 +84,6 @@ void onSaveAs(EditArea2 area)
 	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
     }
 
-    /*
-    boolean onOpenEvent(Base base, String fileName, EditArea area)
-    {
-	NullCheck.notNull(base, "base");
-	NullCheck.notNull(fileName, "fileName");
-	NullCheck.notNull(area, "area");
-	if (fileName.isEmpty())
-	    return false;
-	if (base.modified || base.file != null)
-	    return false;
-final File f = new File(fileName);
-if (f.isDirectory())
-	    return false;
-final FileParams fp = new FileParams(f);
-	final String[] lines;
-	try {
-	    lines = fp.read();
-	}
-	catch(IOException e)
-	{
-	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
-	    return true;
-	}
-	base.file = fp;
-	area.setLines(lines);
-	area.setAreaName(base.file.getName());
-	base.modified = false;;
-	return true;
-    }
-    */
-
     boolean startNarrating(ProgressArea destArea, String text)
     {
 	NullCheck.notNull(destArea, "destArea");
