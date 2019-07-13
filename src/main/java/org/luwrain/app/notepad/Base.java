@@ -28,8 +28,6 @@ import org.luwrain.controls.*;
 
 final class Base
 {
-    static final int DEFAULT_ALIGNING_LINE_LEN = 60;
-
     enum Mode {
 	NONE,
 	NATURAL,
@@ -40,6 +38,7 @@ final class Base
     final Strings strings;
 
     boolean modified = false;
+    String charset = "UTF-8";
     FileParams file = null;
     Mode mode = Mode.NONE;
     boolean speakIndent = false;

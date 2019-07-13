@@ -3,17 +3,14 @@ package org.luwrain.app.notepad;
 
 import java.io.*;
 import java.util.*;
-import java.nio.charset.*;
 
 import org.luwrain.core.*;
 import org.luwrain.popups.*;
 
-class Conversations
+final class Conversations
 {
-    static public final SortedMap<String, Charset> AVAILABLE_CHARSETS = Charset.availableCharsets(); 
-
+    static final String charsets = "IBM866:ISO-8859-5:KOI8-R:UTF-8:windows-1251";
     enum UnsavedChangesRes {CONTINUE_SAVE, CONTINUE_UNSAVED, CANCEL};
-
 
     private final Luwrain luwrain;
     private final Strings strings;
@@ -25,7 +22,6 @@ class Conversations
 	this.luwrain = luwrain;
 	this.strings = strings;
     }
-
 
     //currentFile may be null
 File save(File currentFile)
@@ -46,26 +42,13 @@ File save(File currentFile)
 			   });
     }
 
-
-    Charset charsetPopup()
+    String charset()
     {
-	final LinkedList<String> names = new LinkedList<String>();
-	for(Map.Entry<String, Charset>  ent: AVAILABLE_CHARSETS.entrySet())
-	    names.add(ent.getKey());
-	final EditListPopup popup = new EditListPopup(luwrain,
-						      new EditListPopupUtils.FixedModel(names.toArray(new String[names.size()])),
-						      strings.charsetPopupName(), strings.charsetPopupPrefix(),
-						      "", Popups.DEFAULT_POPUP_FLAGS);
-	luwrain.popup(popup);
-	if (popup.wasCancelled())
+	final String[] names = charsets.split(":", -1);
+	final Object res = Popups.fixedList(luwrain, strings.charsetPopupPrefix(), names);
+	if (res == null)
 	    return null;
-	final String text = popup.text().trim();
-	if (text == null || text.isEmpty() || !AVAILABLE_CHARSETS.containsKey(text))
-	{
-	    luwrain.message(strings.invalidCharset(), Luwrain.MessageType.ERROR);
-	    return null;
-	}
-	return AVAILABLE_CHARSETS.get(text);
+	return res.toString();
     }
 
     UnsavedChangesRes unsavedChanges()

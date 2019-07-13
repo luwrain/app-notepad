@@ -126,6 +126,8 @@ final class App implements Application
 			}
 			if (ActionEvent.isAction(event, "open-as"))
 			    return actions.openAs();
+			if (ActionEvent.isAction(event, "charset"))
+			    return actions.onCharset();
 			if (ActionEvent.isAction(event, "mode-none"))
 			{
 			    base.mode = Base.Mode.NONE;
@@ -229,7 +231,9 @@ final class App implements Application
 		    case "fileName":
 			if (base.file == null || base.file.file == null)
 			    return "";
-			return base.file.file.getAbsolutePath();
+						return base.file.file.getAbsolutePath();
+		    case "charset":
+			return base.charset;
 		    default:
 			return super.getMember(name);
 		    }

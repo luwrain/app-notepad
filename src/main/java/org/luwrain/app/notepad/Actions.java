@@ -84,6 +84,15 @@ void onSaveAs(EditArea2 area)
 	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
     }
 
+    boolean onCharset()
+    {
+final String res = conv.charset();
+if (res == null)
+    return true;
+base.charset = res;
+	return true;
+    }
+
     boolean startNarrating(ProgressArea destArea, String text)
     {
 	NullCheck.notNull(destArea, "destArea");

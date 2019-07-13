@@ -50,6 +50,7 @@ final class ActionLists
 	res.add(new Action("open-as", strings.actionOpenAs(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
 	res.add(new Action("save", strings.actionSave()));
 	res.add(new Action("save-as", strings.actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
+	res.add(new Action("charset", strings.actionCharset(), new KeyboardEvent(KeyboardEvent.Special.F9)));
 	if (base.mode != Base.Mode.NONE)
 	    res.add(new Action("mode-none", strings.modeNone(), new KeyboardEvent(KeyboardEvent.Special.F1, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
 	if (base.mode != Base.Mode.NATURAL)
