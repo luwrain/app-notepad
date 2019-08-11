@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2019 Michael Pozhidaev <msp@luwrain.org>
+c   Copyright 2012-2019 Michael Pozhidaev <msp@luwrain.org>
 
    This file is part of LUWRAIN.
 
@@ -82,12 +82,7 @@ final class App implements Application
 
     private void createArea()
     {
-	final EditArea2.Params params = new EditArea2.Params();
-	params.context = new DefaultControlContext(luwrain);
-	params.name = "";
-	params.appearance = new Appearance(params.context);
-	params.changeListener = ()->{base.modified = true;};
-	this.editArea = new EditArea2(params) {
+	this.editArea = new EditArea2(base.createEditParams()) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -130,19 +125,19 @@ final class App implements Application
 			    return actions.onCharset();
 			if (ActionEvent.isAction(event, "mode-none"))
 			{
-			    base.mode = Base.Mode.NONE;
+			    base.activateMode(Base.Mode.NONE);
 			    luwrain.message(strings.modeNone(), Luwrain.MessageType.OK);
 			    return true;
 			}
 			if (ActionEvent.isAction(event, "mode-natural"))
 			{
-			    base.mode = Base.Mode.NATURAL;
+			    base.activateMode(Base.Mode.NATURAL);
 			    luwrain.message(strings.modeNatural(), Luwrain.MessageType.OK);
 			    return true;
 			}
 			if (ActionEvent.isAction(event, "mode-programming"))
 			{
-			    base.mode = Base.Mode.PROGRAMMING;
+			    base.activateMode(Base.Mode.PROGRAMMING);
 			    luwrain.message(strings.modeProgramming(), Luwrain.MessageType.OK);
 			    return true;
 			}

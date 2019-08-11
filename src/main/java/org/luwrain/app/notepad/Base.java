@@ -28,6 +28,9 @@ import org.luwrain.controls.*;
 
 final class Base
 {
+    static private final String NATURAL_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.natural";
+        static private final String PROGRAMMING_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.programming";
+    
     enum Mode {
 	NONE,
 	NATURAL,
@@ -44,6 +47,8 @@ final class Base
     Mode mode = Mode.NONE;
     boolean speakIndent = false;
 
+    final EditUtils2.ActiveCorrector corrector;
+
 //for narrating
     FutureTask narratingTask = null; 
     Narrating narrating = null;
@@ -54,6 +59,40 @@ final class Base
 	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
 	this.strings = strings;
+	this.corrector = new EditUtils2.ActiveCorrector();
+    }
+
+    void activateMode(Mode mode)
+    {
+	NullCheck.notNull(mode, "mode");
+	switch(mode)
+	{
+	case NATURAL:
+	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getWrappedCorrector(), NATURAL_MODE_CORRECTOR_HOOK));
+	    break;
+	case PROGRAMMING:
+	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getWrappedCorrector(), PROGRAMMING_MODE_CORRECTOR_HOOK));
+	    break;
+	}
+    }
+
+    EditArea2.Params createEditParams()
+    {
+		final EditArea2.Params params = new EditArea2.Params();
+	params.context = new DefaultControlContext(luwrain);
+	params.name = "";
+	params.appearance = new Appearance(params.context);
+	params.changeListener = ()->{modified = true;};
+	params.editFactory = (p, c)->{
+	    final MultilineEdit2.Params pp = new MultilineEdit2.Params();
+	    pp.context = p.context;
+	    	    	    corrector.setWrappedCorrector(c);
+	    pp.model = corrector;
+	    pp.regionPoint = p.regionPoint;
+	    pp.appearance = p.appearance;
+	    return new MultilineEdit2(pp);
+	};
+	return params;
     }
 
         String[] read() throws IOException
