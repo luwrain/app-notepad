@@ -33,7 +33,7 @@ final class App implements Application
     private Actions actions = null;
     private ActionLists actionLists = null;
 
-    private EditArea2 editArea = null;
+    private EditArea editArea = null;
     private AreaLayoutHelper layout = null;
 
     private final String arg;
@@ -82,7 +82,7 @@ final class App implements Application
 
     private void createArea()
     {
-	this.editArea = new EditArea2(base.createEditParams()) {
+	this.editArea = new EditArea(base.createEditParams()) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -110,7 +110,7 @@ final class App implements Application
 		    case PROPERTIES:
 			return showProps();
 		    case ACTION:
-			if (runActionHooks(event))
+			if (runActionHooks(event, regionPoint))
 			    return true;
 			if (ActionEvent.isAction(event, "save"))
 			    return actions.onSave(this);
@@ -159,9 +159,10 @@ final class App implements Application
 	    };
     }
 
-    private boolean runActionHooks(EnvironmentEvent event)
+    private boolean runActionHooks(EnvironmentEvent event, AbstractRegionPoint regionPoint)
     {
 	NullCheck.notNull(event, "event");
+	NullCheck.notNull(regionPoint, "regionPoint");
 	if (!(event instanceof ActionEvent))
 	    return false;
 	final ActionEvent actionEvent = (ActionEvent)event;
@@ -174,7 +175,7 @@ final class App implements Application
 		try {
 		    res.set(luwrain.xRunHooks("luwrain.notepad.action", new Object[]{
 				actionEvent.getActionName(),
-				EditArea2.createHookObject(editArea, lines, hotPoint)
+				EditUtils.createHookObject(editArea, lines, hotPoint, regionPoint)
 			    }, Luwrain.HookStrategy.CHAIN_OF_RESPONSIBILITY));
 		}
 		catch(RuntimeException e)

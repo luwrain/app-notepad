@@ -47,7 +47,7 @@ final class Base
     Mode mode = Mode.NONE;
     boolean speakIndent = false;
 
-    final EditUtils2.ActiveCorrector corrector;
+    final EditUtils.ActiveCorrector corrector;
 
 //for narrating
     FutureTask narratingTask = null; 
@@ -59,7 +59,7 @@ final class Base
 	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
 	this.strings = strings;
-	this.corrector = new EditUtils2.ActiveCorrector();
+	this.corrector = new EditUtils.ActiveCorrector();
     }
 
     void activateMode(Mode mode)
@@ -68,25 +68,26 @@ final class Base
 	switch(mode)
 	{
 	case NATURAL:
-	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getWrappedCorrector(), NATURAL_MODE_CORRECTOR_HOOK));
+	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getDefaultCorrector(), NATURAL_MODE_CORRECTOR_HOOK));
 	    break;
 	case PROGRAMMING:
-	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getWrappedCorrector(), PROGRAMMING_MODE_CORRECTOR_HOOK));
+	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getDefaultCorrector(), PROGRAMMING_MODE_CORRECTOR_HOOK));
 	    break;
 	}
     }
 
-    EditArea2.Params createEditParams()
+    EditArea.Params createEditParams()
     {
-		final EditArea2.Params params = new EditArea2.Params();
+		final EditArea.Params params = new EditArea.Params();
 	params.context = new DefaultControlContext(luwrain);
 	params.name = "";
-	params.appearance = new Appearance(params.context);
+		params.appearance = new Appearance(params.context);
+		params.appearance = new EditUtils.DefaultEditAreaAppearance(params.context);
 	params.changeListener = ()->{modified = true;};
 	params.editFactory = (p, c)->{
 	    final MultilineEdit2.Params pp = new MultilineEdit2.Params();
 	    pp.context = p.context;
-	    	    	    corrector.setWrappedCorrector(c);
+	    	    	    corrector.setDefaultCorrector(c);
 	    pp.model = corrector;
 	    pp.regionPoint = p.regionPoint;
 	    pp.appearance = p.appearance;

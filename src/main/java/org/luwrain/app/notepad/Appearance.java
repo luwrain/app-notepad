@@ -23,13 +23,13 @@ import java.io.*;
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-final class Appearance extends EditUtils2.DefaultEditAreaAppearance
+final class Appearance extends EditUtils.DefaultEditAreaAppearance
 {
     Appearance(ControlContext context)
     {
 	super(context);
     }
-    
+
     @Override public void announceLine(int index, String line)
     {
     }
