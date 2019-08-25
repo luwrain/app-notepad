@@ -28,6 +28,7 @@ public interface Strings
     String actionReplace();
     String actionEnableAligning();
     String actionDisableAligning();
+    String actionNarrating();
     
     String charsetPopupName();
     String charsetPopupPrefix();
@@ -67,4 +68,8 @@ public interface Strings
     String errorLoadingSpeechChannel(String message);
     String propsAreaName();
     String actionCharset();
+
+    String narratingDestDirPopupName();
+    String narratingDestDirPopupPrefix();
+    String narratingAreaName();
 }

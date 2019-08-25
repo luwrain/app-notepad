@@ -76,6 +76,7 @@ final class ActionLists
 	    res.add(new Action("indent", strings.actionIndents(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
 	if (base.speakIndent)
 	    res.add(new Action("no-indent", strings.actionIndents(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
+	res.add(new Action("narrating", strings.actionNarrating(), new KeyboardEvent(KeyboardEvent.Special.F10)));
 	for(Action a: hookActions)
 	    res.add(a);
 	return res.toArray(new Action[res.size()]);

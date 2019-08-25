@@ -83,4 +83,9 @@ File save(File currentFile)
     }
 	*/
     }
+
+    File narratingDestDir()
+    {
+	return Popups.existingDir(luwrain, strings.narratingDestDirPopupName(), strings.narratingDestDirPopupPrefix());
+    }
 }

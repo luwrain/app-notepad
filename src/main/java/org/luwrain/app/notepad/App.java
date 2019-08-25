@@ -34,6 +34,7 @@ final class App implements Application
     private ActionLists actionLists = null;
 
     private EditArea editArea = null;
+    private SimpleArea narratingArea = null;
     private AreaLayoutHelper layout = null;
 
     private final String arg;
@@ -58,7 +59,7 @@ final class App implements Application
 	strings = (Strings)o;
 	this.luwrain = luwrain;
 	this.base = new Base(luwrain, strings);
-	this.actions = new Actions(luwrain, strings, base);
+	this.actions = new Actions(base);
 	this.actionLists = new ActionLists(luwrain, strings, base);
 	createArea();
 	this.layout = new AreaLayoutHelper(()->{
@@ -92,6 +93,13 @@ final class App implements Application
 			case ESCAPE:
 			    closeApp();
 			    return true;
+			case TAB:
+			    if (layout.getAdditionalArea() != null)
+			    {
+				luwrain.setActiveArea(layout.getAdditionalArea());
+				return true;
+			    }
+			    return super.onInputEvent(event);
 			}
 		    return super.onInputEvent(event);
 		}
@@ -123,6 +131,13 @@ final class App implements Application
 			    return actions.onOpenAs();
 			if (ActionEvent.isAction(event, "charset"))
 			    return actions.onCharset();
+			if (ActionEvent.isAction(event, "narrating"))
+			{
+			    if (!actions.onNarrating())
+				return false;
+			    layout.openAdditionalArea(narratingArea, AreaLayoutHelper.Position.BOTTOM);
+			    return true;
+			}
 			if (ActionEvent.isAction(event, "mode-none"))
 			{
 			    base.activateMode(Base.Mode.NONE);
@@ -155,6 +170,42 @@ final class App implements Application
 		@Override public Action[] getAreaActions()
 		{
 		    return actionLists.getActions();
+		}
+	    };
+
+	this.narratingArea = new SimpleArea(new DefaultControlContext(luwrain), strings.narratingAreaName()){
+		@Override public boolean onInputEvent(KeyboardEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial() && !event.isModified())
+			switch(event.getSpecial())
+			{
+			case TAB:
+			    luwrain.setActiveArea(editArea);
+			    return true;
+			case ESCAPE:
+			    //FIXME:			    closeApp();
+			    return true;
+			}
+		    return super.onInputEvent(event);
+		}
+		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onSystemEvent(event);
+		    switch(event.getCode())
+		    {
+		    case CLOSE:
+			closeApp();
+			return true;
+		    default:
+			return super.onSystemEvent(event);
+		    }
+		}
+		@Override public Action[] getAreaActions()
+		{
+		    return new Action[0];
 		}
 	    };
     }
@@ -227,7 +278,7 @@ final class App implements Application
 		    case "fileName":
 			if (base.file == null)
 			    return "";
-						return base.file.getAbsolutePath();
+			return base.file.getAbsolutePath();
 		    case "charset":
 			return base.charset;
 		    default:

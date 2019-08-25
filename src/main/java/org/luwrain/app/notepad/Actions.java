@@ -32,13 +32,11 @@ final class Actions
     private final Base base;
     final Conversations conv;
 
-    Actions(Luwrain luwrain, Strings strings, Base base)
+    Actions(Base base)
     {
-	NullCheck.notNull(luwrain, "luwrain");
-	NullCheck.notNull(strings, "strings");
 	NullCheck.notNull(base, "base");
-	this.luwrain = luwrain;
-	this.strings = strings;
+	this.luwrain = base.luwrain;
+	this.strings = base.strings;
 	this.base = base;
 	this.conv = new Conversations(luwrain, strings);
     }
@@ -108,7 +106,14 @@ base.charset = res;
 	return true;
     }
 
-    boolean startNarrating(ProgressArea destArea, String text)
+    boolean onNarrating()
+    {
+	final File DestDir = conv.narratingDestDir();
+	
+	return true;
+    }
+
+    private boolean startNarrating(SimpleArea destArea, String text)
     {
 	NullCheck.notNull(destArea, "destArea");
 	NullCheck.notNull(text, "text");
@@ -144,7 +149,11 @@ channel = luwrain.loadSpeechChannel("", "");
 				       new File(luwrain.getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
 		@Override protected void progressLine(String text, boolean doneMessage)
 		{
-		    luwrain.runUiSafely(()->destArea.addProgressLine(text));
+		    luwrain.runUiSafely(()->{
+			    //FIXME:
+			    //			    destArea.addProgressLine(text)
+			    
+			    });
 		    if (doneMessage)
 			luwrain.runUiSafely(()->luwrain.message(text, Luwrain.MessageType.DONE));
 		}
