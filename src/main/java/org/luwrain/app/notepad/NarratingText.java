@@ -22,8 +22,10 @@ import org.luwrain.core.*;
 
 final class NarratingText
 {
+    final List<String> sents = new LinkedList();
+    private StringBuilder b = new StringBuilder();
 
-	void splitText(String[] text)
+    void split(String[] text)
     {
 	NullCheck.notNullItems(text, "text");
 	for(int i = 0;i < text.length;i++)
@@ -32,28 +34,37 @@ final class NarratingText
 	    if (line.isEmpty())
 		continue;
 	    int posFrom = 0;
-for(int j = 0;j < line.length();j++)
-{
-final char c = line.charAt(j);
-final char cc = j < line.length()?line.charAt(j):'\0';
-
-if ((c == '.' || c == '!' || c == '?')&&
-(cc == '\0' || Character.isSpace(cc)))
-{
-    onSentEnd(line, posFrom, j + 1);
-j++;
-posFrom = j + 1;
-}
-}
-onSentPart(line, posFrom, line.length());
-}
+	    for(int j = 0;j < line.length();j++)
+	    {
+		final char c = line.charAt(j);
+		final char cc = j + 1< line.length()?line.charAt(j + 1):'\0';
+		if ((c == '.' || c == '!' || c == '?')&&
+		    (cc == '\0' || Character.isSpace(cc)))
+		{
+		    onSentEnd(line, posFrom, j + 1);
+		    j++;
+		    posFrom = j + 1;
+		}
+	    }
+	    if (posFrom < line.length())
+		onSentPart(line, posFrom, line.length());
+	}
+	final String l = new String(b).trim();
+	if (!l.isEmpty())
+	    sents.add(l);
     }
 
     private void onSentPart(String line, int posFrom, int posTo)
     {
+	b.append(line.substring(posFrom, posTo));
     }
 
-	private void onSentEnd(String line, int posFrom, int posTo)
-	{
-	}
+    private void onSentEnd(String line, int posFrom, int posTo)
+    {
+	b.append(line.substring(posFrom, posTo));
+	final String l = new String(b).trim();
+	if (!l.isEmpty())
+	    sents.add(l);
+	b = new StringBuilder();
+    }
 }

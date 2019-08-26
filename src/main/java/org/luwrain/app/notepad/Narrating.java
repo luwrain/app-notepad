@@ -16,14 +16,19 @@
 
 package org.luwrain.app.notepad;
 
+import java.util.*;
 import java.io.*;
 import javax.sound.sampled.AudioFormat;
 
 import org.luwrain.core.*;
 import org.luwrain.speech.*;
+import org.luwrain.util.*;
 
 abstract class Narrating implements Runnable
 {
+    static private final String LOG_COMPONENT = Base.LOG_COMPONENT;
+
+    private final Luwrain luwrain;
     private final Strings strings;
     private final File destDir;
     private final String[] text;
@@ -36,117 +41,92 @@ abstract class Narrating implements Runnable
     private AudioFormat chosenFormat = null;
     private int lastPercents = 0;
 
-    Narrating(Strings strings, String[] text, File destDir, String compressorCmd, Channel channel)
+    Narrating(Luwrain luwrain, Strings strings, String[] text, File destDir, String compressorCmd, Channel channel)
     {
+	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(strings, "strings");
 	NullCheck.notNullItems(text, "text");
 	NullCheck.notNull(destDir, "destDir");
 	NullCheck.notNull(compressorCmd, "compressorCmd");
 	NullCheck.notNull(channel, "channel");
+	this.luwrain = luwrain;
 	this.strings = strings;
 	this.text = text;
 	this.destDir = destDir;
 	this.compressorCmd = compressorCmd;
 	this.channel = channel;
+	final AudioFormat[] formats = channel.getSynthSupportedFormats();
+	if (formats == null || formats.length == 0)
+	    throw new RuntimeException("No supported audio formats");
+	    this.chosenFormat = formats[0];
+	    Log.debug(LOG_COMPONENT, "chosen format is " + chosenFormat.toString());
     }
 
     abstract protected void progressLine(String text, boolean doneMessage);
 
     @Override public void run()
     {
-	try {
-	    final AudioFormat[] formats = channel.getSynthSupportedFormats();
-	    if (formats == null || formats.length < 0)
-	    {
-		progressLine(strings.narratingNoSupportedAudioFormats(), false);
-		return;
-	    }
-	    chosenFormat = formats[0];
+		try {
+	Log.debug(LOG_COMPONENT, "starting narrating");
+	final NarratingText narratingText = new NarratingText();
+	narratingText.split(text);
+	if (narratingText.sents.isEmpty())
+	    return;
+	Log.debug(LOG_COMPONENT, "the text for narrating has " + narratingText.sents.size() + " sentence(s)");
+
 	    openStream();
-	    splitText();
+	    for(String s: narratingText.sents)
+		onNewSent(s);
 	    closeStream();
-	    progressLine(strings.done(), true);
+	    //	    progressLine(strings.done(), true);
 	}
 	catch(Exception e)
 	{
-	    progressLine(e.getClass() + ":" + e.getMessage(), false);
+	    luwrain.crash(e);
 	}
     }
 
-    private void splitText() throws IOException
+    private void onNewSent(String s)
     {
-StringBuilder b = new StringBuilder();
-/*
-	for(int i = 0;i < text.length();++i)
-	{
-	    final int percents = (i * 100) / text.length();
-	    if (percents > lastPercents)
-	    {
-		progressLine("" + percents + "%", false);
-		lastPercents = percents;
-	    }
-	    final char c = text.charAt(i);
-	    final char cc = (i + 1 < text.length())?text.charAt(i + 1):'\0';
-	    if (c == '\n' && cc == '#')
-	    {
-		int k = i + 1;
-		while(k < text.length() && text.charAt(k) != '\n')
-		    ++k;
-		final String s = new String(b);
-		if (k >= text.length())//If the line with hash command is the last one, skipping it
-		    break;
-		if (k > i + 1 && onHashCmd(s, text.substring(i + 1, k)))
-		{
-		    b = new StringBuilder();
-		    i = k;
-		    continue;
-		}
-	    }
-	    if (Character.isISOControl(c))
-	    {
-		b.append(" ");
-		continue;
-	    }
-	    if (c == '.' || c == '!' || c == '?')
-	    {
-		b.append(c);
-		final String s = new String(b);
-		b = new StringBuilder();
-		if (s.length() > 1)
-		    onNewPortion(s, true);
-		continue;
-	    }
-	    b.append(c);
-	}
-	final String s = new String(b);
-	if (!s.isEmpty())
-	    onNewPortion(s, true);
-*/
-    }
-
-    private void onNewPortion(String s, boolean commit) throws IOException
-    {
-	//	channel.synth(s, 0, 0, chosenFormat, stream);
-	if (commit)
-	    checkSize();
+	Log.debug(LOG_COMPONENT, "Speaking \'" + s + "\'");
+	final Channel.Result res = channel.synth(s, stream, chosenFormat, new Channel.SyncParams(), EnumSet.noneOf(Channel.Flags.class));
     }
 
     private void openStream() throws IOException
     {
-	currentFile = File.createTempFile("lwrnarrating", ".dat");
-	stream = new FileOutputStream(currentFile);
+	this.currentFile = File.createTempFile("lwrnarrating", ".dat");
+	Log.debug(LOG_COMPONENT, "created the temporary file " + this.currentFile.getAbsolutePath());
+	this.stream = new FileOutputStream(this.currentFile);
     }
 
     private void closeStream() throws IOException
     {
+	Log.debug(LOG_COMPONENT, "closing stream");
 	stream.flush();
 	stream.close();
 	stream = null;
-	final String fileName = getNextFragmentFileName() + ".wav";
-	final File targetFile = new File(destDir, fileName);
+	final File targetFile = new File(destDir, getNextFragmentFileName() + ".wav");
+	final OutputStream targetStream = new FileOutputStream(targetFile);
+	final InputStream is = new FileInputStream(currentFile);
+	try {
+	    Log.debug(LOG_COMPONENT, "creating " + targetFile.getAbsolutePath());
+	    final byte[] header = SoundUtils.createWaveHeader(
+							      (int)chosenFormat.getFrameRate(),
+							      chosenFormat.getFrameSize() * 8,
+							      chosenFormat.getChannels(),
+							      (int)currentFile.length());
+targetStream.write(header);
+StreamUtils.copyAllBytes(is, targetStream);
+targetStream.flush();
+	}
+	finally {
+	    is.close();
+	    targetStream.close();
+	}
 	progressLine(strings.compressing(targetFile.getName()), false);
-	callCompressor(currentFile, targetFile);
-	currentFile.delete();
+	//	callCompressor(currentFile, targetFile);
+		currentFile.delete();
+	Log.debug(LOG_COMPONENT, "the temporary file deleted");
 	currentFile = null;
     }
 
@@ -199,7 +179,7 @@ try {
 	    final int delay = Integer.parseInt(body);
 	    if (delay > 100 && delay < 100000)
 	    {
-		onNewPortion(uncommittedText, false);
+		onNewSent(uncommittedText);
 		silence(delay);
 	    return true;
 	    } else
@@ -224,6 +204,5 @@ try {
 	while(fileName.length() < 3)
 	    fileName = "0" + fileName;
 	return fileName;
-
     }
 }

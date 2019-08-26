@@ -27,6 +27,8 @@ import org.luwrain.speech.*;
 
 final class Actions
 {
+    static private final String LOG_COMPONENT = "notepad";
+
     private final Luwrain luwrain;
     private final Strings strings;
     private final Base base;
@@ -110,26 +112,19 @@ base.charset = res;
     {
 	NullCheck.notNull(destArea, "destArea");
 	NullCheck.notNullItems(text, "text");
-		if (base.narratingTask != null && !base.narratingTask.isDone())
+	if (base.narratingTask != null && !base.narratingTask.isDone())
 	    return false;
-
 	final File destDir = conv.narratingDestDir();
 	if (destDir == null)
 	    return true;
-	/*
-	if (text.trim().isEmpty())
-	{
-	    luwrain.message(strings.noTextToSynth(), Luwrain.MessageType.ERROR);
-	    return true;
-	}
-	*/
 	final Channel channel;
 	try {
-channel = luwrain.loadSpeechChannel("", "");
+channel = luwrain.loadSpeechChannel("rhvoice", "");
 	}
-	catch(org.luwrain.speech.SpeechException e)
+	catch(Exception e)
 	{
 	    luwrain.message(strings.errorLoadingSpeechChannel(e.getMessage()), Luwrain.MessageType.ERROR);
+	    e.printStackTrace();
 	    return true;
 	}
 		if (channel == null)
@@ -137,7 +132,8 @@ channel = luwrain.loadSpeechChannel("", "");
 	    luwrain.message(strings.noChannelToSynth(), Luwrain.MessageType.ERROR);
 	    return true;
 	}
-	base.narrating = new Narrating(strings, text, destDir, 
+		Log.debug(LOG_COMPONENT, "narrating channel loaded");
+		base.narrating = new Narrating(luwrain, strings, text, destDir, 
 				       new File(luwrain.getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
 		@Override protected void progressLine(String text, boolean doneMessage)
 		{

@@ -28,6 +28,8 @@ import org.luwrain.controls.*;
 
 final class Base
 {
+    static final String LOG_COMPONENT = "notepad";
+
     static private final String NATURAL_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.natural";
         static private final String PROGRAMMING_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.programming";
     
