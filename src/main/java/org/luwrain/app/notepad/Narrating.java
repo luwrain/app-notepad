@@ -26,7 +26,7 @@ abstract class Narrating implements Runnable
 {
     private final Strings strings;
     private final File destDir;
-    private final String text;
+    private final String[] text;
     private final Channel channel;
     private final String compressorCmd;
 
@@ -36,10 +36,10 @@ abstract class Narrating implements Runnable
     private AudioFormat chosenFormat = null;
     private int lastPercents = 0;
 
-    Narrating(Strings strings, String text, File destDir, String compressorCmd, Channel channel)
+    Narrating(Strings strings, String[] text, File destDir, String compressorCmd, Channel channel)
     {
 	NullCheck.notNull(strings, "strings");
-	NullCheck.notNull(text, "text");
+	NullCheck.notNullItems(text, "text");
 	NullCheck.notNull(destDir, "destDir");
 	NullCheck.notNull(compressorCmd, "compressorCmd");
 	NullCheck.notNull(channel, "channel");
@@ -76,6 +76,7 @@ abstract class Narrating implements Runnable
     private void splitText() throws IOException
     {
 StringBuilder b = new StringBuilder();
+/*
 	for(int i = 0;i < text.length();++i)
 	{
 	    final int percents = (i * 100) / text.length();
@@ -120,6 +121,7 @@ StringBuilder b = new StringBuilder();
 	final String s = new String(b);
 	if (!s.isEmpty())
 	    onNewPortion(s, true);
+*/
     }
 
     private void onNewPortion(String s, boolean commit) throws IOException

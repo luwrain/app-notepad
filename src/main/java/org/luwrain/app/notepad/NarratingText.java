@@ -1,0 +1,59 @@
+/*
+   Copyright 2012-2019 Michael Pozhidaev <msp@luwrain.org>
+
+   This file is part of LUWRAIN.
+
+   LUWRAIN is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public
+   License as published by the Free Software Foundation; either
+   version 3 of the License, or (at your option) any later version.
+
+   LUWRAIN is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+*/
+
+package org.luwrain.app.notepad;
+
+import java.util.*;
+
+import org.luwrain.core.*;
+
+final class NarratingText
+{
+
+	void splitText(String[] text)
+    {
+	NullCheck.notNullItems(text, "text");
+	for(int i = 0;i < text.length;i++)
+	{
+	    final String line = text[i].trim();
+	    if (line.isEmpty())
+		continue;
+	    int posFrom = 0;
+for(int j = 0;j < line.length();j++)
+{
+final char c = line.charAt(j);
+final char cc = j < line.length()?line.charAt(j):'\0';
+
+if ((c == '.' || c == '!' || c == '?')&&
+(cc == '\0' || Character.isSpace(cc)))
+{
+    onSentEnd(line, posFrom, j + 1);
+j++;
+posFrom = j + 1;
+}
+}
+onSentPart(line, posFrom, line.length());
+}
+    }
+
+    private void onSentPart(String line, int posFrom, int posTo)
+    {
+    }
+
+	private void onSentEnd(String line, int posFrom, int posTo)
+	{
+	}
+}

@@ -106,24 +106,23 @@ base.charset = res;
 	return true;
     }
 
-    boolean onNarrating()
-    {
-	final File DestDir = conv.narratingDestDir();
-	
-	return true;
-    }
-
-    private boolean startNarrating(SimpleArea destArea, String text)
+    boolean onNarrating(SimpleArea destArea, String[] text)
     {
 	NullCheck.notNull(destArea, "destArea");
-	NullCheck.notNull(text, "text");
-	if (base.narratingTask != null && !base.narratingTask.isDone())
+	NullCheck.notNullItems(text, "text");
+		if (base.narratingTask != null && !base.narratingTask.isDone())
 	    return false;
+
+	final File destDir = conv.narratingDestDir();
+	if (destDir == null)
+	    return true;
+	/*
 	if (text.trim().isEmpty())
 	{
 	    luwrain.message(strings.noTextToSynth(), Luwrain.MessageType.ERROR);
 	    return true;
 	}
+	*/
 	final Channel channel;
 	try {
 channel = luwrain.loadSpeechChannel("", "");
@@ -133,27 +132,19 @@ channel = luwrain.loadSpeechChannel("", "");
 	    luwrain.message(strings.errorLoadingSpeechChannel(e.getMessage()), Luwrain.MessageType.ERROR);
 	    return true;
 	}
-	
-	if (channel == null)
+		if (channel == null)
 	{
 	    luwrain.message(strings.noChannelToSynth(), Luwrain.MessageType.ERROR);
 	    return true;
 	}
-	//	final File homeDir = luwrain.getFileProperty("luwrain.dir.userhome");
-	final File res = Popups.path(luwrain, 
-				     strings.targetDirPopupName(), strings.targetDirPopupPrefix(), luwrain.getFileProperty("luwrain.dir.userhome"),
-				     (fileToCheck, announce)->{return true;});
-	if (res == null)
-	    return true;
-	base.narrating = new Narrating(strings, text, res, 
+	base.narrating = new Narrating(strings, text, destDir, 
 				       new File(luwrain.getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
 		@Override protected void progressLine(String text, boolean doneMessage)
 		{
 		    luwrain.runUiSafely(()->{
 			    //FIXME:
 			    //			    destArea.addProgressLine(text)
-			    
-			    });
+			    			    });
 		    if (doneMessage)
 			luwrain.runUiSafely(()->luwrain.message(text, Luwrain.MessageType.DONE));
 		}

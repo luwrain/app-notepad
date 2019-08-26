@@ -133,7 +133,7 @@ final class App implements Application
 			    return actions.onCharset();
 			if (ActionEvent.isAction(event, "narrating"))
 			{
-			    if (!actions.onNarrating())
+			    if (!actions.onNarrating(narratingArea, editArea.getLines()))
 				return false;
 			    layout.openAdditionalArea(narratingArea, AreaLayoutHelper.Position.BOTTOM);
 			    return true;

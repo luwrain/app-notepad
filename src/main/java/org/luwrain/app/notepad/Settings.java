@@ -26,6 +26,11 @@ interface Settings
     void setAligningLineLen(int value);
     String getLameCommand(String defValue);
     void setLameCommand(String command);
+    String getNarratingChannelName(String defValue);
+    void setNarratingChannelName(String value);
+    String getNarratingChannelParams(String defValue);
+    void setNarratingChannelParams(String name);
+    
 
     static Settings create(Registry registry)
     {
