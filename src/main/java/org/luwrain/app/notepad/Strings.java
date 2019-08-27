@@ -52,9 +52,13 @@ public interface Strings
     String saveChangesPopupName();
     String saveChangesPopupQuestion();
     String savePopupName();
+    String settingsFormFileLenMayNotBeNegative();
+    String settingsFormFileLenIsNotInteger();
     String savePopupPrefix();
     String settingsFormLameCommand();
     String settingsFormName();
+        String settingsFormNarratedFileLen();
     String settingsFormNarratingChannelName();
     String settingsFormNarratingChannelParams();
+
 }

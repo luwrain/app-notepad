@@ -40,14 +40,29 @@ final class SettingsForm extends FormArea implements SectionArea
 
     private void fillForm()
     {
-		addEdit("narrating-channel-name", strings.settingsFormNarratingChannelName(), sett.getNarratingChannelName(""));
-				addEdit("narrating-channel-params", strings.settingsFormNarratingChannelParams(), sett.getNarratingChannelParams(""));
+	addEdit("narrating-channel-name", strings.settingsFormNarratingChannelName(), sett.getNarratingChannelName(""));
+	addEdit("narrating-channel-params", strings.settingsFormNarratingChannelParams(), sett.getNarratingChannelParams(""));
+	addEdit("narrated-file-len", strings.settingsFormNarratedFileLen(), String.valueOf(sett.getNarratedFileLen(0)));
     }
 
-        @Override public boolean saveSectionData()
+    @Override public boolean saveSectionData()
     {
 	sett.setNarratingChannelName(getEnteredText("narrating-channel-name"));
-		sett.setNarratingChannelParams(getEnteredText("narrating-channel-params"));
+	sett.setNarratingChannelParams(getEnteredText("narrating-channel-params"));
+	try {
+	    final int value = Integer.parseInt(getEnteredText("narrated-file-len"));
+	    if (value < 0)
+	    {
+		luwrain.message(strings.settingsFormFileLenMayNotBeNegative(), Luwrain.MessageType.ERROR);
+		return false;
+	    }
+	    sett.setNarratedFileLen(value);
+	}
+	catch(NumberFormatException e)
+	{
+	    luwrain.message(strings.settingsFormFileLenIsNotInteger(), Luwrain.MessageType.ERROR);
+	    return false;
+	}
 	return true;
     }
 
@@ -66,7 +81,6 @@ final class SettingsForm extends FormArea implements SectionArea
 	    return true;
 	return super.onSystemEvent(event);
     }
-
 
     static SettingsForm create(ControlPanel controlPanel)
     {
