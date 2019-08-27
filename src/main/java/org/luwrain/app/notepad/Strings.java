@@ -20,56 +20,41 @@ public interface Strings
 {
     static final String NAME = "luwrain.notepad";
 
-    String appName();
+    String actionCharset();
+    String actionIndents();
+    String actionNarrating();
+    String actionNoIndents();
     String actionOpenAs();
+    String actionReplace();
     String actionSave();
     String actionSaveAs();
-
-    String actionReplace();
-    String actionEnableAligning();
-    String actionDisableAligning();
-    String actionNarrating();
-    
+    String appName();
     String charsetPopupName();
     String charsetPopupPrefix();
     String compressing(String file);
-    String done();
     String enteredPathMayNotBeDir(String fileName);
+    String errorLoadingSpeechChannel(String message);
     String errorOpeningFile(String comment);
     String errorSavingFile(String comment);
     String fileIsSaved();
     String initialTitle();
-    String invalidCharset();
+    String modeNatural();
+    String modeNone();
+    String modeProgramming();
+    String narratingAreaName();
+    String narratingDestDirPopupName();
+    String narratingDestDirPopupPrefix();
     String narratingNoSupportedAudioFormats();
-    String noTextToSynth();
     String noChannelToSynth();
     String noModificationsToSave();
-    String propertiesCurrentLine();
-    String propertiesFileName();
-    String propertiesLinesTotal();
-    String propertiesModified();
-    String propertiesYes();
-    String propertiesNo();
-    String targetDirPopupName();
-    String targetDirPopupPrefix();
+    String noTextToSynth();
+    String propsAreaName();
     String saveChangesPopupName();
     String saveChangesPopupQuestion();
     String savePopupName();
     String savePopupPrefix();
-    String settingsFormName();
-    String settingsFormAligningLineLen();
     String settingsFormLameCommand();
-
-    String modeNone();
-    String modeNatural();
-    String modeProgramming();
-    String actionIndents();
-    String actionNoIndents();
-    String errorLoadingSpeechChannel(String message);
-    String propsAreaName();
-    String actionCharset();
-
-    String narratingDestDirPopupName();
-    String narratingDestDirPopupPrefix();
-    String narratingAreaName();
+    String settingsFormName();
+    String settingsFormNarratingChannelName();
+    String settingsFormNarratingChannelParams();
 }

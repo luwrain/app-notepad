@@ -30,7 +30,8 @@ interface Settings
     void setNarratingChannelName(String value);
     String getNarratingChannelParams(String defValue);
     void setNarratingChannelParams(String name);
-    
+    int getNarratedFileLen(int defValue);
+    void setNarratedFileLen(int value);
 
     static Settings create(Registry registry)
     {

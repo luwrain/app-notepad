@@ -21,11 +21,11 @@ import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.cpanel.*;
 
-class SettingsForm extends FormArea implements SectionArea
+final class SettingsForm extends FormArea implements SectionArea
 {
     private ControlPanel controlPanel;
     private Luwrain luwrain;
-    private Settings settings;
+    private Settings sett;
     private Strings strings;
 
     SettingsForm(ControlPanel controlPanel, Strings strings)
@@ -34,14 +34,21 @@ class SettingsForm extends FormArea implements SectionArea
 	this.controlPanel = controlPanel;
 	this.luwrain = controlPanel.getCoreInterface();;
 	this.strings = strings;
-	this.settings = Settings.create(luwrain.getRegistry());
+	this.sett = Settings.create(luwrain.getRegistry());
 	fillForm();
     }
 
     private void fillForm()
     {
-	//		addEdit("aligning-line-len", strings.settingsFormAligningLineLen(), "" + settings.getAligningLineLen(Base.DEFAULT_ALIGNING_LINE_LEN));
-	addEdit("lame-command", strings.settingsFormLameCommand(), settings.getLameCommand(""));
+		addEdit("narrating-channel-name", strings.settingsFormNarratingChannelName(), sett.getNarratingChannelName(""));
+				addEdit("narrating-channel-params", strings.settingsFormNarratingChannelParams(), sett.getNarratingChannelParams(""));
+    }
+
+        @Override public boolean saveSectionData()
+    {
+	sett.setNarratingChannelName(getEnteredText("narrating-channel-name"));
+		sett.setNarratingChannelParams(getEnteredText("narrating-channel-params"));
+	return true;
     }
 
     @Override public boolean onInputEvent(KeyboardEvent event)
@@ -60,10 +67,6 @@ class SettingsForm extends FormArea implements SectionArea
 	return super.onSystemEvent(event);
     }
 
-    @Override public boolean saveSectionData()
-    {
-	return true;
-    }
 
     static SettingsForm create(ControlPanel controlPanel)
     {
