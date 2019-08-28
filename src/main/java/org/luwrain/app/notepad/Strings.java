@@ -45,7 +45,7 @@ public interface Strings
     String narratingDestDirPopupName();
     String narratingDestDirPopupPrefix();
     String narratingNoSupportedAudioFormats();
-    String noChannelToSynth();
+    String noChannelToSynth(String channelName);
     String noModificationsToSave();
     String noTextToSynth();
     String propsAreaName();
@@ -60,5 +60,8 @@ public interface Strings
         String settingsFormNarratedFileLen();
     String settingsFormNarratingChannelName();
     String settingsFormNarratingChannelParams();
+    String settingsFormNarratingPauseDuration();
+    String settingsFormNarratingSpeechPitch();
+    String settingsFormNarratingSpeechRate();
 
 }

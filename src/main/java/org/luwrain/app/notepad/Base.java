@@ -29,10 +29,9 @@ import org.luwrain.controls.*;
 final class Base
 {
     static final String LOG_COMPONENT = "notepad";
-
     static private final String NATURAL_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.natural";
         static private final String PROGRAMMING_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.programming";
-    
+
     enum Mode {
 	NONE,
 	NATURAL,
@@ -41,6 +40,7 @@ final class Base
 
     final Luwrain luwrain;
     final Strings strings;
+    final Settings sett;
 
         File file = null;
     boolean modified = false;
@@ -61,6 +61,7 @@ final class Base
 	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
 	this.strings = strings;
+	this.sett = Settings.create(luwrain.getRegistry());
 	this.corrector = new EditUtils.ActiveCorrector();
     }
 

@@ -32,6 +32,12 @@ interface Settings
     void setNarratingChannelParams(String name);
     int getNarratedFileLen(int defValue);
     void setNarratedFileLen(int value);
+    int getNarratingSpeechPitch(int defValue);
+    void setNarratingSpeechPitch(int value);
+    int getNarratingSpeechRate(int defValue);
+    void setNarratingSpeechRate(int value);
+    int getNarratingPauseDuration(int defValue);
+    void setNarratingPauseDuration(int value);
 
     static Settings create(Registry registry)
     {

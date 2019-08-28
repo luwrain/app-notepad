@@ -134,7 +134,7 @@ final class App implements Application
 			if (ActionEvent.isAction(event, "narrating"))
 			{
 			    if (!actions.onNarrating(narratingArea, editArea.getLines()))
-				return false;
+				return true;
 			    layout.openAdditionalArea(narratingArea, AreaLayoutHelper.Position.BOTTOM);
 			    return true;
 			}

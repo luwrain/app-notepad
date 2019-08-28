@@ -28,8 +28,7 @@ abstract class Narrating implements Runnable
 {
     static private final String LOG_COMPONENT = Base.LOG_COMPONENT;
 
-    private final Luwrain luwrain;
-    private final Strings strings;
+    private final Base base;
     private final File destDir;
     private final String[] text;
     private final Channel channel;
@@ -41,16 +40,14 @@ abstract class Narrating implements Runnable
     private AudioFormat chosenFormat = null;
     private int lastPercents = 0;
 
-    Narrating(Luwrain luwrain, Strings strings, String[] text, File destDir, String compressorCmd, Channel channel)
+    Narrating(Base base, String[] text, File destDir, String compressorCmd, Channel channel)
     {
-	NullCheck.notNull(luwrain, "luwrain");
-	NullCheck.notNull(strings, "strings");
+	NullCheck.notNull(base, "base");
 	NullCheck.notNullItems(text, "text");
 	NullCheck.notNull(destDir, "destDir");
 	NullCheck.notNull(compressorCmd, "compressorCmd");
 	NullCheck.notNull(channel, "channel");
-	this.luwrain = luwrain;
-	this.strings = strings;
+	this.base = base;
 	this.text = text;
 	this.destDir = destDir;
 	this.compressorCmd = compressorCmd;
@@ -68,28 +65,28 @@ abstract class Narrating implements Runnable
     {
 		try {
 	Log.debug(LOG_COMPONENT, "starting narrating");
-	final NarratingText narratingText = new NarratingText();
-	narratingText.split(text);
-	if (narratingText.sents.isEmpty())
-	    return;
-	Log.debug(LOG_COMPONENT, "the text for narrating has " + narratingText.sents.size() + " sentence(s)");
-
 	    openStream();
-	    for(String s: narratingText.sents)
-		onNewSent(s);
+	    for(String s: text)
+		if (!s.isEmpty())
+		onNewSent(s); else
+		    silence(2000);
 	    closeStream();
-	    //	    progressLine(strings.done(), true);
+	    base.luwrain.playSound(Sounds.DONE);
 	}
 	catch(Exception e)
 	{
-	    luwrain.crash(e);
+	    base.luwrain.crash(e);
 	}
     }
 
-    private void onNewSent(String s)
+    private void onNewSent(String s) throws IOException
     {
+	stream.flush();
+	final Channel.SyncParams p = new Channel.SyncParams();
+	p.setRate(0);
+	p.setPitch(-50);
 	Log.debug(LOG_COMPONENT, "Speaking \'" + s + "\'");
-	final Channel.Result res = channel.synth(s, stream, chosenFormat, new Channel.SyncParams(), EnumSet.noneOf(Channel.Flags.class));
+	final Channel.Result res = channel.synth(s, stream, chosenFormat, p, EnumSet.noneOf(Channel.Flags.class));
     }
 
     private void openStream() throws IOException
@@ -110,11 +107,7 @@ abstract class Narrating implements Runnable
 	final InputStream is = new FileInputStream(currentFile);
 	try {
 	    Log.debug(LOG_COMPONENT, "creating " + targetFile.getAbsolutePath());
-	    final byte[] header = SoundUtils.createWaveHeader(
-							      (int)chosenFormat.getFrameRate(),
-							      chosenFormat.getFrameSize() * 8,
-							      chosenFormat.getChannels(),
-							      (int)currentFile.length());
+	    final byte[] header = SoundUtils.createWaveHeader(chosenFormat, (int)currentFile.length());
 targetStream.write(header);
 StreamUtils.copyAllBytes(is, targetStream);
 targetStream.flush();
@@ -123,7 +116,7 @@ targetStream.flush();
 	    is.close();
 	    targetStream.close();
 	}
-	progressLine(strings.compressing(targetFile.getName()), false);
+	progressLine(base.strings.compressing(targetFile.getName()), false);
 	//	callCompressor(currentFile, targetFile);
 		currentFile.delete();
 	Log.debug(LOG_COMPONENT, "the temporary file deleted");
@@ -161,39 +154,20 @@ targetStream.flush();
 	}
     }
 
-    private void silence(int delay) throws IOException
+    private void silence(int delayMsec) throws IOException
     {
-	final int numBytes = timeToBytes(delay);
+	final int numBytes = timeToBytes(delayMsec);
 	final byte[] buf = new byte[numBytes];
 	for(int i = 0;i < buf.length;++i)
 	    buf[i] = 0;
-	stream.write(buf);
-    }
-
-    private boolean onHashCmd(String uncommittedText, String cmd) throws IOException
-    {
-	if (cmd.length() < 2)
-	    return false;
-	final String body = cmd.substring(1);
-try {
-	    final int delay = Integer.parseInt(body);
-	    if (delay > 100 && delay < 100000)
-	    {
-		onNewSent(uncommittedText);
-		silence(delay);
-	    return true;
-	    } else
-		return false;
-}
-	    catch (NumberFormatException e)
-	    { return false; }
+	FileUtils.writeAllBytes(stream, buf);
     }
 
     private int timeToBytes(int msec)
     {
 	float value = chosenFormat.getSampleRate() * chosenFormat.getSampleSizeInBits() * chosenFormat.getChannels();//bits in a second
 	value /= 8;//bytes in a second
-	value /= 1000;//bytes in millisecond
+	value /= 1000;//bytes in msec
 	return (int)(value * msec);
     }
 

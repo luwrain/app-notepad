@@ -113,36 +113,45 @@ base.charset = res;
 	NullCheck.notNull(destArea, "destArea");
 	NullCheck.notNullItems(text, "text");
 	if (base.narratingTask != null && !base.narratingTask.isDone())
+	{
+	    luwrain.setActiveArea(destArea);
 	    return false;
+	}
+
+	final NarratingText narratingText = new NarratingText();
+	narratingText.split(text);
+	if (narratingText.sents.isEmpty())
+	{
+	    luwrain.message(strings.noTextToSynth(), Luwrain.MessageType.ERROR);
+	    return false;
+	}
 	final File destDir = conv.narratingDestDir();
 	if (destDir == null)
-	    return true;
+	    return false;
 	final Channel channel;
 	try {
-channel = luwrain.loadSpeechChannel("rhvoice", "");
+	    channel = luwrain.loadSpeechChannel(base.sett.getNarratingChannelName(""), base.sett.getNarratingChannelParams(""));
 	}
 	catch(Exception e)
 	{
 	    luwrain.message(strings.errorLoadingSpeechChannel(e.getMessage()), Luwrain.MessageType.ERROR);
 	    e.printStackTrace();
-	    return true;
+	    return false;
 	}
-		if (channel == null)
+	if (channel == null)
 	{
-	    luwrain.message(strings.noChannelToSynth(), Luwrain.MessageType.ERROR);
-	    return true;
+	    luwrain.message(strings.noChannelToSynth(base.sett.getNarratingChannelName("")), Luwrain.MessageType.ERROR);
+	    return false;
 	}
-		Log.debug(LOG_COMPONENT, "narrating channel loaded");
-		base.narrating = new Narrating(luwrain, strings, text, destDir, 
+	Log.debug(LOG_COMPONENT, "narrating channel loaded: " + channel.getChannelName());
+	base.narrating = new Narrating(base,
+				       narratingText.sents.toArray(new String[narratingText.sents.size()]),
+				       destDir, 
 				       new File(luwrain.getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
 		@Override protected void progressLine(String text, boolean doneMessage)
 		{
 		    luwrain.runUiSafely(()->{
-			    //FIXME:
-			    //			    destArea.addProgressLine(text)
-			    			    });
-		    if (doneMessage)
-			luwrain.runUiSafely(()->luwrain.message(text, Luwrain.MessageType.DONE));
+			});
 		}
 	    };
 	base.narratingTask = new FutureTask(base.narrating, null);

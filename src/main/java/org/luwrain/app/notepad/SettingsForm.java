@@ -43,6 +43,9 @@ final class SettingsForm extends FormArea implements SectionArea
 	addEdit("narrating-channel-name", strings.settingsFormNarratingChannelName(), sett.getNarratingChannelName(""));
 	addEdit("narrating-channel-params", strings.settingsFormNarratingChannelParams(), sett.getNarratingChannelParams(""));
 	addEdit("narrated-file-len", strings.settingsFormNarratedFileLen(), String.valueOf(sett.getNarratedFileLen(0)));
+	addEdit("narrating-speech-pitch", strings.settingsFormNarratingSpeechPitch(), String.valueOf(sett.getNarratingSpeechPitch(0)));
+	addEdit("narrating-speech-rate", strings.settingsFormNarratingSpeechRate(), String.valueOf(sett.getNarratingSpeechRate(0)));
+	addEdit("narrating-pause-duration", strings.settingsFormNarratingPauseDuration(), String.valueOf(sett.getNarratingPauseDuration(0)));
     }
 
     @Override public boolean saveSectionData()
@@ -61,6 +64,48 @@ final class SettingsForm extends FormArea implements SectionArea
 	catch(NumberFormatException e)
 	{
 	    luwrain.message(strings.settingsFormFileLenIsNotInteger(), Luwrain.MessageType.ERROR);
+	    return false;
+	}
+	try {
+	    final int value = Integer.parseInt(getEnteredText("narrating-speech-pitch"));
+	    if (value < -50 || value > 50)
+	    {
+		luwrain.message("fixme", Luwrain.MessageType.ERROR);
+		return false;
+	    }
+	    sett.setNarratingSpeechPitch(value);
+	}
+	catch(NumberFormatException e)
+	{
+	    luwrain.message("fixme" + e.getMessage(), Luwrain.MessageType.ERROR);
+	    return false;
+	}
+	try {
+	    final int value = Integer.parseInt(getEnteredText("narrating-speech-rate"));
+	    if (value < -50 || value > 50)
+	    {
+		luwrain.message("fixme", Luwrain.MessageType.ERROR);
+		return false;
+	    }
+	    sett.setNarratingSpeechRate(value);
+	}
+	catch(NumberFormatException e)
+	{
+	    luwrain.message("fixme" + e.getMessage(), Luwrain.MessageType.ERROR);
+	    return false;
+	}
+	try {
+	    final int value = Integer.parseInt(getEnteredText("narrating-pause-duration"));
+	    if (value < 0)
+	    {
+		luwrain.message("fixme", Luwrain.MessageType.ERROR);
+		return false;
+	    }
+	    sett.setNarratingPauseDuration(value);
+	}
+	catch(NumberFormatException e)
+	{
+	    luwrain.message("fixme" + e.getMessage(), Luwrain.MessageType.ERROR);
 	    return false;
 	}
 	return true;

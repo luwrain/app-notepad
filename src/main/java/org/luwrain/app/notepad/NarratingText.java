@@ -22,7 +22,7 @@ import org.luwrain.core.*;
 
 final class NarratingText
 {
-    final List<String> sents = new LinkedList();
+    final LinkedList<String> sents = new LinkedList();
     private StringBuilder b = new StringBuilder();
 
     void split(String[] text)
@@ -32,7 +32,11 @@ final class NarratingText
 	{
 	    final String line = text[i].trim();
 	    if (line.isEmpty())
+	    {
+		if (!sents.isEmpty() && !sents.getLast().isEmpty())
+		    sents.add("");
 		continue;
+	    }
 	    int posFrom = 0;
 	    for(int j = 0;j < line.length();j++)
 	    {
@@ -56,11 +60,15 @@ final class NarratingText
 
     private void onSentPart(String line, int posFrom, int posTo)
     {
+	if (b.length() > 0)
+	    b.append(" ");
 	b.append(line.substring(posFrom, posTo));
     }
 
     private void onSentEnd(String line, int posFrom, int posTo)
     {
+	if (b.length() > 0)
+	    b.append(" ");
 	b.append(line.substring(posFrom, posTo));
 	final String l = new String(b).trim();
 	if (!l.isEmpty())
