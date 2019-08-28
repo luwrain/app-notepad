@@ -44,7 +44,7 @@ public interface Strings
     String narratingCancelled();
     String narratingDestDirPopupName();
     String narratingDestDirPopupPrefix();
-            String narratingDone();
+    String narratingDone();
     String narratingNoSupportedAudioFormats();
     String narratingFileWritten(String file);
     String narratingProgress(String status);

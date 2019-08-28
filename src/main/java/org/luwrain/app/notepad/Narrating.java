@@ -81,7 +81,7 @@ abstract class Narrating implements Runnable
 			return;
 		    final String s = text[i];
 		    if (!s.isEmpty())
-			onNewSent(s); else
+			onNewSent(base.luwrain.getSpeakableText(s, Luwrain.SpeakableTextType.NATURAL)); else
 			silence(base.sett.getNarratingPauseDuration(500));
 		    progressUpdate(i, text.length);
 		}
