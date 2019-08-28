@@ -144,14 +144,30 @@ base.charset = res;
 	    return false;
 	}
 	Log.debug(LOG_COMPONENT, "narrating channel loaded: " + channel.getChannelName());
+	destArea.clear();
+	destArea.addLine(base.strings.narratingProgress("0.0%"));
+	destArea.addLine("");
 	base.narrating = new Narrating(base,
 				       narratingText.sents.toArray(new String[narratingText.sents.size()]),
 				       destDir, 
 				       new File(luwrain.getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
-		@Override protected void progressLine(String text, boolean doneMessage)
+		@Override protected void writeMessage(String text)
 		{
+		    NullCheck.notNull(text, "text");
 		    luwrain.runUiSafely(()->{
+			    destArea.insertLine(destArea.getLineCount() - 2, text);
 			});
+		}
+		@Override protected void progressUpdate(int sentsProcessed, int sentsTotal)
+		{
+		    final float value = ((float)sentsProcessed) / sentsTotal;
+		    luwrain.runUiSafely(()->{
+			    destArea.setLine(destArea.getLineCount() - 1, base.strings.narratingProgress(String.format("%.1f", value)) + "%");
+			});
+		}
+		@Override protected void done()
+		{
+		    luwrain.message(strings.narratingDone(), Luwrain.MessageType.DONE);
 		}
 	    };
 	base.narratingTask = new FutureTask(base.narrating, null);

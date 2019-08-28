@@ -33,12 +33,13 @@ abstract class Narrating implements Runnable
     private final String[] text;
     private final Channel channel;
     private final String compressorCmd;
+    boolean interrupting = false;
 
-    private File currentFile;
-    private OutputStream stream;
+    private final long maxFragmentBytes;
+    private File currentFile = null;
+    private OutputStream stream = null;
     private int fragmentNum = 1;
     private AudioFormat chosenFormat = null;
-    private int lastPercents = 0;
 
     Narrating(Base base, String[] text, File destDir, String compressorCmd, Channel channel)
     {
@@ -55,23 +56,37 @@ abstract class Narrating implements Runnable
 	final AudioFormat[] formats = channel.getSynthSupportedFormats();
 	if (formats == null || formats.length == 0)
 	    throw new RuntimeException("No supported audio formats");
-	    this.chosenFormat = formats[0];
-	    Log.debug(LOG_COMPONENT, "chosen format is " + chosenFormat.toString());
+	this.chosenFormat = formats[0];
+	Log.debug(LOG_COMPONENT, "chosen format is " + chosenFormat.toString());
+	if (base.sett.getNarratedFileLen(0) > 0)
+	    this.maxFragmentBytes = timeToBytes(base.sett.getNarratedFileLen(0) * 1000); else
+	    this.maxFragmentBytes = 0;
+	Log.debug(LOG_COMPONENT, "max length of a fragment in bytes is " + String.valueOf(maxFragmentBytes));
     }
 
-    abstract protected void progressLine(String text, boolean doneMessage);
+    abstract protected void writeMessage(String text);
+    abstract protected void progressUpdate(int sentsProcessed, int sentsTotal);
+    abstract protected void done();
 
     @Override public void run()
     {
-		try {
-	Log.debug(LOG_COMPONENT, "starting narrating");
-	    openStream();
-	    for(String s: text)
-		if (!s.isEmpty())
-		onNewSent(s); else
-		    silence(2000);
-	    closeStream();
-	    base.luwrain.playSound(Sounds.DONE);
+	try {
+	    try {
+		Log.debug(LOG_COMPONENT, "starting narrating");
+		openStream();
+		for(int i = 0;i < text.length;i++)
+		{
+		    final String s = text[i];
+		    if (!s.isEmpty())
+			onNewSent(s); else
+			silence(base.sett.getNarratingPauseDuration(500));
+		    progressUpdate(i, text.length);
+		}
+	    }
+	    finally {
+		closeStream();
+	    }
+	    done();
 	}
 	catch(Exception e)
 	{
@@ -81,10 +96,18 @@ abstract class Narrating implements Runnable
 
     private void onNewSent(String s) throws IOException
     {
-	stream.flush();
+	if (maxFragmentBytes > 0)
+	{
+	    stream.flush();
+	    if (currentFile.length() > maxFragmentBytes)
+	    {
+		closeStream();
+		openStream();
+	    }
+	}
 	final Channel.SyncParams p = new Channel.SyncParams();
-	p.setRate(0);
-	p.setPitch(-50);
+	p.setRate(base.sett.getNarratingSpeechRate(0));
+	p.setPitch(base.sett.getNarratingSpeechPitch(0));
 	Log.debug(LOG_COMPONENT, "Speaking \'" + s + "\'");
 	final Channel.Result res = channel.synth(s, stream, chosenFormat, p, EnumSet.noneOf(Channel.Flags.class));
     }
@@ -98,64 +121,40 @@ abstract class Narrating implements Runnable
 
     private void closeStream() throws IOException
     {
+	if (this.stream == null || this.currentFile == null)
+	{
+	    Log.debug(LOG_COMPONENT, "nothing to close for narrating");
+	    return;
+	}
 	Log.debug(LOG_COMPONENT, "closing stream");
-	stream.flush();
-	stream.close();
-	stream = null;
+	this.stream.flush();
+	this.stream.close();
+	this.stream = null;
 	final File targetFile = new File(destDir, getNextFragmentFileName() + ".wav");
 	final OutputStream targetStream = new FileOutputStream(targetFile);
 	final InputStream is = new FileInputStream(currentFile);
 	try {
 	    Log.debug(LOG_COMPONENT, "creating " + targetFile.getAbsolutePath());
 	    final byte[] header = SoundUtils.createWaveHeader(chosenFormat, (int)currentFile.length());
-targetStream.write(header);
-StreamUtils.copyAllBytes(is, targetStream);
-targetStream.flush();
+	    targetStream.write(header);
+	    StreamUtils.copyAllBytes(is, targetStream);
+	    targetStream.flush();
 	}
 	finally {
 	    is.close();
 	    targetStream.close();
 	}
-	progressLine(base.strings.compressing(targetFile.getName()), false);
+	writeMessage(base.strings.narratingFileWritten(targetFile.getAbsolutePath()));
 	//	callCompressor(currentFile, targetFile);
-		currentFile.delete();
+	this.currentFile.delete();
+	this.currentFile = null;
 	Log.debug(LOG_COMPONENT, "the temporary file deleted");
-	currentFile = null;
-    }
-
-    private void saveWavFile()
-    {
-
-    }
-
-    private void checkSize() throws IOException
-    {
-	stream.flush();
-	if (currentFile.length() > timeToBytes(300000))//5 min
-	{
-	    closeStream();
-	    openStream();
-	}
-    }
-
-    private void callCompressor(File inputFile, File outputFile)
-    {
-	try {
-	    final Process p = new ProcessBuilder(compressorCmd, inputFile.getAbsolutePath(), outputFile.getAbsolutePath()).start();
-	    p.waitFor();
-	}
-	catch(IOException e)
-	{
-	    progressLine(e.getClass().getName() + ":" + e.getMessage(), false);
-	}
-	catch(InterruptedException e)
-	{
-	    Thread.currentThread().interrupt();
-	}
     }
 
     private void silence(int delayMsec) throws IOException
     {
+	if (delayMsec <= 0)
+	    return;
 	final int numBytes = timeToBytes(delayMsec);
 	final byte[] buf = new byte[numBytes];
 	for(int i = 0;i < buf.length;++i)

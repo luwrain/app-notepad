@@ -136,6 +136,7 @@ final class App implements Application
 			    if (!actions.onNarrating(narratingArea, editArea.getLines()))
 				return true;
 			    layout.openAdditionalArea(narratingArea, AreaLayoutHelper.Position.BOTTOM);
+			    luwrain.setActiveArea(narratingArea);
 			    return true;
 			}
 			if (ActionEvent.isAction(event, "mode-none"))
