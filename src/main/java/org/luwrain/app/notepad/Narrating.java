@@ -67,6 +67,7 @@ abstract class Narrating implements Runnable
     abstract protected void writeMessage(String text);
     abstract protected void progressUpdate(int sentsProcessed, int sentsTotal);
     abstract protected void done();
+    abstract protected void cancelled();
 
     @Override public void run()
     {
@@ -76,6 +77,8 @@ abstract class Narrating implements Runnable
 		openStream();
 		for(int i = 0;i < text.length;i++)
 		{
+		    if (interrupting)
+			return;
 		    final String s = text[i];
 		    if (!s.isEmpty())
 			onNewSent(s); else
@@ -85,6 +88,8 @@ abstract class Narrating implements Runnable
 	    }
 	    finally {
 		closeStream();
+		if (interrupting)
+		    cancelled();
 	    }
 	    done();
 	}

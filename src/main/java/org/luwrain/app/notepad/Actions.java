@@ -160,14 +160,24 @@ base.charset = res;
 		}
 		@Override protected void progressUpdate(int sentsProcessed, int sentsTotal)
 		{
-		    final float value = ((float)sentsProcessed) / sentsTotal;
+		    final float value = ((float)sentsProcessed * 100) / sentsTotal;
 		    luwrain.runUiSafely(()->{
-			    destArea.setLine(destArea.getLineCount() - 1, base.strings.narratingProgress(String.format("%.1f", value)) + "%");
+			    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingProgress(String.format("%.1f", value)) + "%");
 			});
 		}
 		@Override protected void done()
 		{
-		    luwrain.message(strings.narratingDone(), Luwrain.MessageType.DONE);
+		    		    luwrain.runUiSafely(()->{
+					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingDone());
+					    		    luwrain.message(strings.narratingDone(), Luwrain.MessageType.DONE);
+			});
+		}
+				@Override protected void cancelled()
+		{
+		    		    luwrain.runUiSafely(()->{
+					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingCancelled());
+					    		    luwrain.message(strings.narratingCancelled(), Luwrain.MessageType.DONE);
+			});
 		}
 	    };
 	base.narratingTask = new FutureTask(base.narrating, null);

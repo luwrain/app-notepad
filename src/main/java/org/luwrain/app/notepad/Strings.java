@@ -41,6 +41,7 @@ public interface Strings
     String modeNone();
     String modeProgramming();
     String narratingAreaName();
+    String narratingCancelled();
     String narratingDestDirPopupName();
     String narratingDestDirPopupPrefix();
             String narratingDone();

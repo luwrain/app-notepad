@@ -185,7 +185,13 @@ final class App implements Application
 			    luwrain.setActiveArea(editArea);
 			    return true;
 			case ESCAPE:
-			    //FIXME:			    closeApp();
+			    if (base.narratingTask != null && !base.narratingTask.isDone())
+			    {
+				//FIXME:confirmation
+				base.narrating.interrupting = true;
+				return true;
+			    }
+			    layout.closeAdditionalArea();
 			    return true;
 			}
 		    return super.onInputEvent(event);
