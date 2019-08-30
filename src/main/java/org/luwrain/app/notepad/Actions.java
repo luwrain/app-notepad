@@ -135,15 +135,15 @@ void onSaveAs(EditArea area)
 	if (base.file != null && //!base.modified &&
 	    conv.rereadWithNewCharser(base.file))
 	{
-	    	try {
-	    editArea.getContent().setLines(base.read());
-	}
-	catch(IOException e)
-	{
-	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
-	    return;
-	}
-	luwrain.onAreaNewContent(editArea);
+	    try {
+		editArea.getContent().setLines(base.read());
+	    }
+	    catch(IOException e)
+	    {
+		luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+		return;
+	    }
+	    luwrain.onAreaNewContent(editArea);
 	}
     }
 

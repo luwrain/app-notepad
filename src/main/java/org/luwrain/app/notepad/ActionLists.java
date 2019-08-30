@@ -66,6 +66,7 @@ final class ActionLists
 	res.add(new Action("save", strings.actionSave(), new KeyboardEvent(KeyboardEvent.Special.F2)));
 	res.add(new Action("save-as", strings.actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
 	res.add(new Action("charset", strings.actionCharset(), new KeyboardEvent(KeyboardEvent.Special.F9)));
+	res.add(new Action("narrating", strings.actionNarrating(), new KeyboardEvent(KeyboardEvent.Special.F10)));
 	if (base.mode != Base.Mode.NONE)
 	    res.add(new Action("mode-none", strings.modeNone(), new KeyboardEvent(KeyboardEvent.Special.F1, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
 	if (base.mode != Base.Mode.NATURAL)
@@ -76,7 +77,6 @@ final class ActionLists
 	    res.add(new Action("indent", strings.actionIndents(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
 	if (base.speakIndent)
 	    res.add(new Action("no-indent", strings.actionIndents(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.ALT))));
-	res.add(new Action("narrating", strings.actionNarrating(), new KeyboardEvent(KeyboardEvent.Special.F10)));
 	for(Action a: hookActions)
 	    res.add(a);
 	return res.toArray(new Action[res.size()]);
