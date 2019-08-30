@@ -75,13 +75,19 @@ File save(File currentFile)
 	return popup.result()?UnsavedChangesRes.CONTINUE_SAVE:UnsavedChangesRes.CONTINUE_UNSAVED;
     }
 
-    void openAs()
+    File open()
     {
-	/*
-	final CustomFilePopup popup = new CustomFilePopup(luwrain, strings, null, "Открыть файл", "Имя файла:", luwrain.getFileProperty("luwrain.dir.userhome"));
-	luwrain.popup(popup);
-    }
-	*/
+	return Popups.path(luwrain,
+			   strings.openPopupName(), strings.openPopupPrefix(),
+			   (file, announce)->{
+			       if (file.exists() && file.isDirectory())
+			       {
+				   if (announce)
+				       luwrain.message(strings.enteredPathMayNotBeDir(file.getAbsolutePath()), Luwrain.MessageType.ERROR);
+				   return false;
+			       }
+			       return true;
+			   });
     }
 
     File narratingDestDir()

@@ -43,9 +43,9 @@ final class Actions
 	this.conv = new Conversations(luwrain, strings);
     }
 
-    boolean onOpenAs()
+    boolean onOpen()
     {
-	conv.openAs();
+	conv.open();
 	return true;
     }
 

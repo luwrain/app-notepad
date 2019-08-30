@@ -62,9 +62,9 @@ final class ActionLists
     Action[] getActions()
     {
 	final List<Action> res = new LinkedList();
-	res.add(new Action("open-as", strings.actionOpenAs(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
-	res.add(new Action("save", strings.actionSave()));
-	res.add(new Action("save-as", strings.actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F4, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
+	res.add(new Action("open", strings.actionOpen(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
+	res.add(new Action("save", strings.actionSave(), new KeyboardEvent(KeyboardEvent.Special.F2)));
+	res.add(new Action("save-as", strings.actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.SHIFT))));
 	res.add(new Action("charset", strings.actionCharset(), new KeyboardEvent(KeyboardEvent.Special.F9)));
 	if (base.mode != Base.Mode.NONE)
 	    res.add(new Action("mode-none", strings.modeNone(), new KeyboardEvent(KeyboardEvent.Special.F1, EnumSet.of(KeyboardEvent.Modifiers.ALT))));

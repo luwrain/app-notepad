@@ -127,8 +127,8 @@ final class App implements Application
 			    actions.onSaveAs(this);
 			    return true;
 			}
-			if (ActionEvent.isAction(event, "open-as"))
-			    return actions.onOpenAs();
+			if (ActionEvent.isAction(event, "open"))
+			    return actions.onOpen();
 			if (ActionEvent.isAction(event, "charset"))
 			    return actions.onCharset();
 			if (ActionEvent.isAction(event, "narrating"))

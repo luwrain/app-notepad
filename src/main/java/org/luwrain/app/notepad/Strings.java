@@ -24,7 +24,7 @@ public interface Strings
     String actionIndents();
     String actionNarrating();
     String actionNoIndents();
-    String actionOpenAs();
+    String actionOpen();
     String actionReplace();
     String actionSave();
     String actionSaveAs();
@@ -51,13 +51,15 @@ public interface Strings
     String noChannelToSynth(String channelName);
     String noModificationsToSave();
     String noTextToSynth();
+    String openPopupName();
+    String openPopupPrefix();
     String propsAreaName();
     String saveChangesPopupName();
     String saveChangesPopupQuestion();
     String savePopupName();
+        String savePopupPrefix();
     String settingsFormFileLenMayNotBeNegative();
     String settingsFormFileLenIsNotInteger();
-    String savePopupPrefix();
     String settingsFormLameCommand();
     String settingsFormName();
     String settingsFormNarratedFileLen();
