@@ -135,7 +135,9 @@ actions.onOpen(this);
 return true;
 			}
 			if (ActionEvent.isAction(event, "charset"))
-			    return actions.onCharset();
+			{
+			    actions.onCharset(this);
+			}
 			if (ActionEvent.isAction(event, "narrating"))
 			{
 			    if (!actions.onNarrating(narratingArea, editArea.getLines()))

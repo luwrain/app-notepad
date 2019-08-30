@@ -114,13 +114,37 @@ void onSaveAs(EditArea area)
 	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
     }
 
-    boolean onCharset()
+    void onCharset(EditArea editArea)
     {
-final String res = conv.charset();
-if (res == null)
-    return true;
-base.charset = res;
-	return true;
+	NullCheck.notNull(editArea, "editArea");
+	if (base.modified)
+	{
+	    switch(conv.unsavedChanges())
+	    {
+	    case CONTINUE_SAVE:
+		if (!onSave(editArea))
+		    return;
+	    case CANCEL:
+		return;
+	    }
+	}
+	final String res = conv.charset();
+	if (res == null)
+	    return;
+	base.charset = res;
+	if (base.file != null && //!base.modified &&
+	    conv.rereadWithNewCharser(base.file))
+	{
+	    	try {
+	    editArea.getContent().setLines(base.read());
+	}
+	catch(IOException e)
+	{
+	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+	    return;
+	}
+	luwrain.onAreaNewContent(editArea);
+	}
     }
 
     boolean onNarrating(SimpleArea destArea, String[] text)

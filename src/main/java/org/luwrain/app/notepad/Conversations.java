@@ -66,6 +66,12 @@ File save(File currentFile)
 	return res.toString();
     }
 
+    boolean rereadWithNewCharser(File file)
+    {
+	NullCheck.notNull(file, "file");
+	return Popups.confirmDefaultYes(luwrain, "Новая кодировка", "Перечитать файл \"" + file.getAbsolutePath() + "\" с новой кодировкой?");
+    }
+
     UnsavedChangesRes unsavedChanges()
     {
 	final YesNoPopup popup = new YesNoPopup(luwrain, strings.saveChangesPopupName(), strings.saveChangesPopupQuestion(), true, Popups.DEFAULT_POPUP_FLAGS);
