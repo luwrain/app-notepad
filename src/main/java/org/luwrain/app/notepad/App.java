@@ -128,7 +128,12 @@ final class App implements Application
 			    return true;
 			}
 			if (ActionEvent.isAction(event, "open"))
-			    return actions.onOpen();
+			{
+			    if (!everythingSaved())
+				return true;
+actions.onOpen(this);
+return true;
+			}
 			if (ActionEvent.isAction(event, "charset"))
 			    return actions.onCharset();
 			if (ActionEvent.isAction(event, "narrating"))
@@ -322,8 +327,8 @@ final class App implements Application
 	return true;
     }
 
-    //Returns true, if there are no more modification which the user would like to save
-    private boolean noUnsavedData()
+    //Returns true, if there are no more modification which the user might want to save
+    private boolean everythingSaved()
     {
 	if (!base.modified)
 	    return true;
@@ -341,7 +346,7 @@ final class App implements Application
 
     @Override public void closeApp()
     {
-	if (!noUnsavedData())
+	if (!everythingSaved())
 	    return;
 	luwrain.closeApp();
     }

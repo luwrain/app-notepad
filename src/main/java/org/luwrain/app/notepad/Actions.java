@@ -43,10 +43,25 @@ final class Actions
 	this.conv = new Conversations(luwrain, strings);
     }
 
-    boolean onOpen()
+    void onOpen(EditArea editArea)
     {
-	conv.open();
-	return true;
+	NullCheck.notNull(editArea, "editArea");
+	final File file = conv.open();
+	if (file == null)
+	    return;
+	base.file = file;
+	luwrain.onAreaNewName(editArea);
+	try {
+	    editArea.getContent().setLines(base.read());
+	}
+	catch(IOException e)
+	{
+	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+	    return;
+	}
+	editArea.reset(false);
+	luwrain.onAreaNewContent(editArea);
+	luwrain.onAreaNewHotPoint(editArea);
     }
 
     //Returns True if everything saved, false otherwise
