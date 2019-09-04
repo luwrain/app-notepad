@@ -90,8 +90,8 @@ final class Base
 	params.editFactory = (p, c)->{
 	    final MultilineEdit2.Params pp = new MultilineEdit2.Params();
 	    pp.context = p.context;
-	    	    	    corrector.setDefaultCorrector(c);
-	    pp.model = corrector;
+	    	    	    Base.this.corrector.setDefaultCorrector(c);
+	    pp.model = Base.this.corrector;
 	    pp.regionPoint = p.regionPoint;
 	    pp.appearance = p.appearance;
 	    return new MultilineEdit2(pp);

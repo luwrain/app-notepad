@@ -72,6 +72,7 @@ final class App implements Application
 	    try {
 		final String[] lines = base.read();
 		editArea.setLines(lines);
+		base.modified = false;
 	    }
 	    catch(IOException e)
 	    {

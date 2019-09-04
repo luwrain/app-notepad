@@ -62,6 +62,7 @@ final class Actions
 	editArea.reset(false);
 	luwrain.onAreaNewContent(editArea);
 	luwrain.onAreaNewHotPoint(editArea);
+	base.modified = false;
     }
 
     //Returns True if everything saved, false otherwise
