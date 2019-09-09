@@ -125,7 +125,7 @@ final class App implements Application
 			    return actions.onSave(this);
 			if (ActionEvent.isAction(event, "save-as"))
 			{
-			    actions.onSaveAs(this);
+			    			    actions.onSaveAs(this);
 			    return true;
 			}
 			if (ActionEvent.isAction(event, "open"))

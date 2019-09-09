@@ -39,22 +39,40 @@ final class Conversations
     }
 
     //currentFile may be null
-File save(File currentFile)
+    File save(File currentFile)
     {
 	return Popups.path(luwrain, 
-			   strings.savePopupName(),
-			   strings.savePopupPrefix(),
-			   currentFile != null?currentFile:luwrain.getFileProperty("luwrain.dir.userhome"),
-			   /*			   luwrain.getFileProperty("luwrain.dir.userhome"),*/
+			   strings.savePopupName(), strings.savePopupPrefix(),
+			   currentFile, //Tt's OK, if this value is null
 			   (fileToCheck, announce)->{
-			       if (fileToCheck.isDirectory())
+			       if (fileToCheck.exists() && fileToCheck.isDirectory())
 			       {
 				   if (announce)
-				   luwrain.message(strings.enteredPathMayNotBeDir(fileToCheck.getAbsolutePath()), Luwrain.MessageType.ERROR);
+				       luwrain.message(strings.enteredPathMayNotBeDir(fileToCheck.getAbsolutePath()), Luwrain.MessageType.ERROR);
 				   return false;
 			       }
 			       return true;
 			   });
+    }
+
+    File open()
+    {
+	return Popups.path(luwrain,
+			   strings.openPopupName(), strings.openPopupPrefix(),
+			   (file, announce)->{
+			       if (file.exists() && file.isDirectory())
+			       {
+				   if (announce)
+				       luwrain.message(strings.enteredPathMayNotBeDir(file.getAbsolutePath()), Luwrain.MessageType.ERROR);
+				   return false;
+			       }
+			       return true;
+			   });
+    }
+
+    File narratingDestDir()
+    {
+	return Popups.existingDir(luwrain, strings.narratingDestDirPopupName(), strings.narratingDestDirPopupPrefix());
     }
 
     String charset()
@@ -79,25 +97,5 @@ File save(File currentFile)
 	if (popup.wasCancelled())
 	    return UnsavedChangesRes.CANCEL;
 	return popup.result()?UnsavedChangesRes.CONTINUE_SAVE:UnsavedChangesRes.CONTINUE_UNSAVED;
-    }
-
-    File open()
-    {
-	return Popups.path(luwrain,
-			   strings.openPopupName(), strings.openPopupPrefix(),
-			   (file, announce)->{
-			       if (file.exists() && file.isDirectory())
-			       {
-				   if (announce)
-				       luwrain.message(strings.enteredPathMayNotBeDir(file.getAbsolutePath()), Luwrain.MessageType.ERROR);
-				   return false;
-			       }
-			       return true;
-			   });
-    }
-
-    File narratingDestDir()
-    {
-	return Popups.existingDir(luwrain, strings.narratingDestDirPopupName(), strings.narratingDestDirPopupPrefix());
     }
 }

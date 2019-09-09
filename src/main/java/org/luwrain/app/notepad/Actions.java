@@ -95,7 +95,7 @@ final class Actions
 	return true;
     }
 
-void onSaveAs(EditArea area)
+    void onSaveAs(EditArea area)
     {
 	NullCheck.notNull(area, "area");
 	final File f = conv.save(base.file);
