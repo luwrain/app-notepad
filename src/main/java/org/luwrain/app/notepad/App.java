@@ -70,13 +70,13 @@ final class App implements Application
 	{
 	    base.file = new File(arg);
 	    try {
-		final String[] lines = base.read();
-		editArea.setLines(lines);
+		if (base.file.exists() && !base.file.isDirectory())
+		    editArea.setLines(base.read());
 		base.modified = false;
 	    }
 	    catch(IOException e)
 	    {
-		luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+		luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)));
 	    }
 	}
 	return new InitResult();
@@ -241,7 +241,7 @@ return true;
 		try {
 		    res.set(luwrain.xRunHooks("luwrain.notepad.action", new Object[]{
 				actionEvent.getActionName(),
-				EditUtils.createHookObject(editArea, lines, hotPoint, regionPoint)
+				org.luwrain.script.TextScriptUtils.createTextEditHookObject(editArea, lines, hotPoint, regionPoint)
 			    }, Luwrain.HookStrategy.CHAIN_OF_RESPONSIBILITY));
 		}
 		catch(RuntimeException e)
