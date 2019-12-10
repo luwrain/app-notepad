@@ -88,13 +88,13 @@ final class Base
 		params.appearance = new EditUtils.DefaultEditAreaAppearance(params.context);
 	params.changeListener = ()->{modified = true;};
 	params.editFactory = (p, c)->{
-	    final MultilineEdit2.Params pp = new MultilineEdit2.Params();
+	    final MultilineEdit.Params pp = new MultilineEdit.Params();
 	    pp.context = p.context;
 	    	    	    Base.this.corrector.setDefaultCorrector(c);
 	    pp.model = Base.this.corrector;
 	    pp.regionPoint = p.regionPoint;
 	    pp.appearance = p.appearance;
-	    return new MultilineEdit2(pp);
+	    return new MultilineEdit(pp);
 	};
 	return params;
     }

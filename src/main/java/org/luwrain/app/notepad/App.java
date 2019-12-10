@@ -232,10 +232,10 @@ return true;
 	if (!(event instanceof ActionEvent))
 	    return false;
 	final ActionEvent actionEvent = (ActionEvent)event;
-	final MultilineEdit2.Model model = editArea.getEdit().getMultilineEditModel();
-	if (model == null || !(model instanceof MultilineEditCorrector2))
+	final MultilineEdit.Model model = editArea.getEdit().getMultilineEditModel();
+	if (model == null || !(model instanceof MultilineEditCorrector))
 	    return false;
-	final MultilineEditCorrector2 corrector = (MultilineEditCorrector2)model;
+	final MultilineEditCorrector corrector = (MultilineEditCorrector)model;
 	final AtomicBoolean res = new AtomicBoolean(false);
 	corrector.doEditAction((lines, hotPoint)->{
 		try {
