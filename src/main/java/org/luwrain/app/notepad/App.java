@@ -17,13 +17,15 @@
 package org.luwrain.app.notepad;
 
 import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.*;
 import java.io.*;
 
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.script.*;
+import org.luwrain.speech.*;
+import org.luwrain.template.*;
 
 final class App extends AppBase<Strings>
 {
@@ -45,16 +47,14 @@ final class App extends AppBase<Strings>
     boolean speakIndent = false;
 
     final EditUtils.ActiveCorrector corrector;
-
-    
-//for narrating
-    FutureTask narratingTask = null; 
+        final Settings sett = null;
+        FutureTask narratingTask = null; 
     Narrating narrating = null;
-
-
-
-    
     private final String arg;
+    private Conversations conv = null;
+    private MainLayout mainLayout = null;
+    private NarratingLayout narratingLayout = null;
+
 
     App()
     {
@@ -70,20 +70,23 @@ final class App extends AppBase<Strings>
 
     @Override public boolean onAppInit()
     {
+	this.conv = new Conversations(getLuwrain(), getStrings());
+	this.mainLayout = new MainLayout(this);
+	this.narratingLayout = new NarratingLayout(this);
 	if (arg != null && !arg.isEmpty())
 	{
-	    base.file = new File(arg);
+	    this.file = new File(arg);
 	    try {
-		if (base.file.exists() && !base.file.isDirectory())
-		    editArea.setLines(base.read());
-		base.modified = false;
+		if (this.file.exists() && !this.file.isDirectory())
+		    mainLayout.setText(read());
+		this.modified = false;
 	    }
 	    catch(IOException e)
 	    {
-		luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)));
+		getLuwrain().message(getStrings().errorOpeningFile(getI18n().getExceptionDescr(e)));
 	    }
 	}
-	return new InitResult();
+	return true;
     }
 
     @Override public AreaLayout getDefaultAreaLayout()
@@ -91,15 +94,46 @@ final class App extends AppBase<Strings>
 	return mainLayout.getLayout();
     }
 
+        //Returns True if everything saved, false otherwise
+    boolean onSave(EditArea area)
+    {
+	NullCheck.notNull(area, "area");
+	if (!modified)
+	{
+	    getLuwrain().message(getStrings().noModificationsToSave());
+	    return true;
+	}
+	if (file == null)
+	{
+	    final File f = conv.save(file );
+	    if (f == null)
+		return false;
+	    this.file = f;
+	    mainLayout.onAreaNewName();
+	}
+	try {
+	    save(mainLayout.getLines());
+	}
+	catch(IOException e)
+	{
+	    getLuwrain().message(getStrings().errorSavingFile(getI18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+	    return true;
+	}
+	this.modified = false;
+	getLuwrain().message(getStrings().fileIsSaved(), Luwrain.MessageType.OK);
+	return true;
+    }
+
+
     //Returns true, if there are no more modification which the user might want to save
     private boolean everythingSaved()
     {
-	if (!base.modified)
+	if (!modified)
 	    return true;
-	switch(actions.conv.unsavedChanges())
+	switch(conv.unsavedChanges())
 	{
 	case CONTINUE_SAVE:
-	    return actions.onSave(editArea);
+	    return onSave(null);
 	case CONTINUE_UNSAVED:
 	    return true;
 	case CANCEL:
@@ -108,11 +142,16 @@ final class App extends AppBase<Strings>
 	return false;
     }
 
+    Conversations getConv()
+    {
+	return this.conv;
+    }
+
     @Override public void closeApp()
     {
 	if (!everythingSaved())
 	    return;
-	luwrain.closeApp();
+super.closeApp();
     }
 
         void activateMode(Mode mode)
@@ -121,10 +160,10 @@ final class App extends AppBase<Strings>
 	switch(mode)
 	{
 	case NATURAL:
-	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getDefaultCorrector(), NATURAL_MODE_CORRECTOR_HOOK));
+	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(getLuwrain()), corrector.getDefaultCorrector(), NATURAL_MODE_CORRECTOR_HOOK));
 	    break;
 	case PROGRAMMING:
-	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getDefaultCorrector(), PROGRAMMING_MODE_CORRECTOR_HOOK));
+	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(getLuwrain()), corrector.getDefaultCorrector(), PROGRAMMING_MODE_CORRECTOR_HOOK));
 	    break;
 	}
     }
@@ -146,9 +185,9 @@ final class App extends AppBase<Strings>
     {
 	NullCheck.notNull(destArea, "destArea");
 	NullCheck.notNullItems(text, "text");
-	if (base.narratingTask != null && !base.narratingTask.isDone())
+	if (this.narratingTask != null && !this.narratingTask.isDone())
 	{
-	    luwrain.setActiveArea(destArea);
+	    //	    luwrain.setActiveArea(destArea);
 	    return false;
 	}
 
@@ -156,7 +195,7 @@ final class App extends AppBase<Strings>
 	narratingText.split(text);
 	if (narratingText.sents.isEmpty())
 	{
-	    luwrain.message(strings.noTextToSynth(), Luwrain.MessageType.ERROR);
+	    getLuwrain().message(getStrings().noTextToSynth(), Luwrain.MessageType.ERROR);
 	    return false;
 	}
 	final File destDir = conv.narratingDestDir();
@@ -164,58 +203,58 @@ final class App extends AppBase<Strings>
 	    return false;
 	final Channel channel;
 	try {
-	    channel = luwrain.loadSpeechChannel(base.sett.getNarratingChannelName(""), base.sett.getNarratingChannelParams(""));
+	    channel = getLuwrain().loadSpeechChannel(sett.getNarratingChannelName(""), sett.getNarratingChannelParams(""));
 	}
 	catch(Exception e)
 	{
-	    luwrain.message(strings.errorLoadingSpeechChannel(e.getMessage()), Luwrain.MessageType.ERROR);
+	    getLuwrain().message(getStrings().errorLoadingSpeechChannel(e.getMessage()), Luwrain.MessageType.ERROR);
 	    e.printStackTrace();
 	    return false;
 	}
 	if (channel == null)
 	{
-	    luwrain.message(strings.noChannelToSynth(base.sett.getNarratingChannelName("")), Luwrain.MessageType.ERROR);
+	    getLuwrain().message(getStrings().noChannelToSynth(sett.getNarratingChannelName("")), Luwrain.MessageType.ERROR);
 	    return false;
 	}
 	Log.debug(LOG_COMPONENT, "narrating channel loaded: " + channel.getChannelName());
-	destArea.clear();
-	destArea.addLine(base.strings.narratingProgress("0.0%"));
+	//	destArea.clear();
+	//	destArea.addLine(base.strings.narratingProgress("0.0%"));
 	destArea.addLine("");
-	base.narrating = new Narrating(base,
+	this.narrating = new Narrating(this,
 				       narratingText.sents.toArray(new String[narratingText.sents.size()]),
 				       destDir, 
-				       new File(luwrain.getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
+				       new File(getLuwrain().getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
 		@Override protected void writeMessage(String text)
 		{
 		    NullCheck.notNull(text, "text");
-		    luwrain.runUiSafely(()->{
+		    getLuwrain().runUiSafely(()->{
 			    destArea.insertLine(destArea.getLineCount() - 2, text);
 			});
 		}
 		@Override protected void progressUpdate(int sentsProcessed, int sentsTotal)
 		{
 		    final float value = ((float)sentsProcessed * 100) / sentsTotal;
-		    luwrain.runUiSafely(()->{
-			    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingProgress(String.format("%.1f", value)) + "%");
+		    getLuwrain().runUiSafely(()->{
+			    //			    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingProgress(String.format("%.1f", value)) + "%");
 			});
 		}
 		@Override protected void done()
 		{
-		    		    luwrain.runUiSafely(()->{
-					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingDone());
-					    		    luwrain.message(strings.narratingDone(), Luwrain.MessageType.DONE);
+		    getLuwrain().runUiSafely(()->{
+			    //					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingDone());
+			    getLuwrain().message(getStrings().narratingDone(), Luwrain.MessageType.DONE);
 			});
 		}
 				@Override protected void cancelled()
 		{
-		    		    luwrain.runUiSafely(()->{
-					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingCancelled());
-					    		    luwrain.message(strings.narratingCancelled(), Luwrain.MessageType.DONE);
+		    getLuwrain().runUiSafely(()->{
+			    //					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingCancelled());
+			    getLuwrain().message(getStrings().narratingCancelled(), Luwrain.MessageType.DONE);
 			});
 		}
 	    };
-	base.narratingTask = new FutureTask(base.narrating, null);
-	luwrain.executeBkg(base.narratingTask);
+	this.narratingTask = new FutureTask(this.narrating, null);
+	getLuwrain().executeBkg(this.narratingTask);
 	return true;
     }
 
@@ -223,13 +262,5 @@ final class App extends AppBase<Strings>
     
 
 
-    @Override public AreaLayout getAreaLayout()
-    {
-	return layout.getLayout();
-    }
-
-    @Override public String getAppName()
-    {
-	return base.file == null?strings.appName():base.file.getName();
-    }
 }
+

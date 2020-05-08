@@ -26,9 +26,9 @@ import org.luwrain.util.*;
 
 abstract class Narrating implements Runnable
 {
-    static private final String LOG_COMPONENT = Base.LOG_COMPONENT;
+    static private final String LOG_COMPONENT = App.LOG_COMPONENT;
 
-    private final Base base;
+    private final App app;
     private final File destDir;
     private final String[] text;
     private final Channel channel;
@@ -41,14 +41,14 @@ abstract class Narrating implements Runnable
     private int fragmentNum = 1;
     private AudioFormat chosenFormat = null;
 
-    Narrating(Base base, String[] text, File destDir, String compressorCmd, Channel channel)
+    Narrating(App app, String[] text, File destDir, String compressorCmd, Channel channel)
     {
-	NullCheck.notNull(base, "base");
+	NullCheck.notNull(app, "app");
 	NullCheck.notNullItems(text, "text");
 	NullCheck.notNull(destDir, "destDir");
 	NullCheck.notNull(compressorCmd, "compressorCmd");
 	NullCheck.notNull(channel, "channel");
-	this.base = base;
+	this.app = app;
 	this.text = text;
 	this.destDir = destDir;
 	this.compressorCmd = compressorCmd;
@@ -58,8 +58,8 @@ abstract class Narrating implements Runnable
 	    throw new RuntimeException("No supported audio formats");
 	this.chosenFormat = formats[0];
 	Log.debug(LOG_COMPONENT, "chosen format is " + chosenFormat.toString());
-	if (base.sett.getNarratedFileLen(0) > 0)
-	    this.maxFragmentBytes = timeToBytes(base.sett.getNarratedFileLen(0) * 1000); else
+	if (app.sett.getNarratedFileLen(0) > 0)
+	    this.maxFragmentBytes = timeToBytes(app.sett.getNarratedFileLen(0) * 1000); else
 	    this.maxFragmentBytes = 0;
 	Log.debug(LOG_COMPONENT, "max length of a fragment in bytes is " + String.valueOf(maxFragmentBytes));
     }
@@ -81,8 +81,8 @@ abstract class Narrating implements Runnable
 			return;
 		    final String s = text[i];
 		    if (!s.isEmpty())
-			onNewSent(base.luwrain.getSpeakableText(s, Luwrain.SpeakableTextType.NATURAL)); else
-			silence(base.sett.getNarratingPauseDuration(500));
+			onNewSent(app.getLuwrain().getSpeakableText(s, Luwrain.SpeakableTextType.NATURAL)); else
+			silence(app.sett.getNarratingPauseDuration(500));
 		    progressUpdate(i, text.length);
 		}
 	    }
@@ -95,7 +95,7 @@ abstract class Narrating implements Runnable
 	}
 	catch(Exception e)
 	{
-	    base.luwrain.crash(e);
+	    app.getLuwrain().crash(e);
 	}
     }
 
@@ -111,8 +111,8 @@ abstract class Narrating implements Runnable
 	    }
 	}
 	final Channel.SyncParams p = new Channel.SyncParams();
-	p.setRate(base.sett.getNarratingSpeechRate(0));
-	p.setPitch(base.sett.getNarratingSpeechPitch(0));
+	p.setRate(app.sett.getNarratingSpeechRate(0));
+	p.setPitch(app.sett.getNarratingSpeechPitch(0));
 	Log.debug(LOG_COMPONENT, "Speaking \'" + s + "\'");
 	final Channel.Result res = channel.synth(s, stream, chosenFormat, p, EnumSet.noneOf(Channel.Flags.class));
     }
@@ -149,7 +149,7 @@ abstract class Narrating implements Runnable
 	    is.close();
 	    targetStream.close();
 	}
-	writeMessage(base.strings.narratingFileWritten(targetFile.getAbsolutePath()));
+	writeMessage(app.getStrings().narratingFileWritten(targetFile.getAbsolutePath()));
 	//	callCompressor(currentFile, targetFile);
 	this.currentFile.delete();
 	this.currentFile = null;

@@ -24,6 +24,7 @@ import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.script.*;
+import org.luwrain.template.*;
 
 final class MainLayout extends LayoutBase
 {
@@ -49,15 +50,16 @@ final class MainLayout extends LayoutBase
 		}
 		@Override public String getAreaName()
 		{
-		    if (base.file == null)
-			return strings.initialTitle();
-		    return base.file.getName();
+		    if (app.file == null)
+			return app.getStrings().initialTitle();
+		    return app.file.getName();
 		}
 		@Override public Action[] getAreaActions()
 		{
 		    return new Action[0];
 		}
 	    };
+    }
 
     private boolean runActionHooks(EnvironmentEvent event, AbstractRegionPoint regionPoint)
     {
@@ -73,14 +75,14 @@ final class MainLayout extends LayoutBase
 	final AtomicBoolean res = new AtomicBoolean(false);
 	corrector.doEditAction((lines, hotPoint)->{
 		try {
-		    res.set(luwrain.xRunHooks("luwrain.notepad.action", new Object[]{
+		    res.set(app.getLuwrain().xRunHooks("luwrain.notepad.action", new Object[]{
 				actionEvent.getActionName(),
 				org.luwrain.script.TextScriptUtils.createTextEditHookObject(editArea, lines, hotPoint, regionPoint)
 			    }, Luwrain.HookStrategy.CHAIN_OF_RESPONSIBILITY));
 		}
 		catch(RuntimeException e)
 		{
-		    luwrain.crash(e);
+		    app.getLuwrain().crash(e);
 		}
 	    });
 	return res.get();
@@ -108,35 +110,6 @@ final class MainLayout extends LayoutBase
 	base.modified = false;
     }
 
-    //Returns True if everything saved, false otherwise
-    boolean onSave(EditArea area)
-    {
-	NullCheck.notNull(area, "area");
-	if (!base.modified)
-	{
-	    luwrain.message(strings.noModificationsToSave());
-	    return true;
-	}
-	if (base.file == null)
-	{
-	    final File f = conv.save(base.file );
-	    if (f == null)
-		return false;
-	    base.file = f;
-	    luwrain.onAreaNewName(area);
-	}
-	try {
-	    base.save(area.getLines());
-	}
-	catch(IOException e)
-	{
-	    luwrain.message(strings.errorSavingFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
-	    return true;
-	}
-	base.modified = false;
-	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
-	return true;
-    }
 
     void onSaveAs(EditArea area)
     {
@@ -190,6 +163,21 @@ final class MainLayout extends LayoutBase
 	    luwrain.onAreaNewContent(editArea);
 	}
     }
+
+    void setText(String[] text)
+    {
+	NullCheck.notNullItems(text, "text");
+	//FIXME:
+    }
+    void onAreaNewName()
+    {
+	app.getLuwrain().onAreaNewName(editArea);
+	    }
+
+    String[] getLines()
+	      {
+		  return editarea.getLines();
+	      }
 
 
 
