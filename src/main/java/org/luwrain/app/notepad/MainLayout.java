@@ -34,6 +34,7 @@ final class MainLayout extends LayoutBase
     MainLayout(App app)
     {
 	NullCheck.notNull(app, "app");
+	this.app = app;
 			       this.editArea = new EditArea(createEditParams()) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
@@ -91,76 +92,76 @@ final class MainLayout extends LayoutBase
         void onOpen(EditArea editArea)
     {
 	NullCheck.notNull(editArea, "editArea");
-	final File file = conv.open();
+	final File file = app.getConv().open();
 	if (file == null)
 	    return;
-	base.file = file;
-	luwrain.onAreaNewName(editArea);
+	app.file = file;
+	app.getLuwrain().onAreaNewName(editArea);
 	try {
-	    editArea.getContent().setLines(base.read());
+	    editArea.getContent().setLines(app.read());
 	}
 	catch(IOException e)
 	{
-	    luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+	    app.getLuwrain().message(app.getStrings().errorOpeningFile(app.getI18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
 	    return;
 	}
 	editArea.reset(false);
-	luwrain.onAreaNewContent(editArea);
-	luwrain.onAreaNewHotPoint(editArea);
-	base.modified = false;
+	app.getLuwrain().onAreaNewContent(editArea);
+	app.getLuwrain().onAreaNewHotPoint(editArea);
+	app.modified = false;
     }
 
 
     void onSaveAs(EditArea area)
     {
 	NullCheck.notNull(area, "area");
-	final File f = conv.save(base.file);
+	final File f = app.getConv().save(app.file);
 	if (f == null)
 	    return;
-	base.file = f;
-	luwrain.onAreaNewName(area);
+	app.file = f;
+	app.getLuwrain().onAreaNewName(editArea);
 	try {
-	    base.save(area.getLines());
+	    app.save(editArea.getLines());
 	}
 	catch(IOException e)
 	{
-	    luwrain.message(strings.errorSavingFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+	    app.getLuwrain().message(app.getStrings().errorSavingFile(app.getI18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
 	    return;
 	}
-	base.modified = false;
-	luwrain.message(strings.fileIsSaved(), Luwrain.MessageType.OK);
+	app.modified = false;
+	app.getLuwrain().message(app.getStrings().fileIsSaved(), Luwrain.MessageType.OK);
     }
 
     void onCharset(EditArea editArea)
     {
 	NullCheck.notNull(editArea, "editArea");
-	if (base.modified)
+	if (app.modified)
 	{
-	    switch(conv.unsavedChanges())
+	    switch(app.getConv().unsavedChanges())
 	    {
 	    case CONTINUE_SAVE:
-		if (!onSave(editArea))
+		if (!app.onSave(editArea))
 		    return;
 	    case CANCEL:
 		return;
 	    }
 	}
-	final String res = conv.charset();
+	final String res = app.getConv().charset();
 	if (res == null)
 	    return;
-	base.charset = res;
-	if (base.file != null && //!base.modified &&
-	    conv.rereadWithNewCharser(base.file))
+	app.charset = res;
+	if (app.file != null && //!base.modified &&
+	    app.getConv().rereadWithNewCharser(app.file))
 	{
 	    try {
-		editArea.getContent().setLines(base.read());
+		editArea.getContent().setLines(app.read());
 	    }
 	    catch(IOException e)
 	    {
-		luwrain.message(strings.errorOpeningFile(luwrain.i18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+		app.getLuwrain().message(app.getStrings().errorOpeningFile(app.getI18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
 		return;
 	    }
-	    luwrain.onAreaNewContent(editArea);
+	    app.getLuwrain().onAreaNewContent(editArea);
 	}
     }
 
@@ -176,7 +177,7 @@ final class MainLayout extends LayoutBase
 
     String[] getLines()
 	      {
-		  return editarea.getLines();
+		  return editArea.getLines();
 	      }
 
 
@@ -189,16 +190,16 @@ AreaLayout getLayout()
     EditArea.Params createEditParams()
     {
 		final EditArea.Params params = new EditArea.Params();
-	params.context = new DefaultControlContext(luwrain);
+		params.context = new DefaultControlContext(app.getLuwrain());
 	params.name = "";
 		params.appearance = new Appearance(params.context);
 		params.appearance = new EditUtils.DefaultEditAreaAppearance(params.context);
-	params.changeListener = ()->{modified = true;};
+	params.changeListener = ()->{app.modified = true;};
 	params.editFactory = (p, c)->{
 	    final MultilineEdit.Params pp = new MultilineEdit.Params();
 	    pp.context = p.context;
-	    	    	    Base.this.corrector.setDefaultCorrector(c);
-	    pp.model = Base.this.corrector;
+	    	    	    app.corrector.setDefaultCorrector(c);
+	    pp.model = app.corrector;
 	    pp.regionPoint = p.regionPoint;
 	    pp.appearance = p.appearance;
 	    return new MultilineEdit(pp);

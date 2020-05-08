@@ -34,8 +34,8 @@ final class NarratingLayout extends LayoutBase
     NarratingLayout(App app)
     {
 	NullCheck.notNull(app, "app");
-
-	this.narratingArea = new SimpleArea(new DefaultControlContext(luwrain), strings.narratingAreaName()){
+	this.app = app;
+	this.narratingArea = new SimpleArea(new DefaultControlContext(app.getLuwrain()), app.getStrings().narratingAreaName()){
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
