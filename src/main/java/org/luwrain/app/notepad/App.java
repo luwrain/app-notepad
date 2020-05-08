@@ -1,5 +1,5 @@
 /*
-c   Copyright 2012-2019 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
 
    This file is part of LUWRAIN.
 
@@ -25,47 +25,51 @@ import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.script.*;
 
-final class App implements Application
+final class App extends AppBase<Strings>
 {
-    private Luwrain luwrain = null;
-    private Strings strings = null;
-    private Base base = null;
-    private Actions actions = null;
-    private ActionLists actionLists = null;
+    static final String LOG_COMPONENT = "notepad";
+    static private final String NATURAL_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.natural";
+        static private final String PROGRAMMING_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.programming";
 
-    private EditArea editArea = null;
-    private SimpleArea narratingArea = null;
-    private AreaLayoutHelper layout = null;
+    enum Mode {
+	NONE,
+	NATURAL,
+	PROGRAMMING
+    };
 
+            File file = null;
+    boolean modified = false;
+    String charset = "UTF-8";
+    String lineSeparator = System.lineSeparator();
+    Mode mode = Mode.NONE;
+    boolean speakIndent = false;
+
+    final EditUtils.ActiveCorrector corrector;
+
+    
+//for narrating
+    FutureTask narratingTask = null; 
+    Narrating narrating = null;
+
+
+
+    
     private final String arg;
 
     App()
     {
-	arg = null;
+	this(null);
     }
 
     App(String arg)
     {
-	NullCheck.notNull(arg, "arg");
+	super(Strings.NAME, Strings.class);
 	this.arg = arg;
+		this.corrector = new EditUtils.ActiveCorrector();
     }
 
-    @Override public InitResult onLaunchApp(Luwrain luwrain)
+    @Override public boolean onAppInit()
     {
-	NullCheck.notNull(luwrain, "luwrain");
-	final Object o = luwrain.i18n().getStrings(Strings.NAME);
-	if (o == null || !(o instanceof Strings))
-	    return new InitResult(InitResult.Type.NO_STRINGS_OBJ, Strings.NAME);
-	strings = (Strings)o;
-	this.luwrain = luwrain;
-	this.base = new Base(luwrain, strings);
-	this.actions = new Actions(base);
-	this.actionLists = new ActionLists(luwrain, strings, base);
-	createArea();
-	this.layout = new AreaLayoutHelper(()->{
-		luwrain.onNewAreaLayout();
-		luwrain.announceActiveArea();
-	    }, editArea);
 	if (arg != null && !arg.isEmpty())
 	{
 	    base.file = new File(arg);
@@ -82,252 +86,9 @@ final class App implements Application
 	return new InitResult();
     }
 
-    private void createArea()
+    @Override public AreaLayout getDefaultAreaLayout()
     {
-	this.editArea = new EditArea(base.createEditParams()) {
-		@Override public boolean onInputEvent(KeyboardEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.isSpecial() && !event.isModified())
-			switch(event.getSpecial())
-			{
-			case ESCAPE:
-			    closeApp();
-			    return true;
-			case TAB:
-			    if (layout.getAdditionalArea() != null)
-			    {
-				luwrain.setActiveArea(layout.getAdditionalArea());
-				return true;
-			    }
-			    return super.onInputEvent(event);
-			}
-		    return super.onInputEvent(event);
-		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onSystemEvent(event);
-		    switch(event.getCode())
-		    {
-		    case CLOSE:
-			closeApp();
-			return true;
-		    case SAVE:
-			return actions.onSave( editArea);
-		    case PROPERTIES:
-			return showProps();
-		    case ACTION:
-			if (runActionHooks(event, regionPoint))
-			    return true;
-			if (ActionEvent.isAction(event, "save"))
-			    return actions.onSave(this);
-			if (ActionEvent.isAction(event, "save-as"))
-			{
-			    			    actions.onSaveAs(this);
-			    return true;
-			}
-			if (ActionEvent.isAction(event, "open"))
-			{
-			    if (!everythingSaved())
-				return true;
-actions.onOpen(this);
-return true;
-			}
-			if (ActionEvent.isAction(event, "charset"))
-			{
-			    actions.onCharset(this);
-			}
-			if (ActionEvent.isAction(event, "narrating"))
-			{
-			    if (!actions.onNarrating(narratingArea, editArea.getLines()))
-				return true;
-			    layout.openAdditionalArea(narratingArea, AreaLayoutHelper.Position.BOTTOM);
-			    luwrain.setActiveArea(narratingArea);
-			    return true;
-			}
-			if (ActionEvent.isAction(event, "mode-none"))
-			{
-			    base.activateMode(Base.Mode.NONE);
-			    luwrain.message(strings.modeNone(), Luwrain.MessageType.OK);
-			    return true;
-			}
-			if (ActionEvent.isAction(event, "mode-natural"))
-			{
-			    base.activateMode(Base.Mode.NATURAL);
-			    luwrain.message(strings.modeNatural(), Luwrain.MessageType.OK);
-			    return true;
-			}
-			if (ActionEvent.isAction(event, "mode-programming"))
-			{
-			    base.activateMode(Base.Mode.PROGRAMMING);
-			    luwrain.message(strings.modeProgramming(), Luwrain.MessageType.OK);
-			    return true;
-			}
-			return false;
-		    default:
-			return super.onSystemEvent(event);
-		    }
-		}
-		@Override public String getAreaName()
-		{
-		    if (base.file == null)
-			return strings.initialTitle();
-		    return base.file.getName();
-		}
-		@Override public Action[] getAreaActions()
-		{
-		    return actionLists.getActions();
-		}
-	    };
-
-	this.narratingArea = new SimpleArea(new DefaultControlContext(luwrain), strings.narratingAreaName()){
-		@Override public boolean onInputEvent(KeyboardEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.isSpecial() && !event.isModified())
-			switch(event.getSpecial())
-			{
-			case TAB:
-			    luwrain.setActiveArea(editArea);
-			    return true;
-			case ESCAPE:
-			    if (base.narratingTask != null && !base.narratingTask.isDone())
-			    {
-				//FIXME:confirmation
-				base.narrating.interrupting = true;
-				return true;
-			    }
-			    layout.closeAdditionalArea();
-			    return true;
-			}
-		    return super.onInputEvent(event);
-		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onSystemEvent(event);
-		    switch(event.getCode())
-		    {
-		    case CLOSE:
-			closeApp();
-			return true;
-		    default:
-			return super.onSystemEvent(event);
-		    }
-		}
-		@Override public Action[] getAreaActions()
-		{
-		    return new Action[0];
-		}
-	    };
-    }
-
-    private boolean runActionHooks(EnvironmentEvent event, AbstractRegionPoint regionPoint)
-    {
-	NullCheck.notNull(event, "event");
-	NullCheck.notNull(regionPoint, "regionPoint");
-	if (!(event instanceof ActionEvent))
-	    return false;
-	final ActionEvent actionEvent = (ActionEvent)event;
-	final MultilineEdit.Model model = editArea.getEdit().getMultilineEditModel();
-	if (model == null || !(model instanceof MultilineEditCorrector))
-	    return false;
-	final MultilineEditCorrector corrector = (MultilineEditCorrector)model;
-	final AtomicBoolean res = new AtomicBoolean(false);
-	corrector.doEditAction((lines, hotPoint)->{
-		try {
-		    res.set(luwrain.xRunHooks("luwrain.notepad.action", new Object[]{
-				actionEvent.getActionName(),
-				org.luwrain.script.TextScriptUtils.createTextEditHookObject(editArea, lines, hotPoint, regionPoint)
-			    }, Luwrain.HookStrategy.CHAIN_OF_RESPONSIBILITY));
-		}
-		catch(RuntimeException e)
-		{
-		    luwrain.crash(e);
-		}
-	    });
-	return res.get();
-    }
-
-    private boolean showProps()
-    {
-	final SimpleArea propsArea = new SimpleArea(new DefaultControlContext(luwrain), strings.propsAreaName()) {
-		@Override public boolean onInputEvent(KeyboardEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.isSpecial() && !event.isModified())
-			switch(event.getSpecial())
-			{
-			case ESCAPE:
-			    layout.closeTempLayout();
-			    return true;
-			}
-		    return super.onInputEvent(event);
-		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onSystemEvent(event);
-		    switch(event.getCode())
-		    {
-		    case CLOSE:
-			closeApp();
-			return true;
-		    default:
-			return super.onSystemEvent(event);
-		    }
-		}
-	    };
-	final EmptyHookObject hookObj = new EmptyHookObject(){
-		@Override public Object getMember(String name)
-		{
-		    NullCheck.notEmpty(name, "name");
-		    switch(name)
-		    {
-		    case "lines":
-			return ScriptUtils.createReadOnlyArray(editArea.getLines());
-		    case "fileName":
-			if (base.file == null)
-			    return "";
-			return base.file.getAbsolutePath();
-		    case "charset":
-			return base.charset;
-		    default:
-			return super.getMember(name);
-		    }
-		}
-	    };
-	final List<String> res = new LinkedList();
-	try {
-	    final Object o = new org.luwrain.script.hooks.ProviderHook(luwrain).run("luwrain.notepad.properties.basic", new Object[]{hookObj});
-	    if (o != null)
-	    {
-		final List r = ScriptUtils.getArray(o);
-		for(Object i: r)
-		{
-		    final String s = ScriptUtils.getStringValue(i);
-		    if (s != null && !s.trim().isEmpty())
-			res.add(s);
-		}
-	    }
-	}
-	catch(RuntimeException e)
-	{
-	    luwrain.crash(e);
-	    return true;
-	}
-	propsArea.beginLinesTrans();
-	propsArea.addLine("");
-	for(String s: res)
-	    propsArea.addLine(s);
-	propsArea.addLine("");
-	propsArea.endLinesTrans();
-	layout.openTempArea(propsArea);
-	return true;
+	return mainLayout.getLayout();
     }
 
     //Returns true, if there are no more modification which the user might want to save
@@ -353,6 +114,114 @@ return true;
 	    return;
 	luwrain.closeApp();
     }
+
+        void activateMode(Mode mode)
+    {
+	NullCheck.notNull(mode, "mode");
+	switch(mode)
+	{
+	case NATURAL:
+	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getDefaultCorrector(), NATURAL_MODE_CORRECTOR_HOOK));
+	    break;
+	case PROGRAMMING:
+	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(luwrain), corrector.getDefaultCorrector(), PROGRAMMING_MODE_CORRECTOR_HOOK));
+	    break;
+	}
+    }
+
+
+        String[] read() throws IOException
+    {
+	final String text = org.luwrain.util.FileUtils.readTextFileSingleString(file, charset);
+	return org.luwrain.util.FileUtils.universalLineSplitting(text);
+    }
+
+    void save(String[] lines) throws IOException
+    {
+	NullCheck.notNullItems(lines, "lines");
+	org.luwrain.util.FileUtils.writeTextFileMultipleStrings(file, lines, charset, lineSeparator);
+    }
+
+        boolean onNarrating(SimpleArea destArea, String[] text)
+    {
+	NullCheck.notNull(destArea, "destArea");
+	NullCheck.notNullItems(text, "text");
+	if (base.narratingTask != null && !base.narratingTask.isDone())
+	{
+	    luwrain.setActiveArea(destArea);
+	    return false;
+	}
+
+	final NarratingText narratingText = new NarratingText();
+	narratingText.split(text);
+	if (narratingText.sents.isEmpty())
+	{
+	    luwrain.message(strings.noTextToSynth(), Luwrain.MessageType.ERROR);
+	    return false;
+	}
+	final File destDir = conv.narratingDestDir();
+	if (destDir == null)
+	    return false;
+	final Channel channel;
+	try {
+	    channel = luwrain.loadSpeechChannel(base.sett.getNarratingChannelName(""), base.sett.getNarratingChannelParams(""));
+	}
+	catch(Exception e)
+	{
+	    luwrain.message(strings.errorLoadingSpeechChannel(e.getMessage()), Luwrain.MessageType.ERROR);
+	    e.printStackTrace();
+	    return false;
+	}
+	if (channel == null)
+	{
+	    luwrain.message(strings.noChannelToSynth(base.sett.getNarratingChannelName("")), Luwrain.MessageType.ERROR);
+	    return false;
+	}
+	Log.debug(LOG_COMPONENT, "narrating channel loaded: " + channel.getChannelName());
+	destArea.clear();
+	destArea.addLine(base.strings.narratingProgress("0.0%"));
+	destArea.addLine("");
+	base.narrating = new Narrating(base,
+				       narratingText.sents.toArray(new String[narratingText.sents.size()]),
+				       destDir, 
+				       new File(luwrain.getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel){
+		@Override protected void writeMessage(String text)
+		{
+		    NullCheck.notNull(text, "text");
+		    luwrain.runUiSafely(()->{
+			    destArea.insertLine(destArea.getLineCount() - 2, text);
+			});
+		}
+		@Override protected void progressUpdate(int sentsProcessed, int sentsTotal)
+		{
+		    final float value = ((float)sentsProcessed * 100) / sentsTotal;
+		    luwrain.runUiSafely(()->{
+			    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingProgress(String.format("%.1f", value)) + "%");
+			});
+		}
+		@Override protected void done()
+		{
+		    		    luwrain.runUiSafely(()->{
+					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingDone());
+					    		    luwrain.message(strings.narratingDone(), Luwrain.MessageType.DONE);
+			});
+		}
+				@Override protected void cancelled()
+		{
+		    		    luwrain.runUiSafely(()->{
+					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingCancelled());
+					    		    luwrain.message(strings.narratingCancelled(), Luwrain.MessageType.DONE);
+			});
+		}
+	    };
+	base.narratingTask = new FutureTask(base.narrating, null);
+	luwrain.executeBkg(base.narratingTask);
+	return true;
+    }
+
+
+    
+
 
     @Override public AreaLayout getAreaLayout()
     {
