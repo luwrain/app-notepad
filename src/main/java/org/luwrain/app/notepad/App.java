@@ -31,7 +31,7 @@ final class App extends AppBase<Strings>
 {
     static final String LOG_COMPONENT = "notepad";
     static private final String NATURAL_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.natural";
-        static private final String PROGRAMMING_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.programming";
+    static private final String PROGRAMMING_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.programming";
 
     enum Mode {
 	NONE,
@@ -39,22 +39,21 @@ final class App extends AppBase<Strings>
 	PROGRAMMING
     };
 
-            File file = null;
+    File file = null;
     boolean modified = false;
     String charset = "UTF-8";
     String lineSeparator = System.lineSeparator();
     Mode mode = Mode.NONE;
     boolean speakIndent = false;
-
-    final EditUtils.ActiveCorrector corrector;
-        final Settings sett = null;
-        FutureTask narratingTask = null; 
+    FutureTask narratingTask = null; 
     Narrating narrating = null;
+    final EditUtils.ActiveCorrector corrector;
+
+    final Settings sett = null;
     private final String arg;
     private Conversations conv = null;
     private MainLayout mainLayout = null;
     private NarratingLayout narratingLayout = null;
-
 
     App()
     {
@@ -65,10 +64,10 @@ final class App extends AppBase<Strings>
     {
 	super(Strings.NAME, Strings.class);
 	this.arg = arg;
-		this.corrector = new EditUtils.ActiveCorrector();
+	this.corrector = new EditUtils.ActiveCorrector();
     }
 
-    @Override public boolean onAppInit()
+    @Override public boolean onAppInit() throws IOException
     {
 	this.conv = new Conversations(getLuwrain(), getStrings());
 	this.mainLayout = new MainLayout(this);
@@ -76,25 +75,15 @@ final class App extends AppBase<Strings>
 	if (arg != null && !arg.isEmpty())
 	{
 	    this.file = new File(arg);
-	    try {
-		if (this.file.exists() && !this.file.isDirectory())
-		    mainLayout.setText(read());
-		this.modified = false;
-	    }
-	    catch(IOException e)
-	    {
-		getLuwrain().message(getStrings().errorOpeningFile(getI18n().getExceptionDescr(e)));
-	    }
+	    if (this.file.exists() && !this.file.isDirectory())
+		mainLayout.setText(read());
+	    this.modified = false;
 	}
 	return true;
     }
 
-    @Override public AreaLayout getDefaultAreaLayout()
-    {
-	return mainLayout.getLayout();
-    }
 
-        //Returns True if everything saved, false otherwise
+    //Returns True if everything saved, false otherwise
     boolean onSave(EditArea area)
     {
 	NullCheck.notNull(area, "area");
@@ -124,7 +113,6 @@ final class App extends AppBase<Strings>
 	return true;
     }
 
-
     //Returns true, if there are no more modification which the user might want to save
     private boolean everythingSaved()
     {
@@ -147,14 +135,7 @@ final class App extends AppBase<Strings>
 	return this.conv;
     }
 
-    @Override public void closeApp()
-    {
-	if (!everythingSaved())
-	    return;
-super.closeApp();
-    }
-
-        void activateMode(Mode mode)
+    void activateMode(Mode mode)
     {
 	NullCheck.notNull(mode, "mode");
 	switch(mode)
@@ -168,8 +149,7 @@ super.closeApp();
 	}
     }
 
-
-        String[] read() throws IOException
+    String[] read() throws IOException
     {
 	final String text = org.luwrain.util.FileUtils.readTextFileSingleString(file, charset);
 	return org.luwrain.util.FileUtils.universalLineSplitting(text);
@@ -181,7 +161,7 @@ super.closeApp();
 	org.luwrain.util.FileUtils.writeTextFileMultipleStrings(file, lines, charset, lineSeparator);
     }
 
-        boolean onNarrating(SimpleArea destArea, String[] text)
+    boolean onNarrating(SimpleArea destArea, String[] text)
     {
 	NullCheck.notNull(destArea, "destArea");
 	NullCheck.notNullItems(text, "text");
@@ -190,7 +170,6 @@ super.closeApp();
 	    //	    luwrain.setActiveArea(destArea);
 	    return false;
 	}
-
 	final NarratingText narratingText = new NarratingText();
 	narratingText.split(text);
 	if (narratingText.sents.isEmpty())
@@ -245,7 +224,7 @@ super.closeApp();
 			    getLuwrain().message(getStrings().narratingDone(), Luwrain.MessageType.DONE);
 			});
 		}
-				@Override protected void cancelled()
+		@Override protected void cancelled()
 		{
 		    getLuwrain().runUiSafely(()->{
 			    //					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingCancelled());
@@ -258,9 +237,15 @@ super.closeApp();
 	return true;
     }
 
+    @Override public AreaLayout getDefaultAreaLayout()
+    {
+	return mainLayout.getLayout();
+    }
 
-    
-
-
+    @Override public void closeApp()
+    {
+	if (!everythingSaved())
+	    return;
+	super.closeApp();
+    }
 }
-
