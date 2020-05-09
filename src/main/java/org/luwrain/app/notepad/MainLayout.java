@@ -56,7 +56,9 @@ final class MainLayout extends LayoutBase
 			    {
 			    case SAVE:
 				app.onSave();
-				return true;
+								return true;
+			    case PROPERTIES:
+				return showProperties();
 			    }
 					    if (app.onSystemEvent(this, event, actions))
 			return true;
@@ -148,6 +150,17 @@ final class MainLayout extends LayoutBase
 	    }
 	}
     return true;
+    }
+
+    private boolean showProperties()
+    {
+	final PropertiesLayout propertiesLayout = new PropertiesLayout(app, new String[0], ()->{
+		app.openLayout(getLayout());
+		app.getLuwrain().announceActiveArea();
+	    });
+	app.openLayout(propertiesLayout.getLayout());
+	app.getLuwrain().announceActiveArea();
+	return true;
     }
 
         String[] getText()

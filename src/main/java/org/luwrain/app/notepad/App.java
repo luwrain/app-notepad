@@ -83,6 +83,12 @@ final class App extends AppBase<Strings>
 	return true;
     }
 
+    void openLayout(AreaLayout layout)
+    {
+	NullCheck.notNull(layout, "layout");
+	getLayout().setBasicLayout(layout);
+    }
+
     //Returns True if everything saved, false otherwise
     boolean onSave()
     {
@@ -232,7 +238,7 @@ final class App extends AppBase<Strings>
 	org.luwrain.util.FileUtils.writeTextFileMultipleStrings(file, lines, charset, lineSeparator);
     }
 
-            @Override public boolean onInputEvent(Area area, KeyboardEvent event)
+    boolean onInputEvent(Area area, KeyboardEvent event, Runnable closing)
     {
 	NullCheck.notNull(area, "area");
 	if (super.onInputEvent(area, event))
@@ -241,10 +247,19 @@ final class App extends AppBase<Strings>
 	    switch(event.getSpecial())
 	    {
 	    case ESCAPE:
-		closeApp();
+		if (closing != null)
+		    closing.run(); else
+		    closeApp();
 		return true;
 	    }
 	return false;
+    }
+
+                @Override public boolean onInputEvent(Area area, KeyboardEvent event)
+    {
+	NullCheck.notNull(area, "area");
+	NullCheck.notNull(event, "event");
+	return onInputEvent(area, event, null);
     }
 
         Conversations getConv()

@@ -29,16 +29,17 @@ final class PropertiesLayout extends LayoutBase
     private final App app;
     private final SimpleArea propsArea;
 
-    PropertiesLayout(App app, String[] lines)
+    PropertiesLayout(App app, String[] lines, Runnable closing)
     {
 	NullCheck.notNull(app, "app");
 	NullCheck.notNullItems(lines, "lines");
+	NullCheck.notNull(closing, "closing");
 	this.app = app;
 	this.propsArea = new SimpleArea(new DefaultControlContext(app.getLuwrain()), app.getStrings().propsAreaName()) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
-		    if (app.onInputEvent(this, event))
+		    if (app.onInputEvent(this, event, closing))
 			return true;
 		    return super.onInputEvent(event);
 		}
