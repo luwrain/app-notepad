@@ -23,7 +23,6 @@ import java.io.*;
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
-import org.luwrain.script.*;
 import org.luwrain.speech.*;
 import org.luwrain.template.*;
 
