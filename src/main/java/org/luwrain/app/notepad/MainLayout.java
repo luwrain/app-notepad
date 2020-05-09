@@ -37,7 +37,9 @@ final class MainLayout extends LayoutBase
 	this.app = app;
 	this.editArea = new EditArea(createEditParams()) {
 		private final Actions actions = actions(
-							action("open", app.getStrings().actionOpen(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actOpen)
+							action("open", app.getStrings().actionOpen(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
+														action("save-as", app.getStrings().actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
+														action("charset", app.getStrings().actionCharset(), new KeyboardEvent(KeyboardEvent.Special.F9), MainLayout .this::actCharset)
 							);
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
@@ -48,7 +50,15 @@ final class MainLayout extends LayoutBase
 		}
 		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
-		    if (app.onSystemEvent(this, event, actions))
+		    NullCheck.notNull(event, "event");
+			if (event.getType() == EnvironmentEvent.Type.REGULAR)
+			    switch(event.getCode())
+			    {
+			    case SAVE:
+				app.onSave();
+				return true;
+			    }
+					    if (app.onSystemEvent(this, event, actions))
 			return true;
 		    return super.onSystemEvent(event);
 		}
@@ -75,7 +85,7 @@ final class MainLayout extends LayoutBase
     private boolean actOpen()
     {
 	if (!app.everythingSaved())
-	    return false;
+	    return true;
 		final File file = app.getConv().open();
 	if (file == null)
 	    return true;
@@ -93,63 +103,57 @@ final class MainLayout extends LayoutBase
 	}
 	app.setAppName(app.file.getName());
 	editArea.reset(false);
-	app.getLuwrain().onAreaNewName(editArea);
+	onNewFile();
 	app.modified = false;
 	return true;
     }
 
-    void onSaveAs(EditArea area)
+    private boolean actSaveAs()
     {
-	NullCheck.notNull(area, "area");
 	final File f = app.getConv().save(app.file);
 	if (f == null)
-	    return;
+	    return true;
 	app.file = f;
-	app.getLuwrain().onAreaNewName(editArea);
+	onNewFile();
 	try {
-	    app.save(editArea.getLines());
+	    app.save(getText());
 	}
 	catch(IOException e)
 	{
-	    app.getLuwrain().message(app.getStrings().errorSavingFile(app.getI18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
-	    return;
+	    app.getLuwrain().crash(e);
+	    return true;
 	}
 	app.modified = false;
 	app.getLuwrain().message(app.getStrings().fileIsSaved(), Luwrain.MessageType.OK);
+	return true;
     }
 
-    void onCharset(EditArea editArea)
+    private boolean actCharset()
     {
-	NullCheck.notNull(editArea, "editArea");
-	if (app.modified)
-	{
-	    switch(app.getConv().unsavedChanges())
-	    {
-	    case CONTINUE_SAVE:
-		if (!app.onSave())
-		    return;
-	    case CANCEL:
-		return;
-	    }
-	}
+		if (!app.everythingSaved())
+	    return true;
 	final String res = app.getConv().charset();
 	if (res == null)
-	    return;
+	    return true;
 	app.charset = res;
-	if (app.file != null && //!base.modified &&
-	    app.getConv().rereadWithNewCharser(app.file))
+	if (app.file != null && app.getConv().rereadWithNewCharser(app.file))
 	{
 	    try {
-		editArea.getContent().setLines(app.read());
+		setText(app.read());
 	    }
 	    catch(IOException e)
 	    {
-		app.getLuwrain().message(app.getStrings().errorOpeningFile(app.getI18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
-		return;
+		app.getLuwrain().crash(e);
+		return true;
 	    }
-	    app.getLuwrain().onAreaNewContent(editArea);
 	}
+    return true;
     }
+
+        String[] getText()
+	      {
+		  return editArea.getLines();
+	      }
 
     void setText(String[] text)
     {
@@ -158,17 +162,10 @@ final class MainLayout extends LayoutBase
 	app.getLuwrain().onAreaNewContent(editArea);
     }
 
-    void onAreaNewName()
+        void onNewFile()
     {
 	app.getLuwrain().onAreaNewName(editArea);
     }
-
-    String[] getLines()
-	      {
-		  return editArea.getLines();
-	      }
-
-
 
 AreaLayout getLayout()
     {
@@ -194,5 +191,4 @@ AreaLayout getLayout()
 	};
 	return params;
     }
-
 }

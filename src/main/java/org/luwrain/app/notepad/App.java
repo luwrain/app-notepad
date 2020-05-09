@@ -30,25 +30,22 @@ import org.luwrain.template.*;
 final class App extends AppBase<Strings>
 {
     static final String LOG_COMPONENT = "notepad";
+    static private final String DEFAULT_CHARSET = "UTF-8";
     static private final String NATURAL_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.natural";
     static private final String PROGRAMMING_MODE_CORRECTOR_HOOK = "luwrain.notepad.mode.programming";
 
-    enum Mode {
-	NONE,
-	NATURAL,
-	PROGRAMMING
-    };
+    enum Mode { NONE, NATURAL, PROGRAMMING };
 
     File file = null;
     boolean modified = false;
-    String charset = "UTF-8";
+    String charset = DEFAULT_CHARSET;
     String lineSeparator = System.lineSeparator();
     Mode mode = Mode.NONE;
+        final EditUtils.ActiveCorrector corrector;
     boolean speakIndent = false;
-    FutureTask narratingTask = null; 
-    Narrating narrating = null;
-    final EditUtils.ActiveCorrector corrector;
 
+    private FutureTask narratingTask = null; 
+    private Narrating narrating = null;
     Settings sett = null;
     private final String arg;
     private Conversations conv = null;
@@ -101,16 +98,16 @@ final class App extends AppBase<Strings>
 	    if (f == null)
 		return false;
 	    this.file = f;
-	    mainLayout.onAreaNewName();
+	    mainLayout.onNewFile();
 	    setAppName(file.getName());
 	}
 	try {
-	    save(mainLayout.getLines());
+	    save(mainLayout.getText());
 	}
 	catch(IOException e)
 	{
 	    getLuwrain().crash(e);
-	    return true;
+	    return false;
 	}
 	this.modified = false;
 	getLuwrain().message(getStrings().fileIsSaved(), Luwrain.MessageType.OK);

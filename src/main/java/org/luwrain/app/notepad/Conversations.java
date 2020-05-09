@@ -24,7 +24,7 @@ import org.luwrain.popups.*;
 
 final class Conversations
 {
-    static final String charsets = "UTF-8:KOI8-R:windows-1251:IBM866:ISO-8859-5:";
+    static final String charsets = "UTF-8:KOI8-R:windows-1251:IBM866:ISO-8859-5";
     enum UnsavedChangesRes {CONTINUE_SAVE, CONTINUE_UNSAVED, CANCEL};
 
     private final Luwrain luwrain;
