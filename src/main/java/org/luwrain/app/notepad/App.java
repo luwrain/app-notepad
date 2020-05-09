@@ -49,9 +49,10 @@ final class App extends AppBase<Strings>
     Narrating narrating = null;
     final EditUtils.ActiveCorrector corrector;
 
-    final Settings sett = null;
+    Settings sett = null;
     private final String arg;
     private Conversations conv = null;
+    private Hooks hooks = null;
     private MainLayout mainLayout = null;
     private NarratingLayout narratingLayout = null;
 
@@ -69,24 +70,26 @@ final class App extends AppBase<Strings>
 
     @Override public boolean onAppInit() throws IOException
     {
+	this.sett = Settings.create(getLuwrain().getRegistry());
 	this.conv = new Conversations(getLuwrain(), getStrings());
+	this.hooks = new Hooks(this);
 	this.mainLayout = new MainLayout(this);
 	this.narratingLayout = new NarratingLayout(this);
+	setAppName(getStrings().appName());
 	if (arg != null && !arg.isEmpty())
 	{
 	    this.file = new File(arg);
 	    if (this.file.exists() && !this.file.isDirectory())
 		mainLayout.setText(read());
 	    this.modified = false;
+	    setAppName(file.getName());
 	}
 	return true;
     }
 
-
     //Returns True if everything saved, false otherwise
-    boolean onSave(EditArea area)
+    boolean onSave()
     {
-	NullCheck.notNull(area, "area");
 	if (!modified)
 	{
 	    getLuwrain().message(getStrings().noModificationsToSave());
@@ -94,18 +97,19 @@ final class App extends AppBase<Strings>
 	}
 	if (file == null)
 	{
-	    final File f = conv.save(file );
+	    final File f = conv.save(null);
 	    if (f == null)
 		return false;
 	    this.file = f;
 	    mainLayout.onAreaNewName();
+	    setAppName(file.getName());
 	}
 	try {
 	    save(mainLayout.getLines());
 	}
 	catch(IOException e)
 	{
-	    getLuwrain().message(getStrings().errorSavingFile(getI18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
+	    getLuwrain().crash(e);
 	    return true;
 	}
 	this.modified = false;
@@ -113,26 +117,21 @@ final class App extends AppBase<Strings>
 	return true;
     }
 
-    //Returns true, if there are no more modification which the user might want to save
-    private boolean everythingSaved()
+    //Returns true, if there are no modifications a user might want to save
+    boolean everythingSaved()
     {
 	if (!modified)
 	    return true;
 	switch(conv.unsavedChanges())
 	{
 	case CONTINUE_SAVE:
-	    return onSave(null);
+	    return onSave();
 	case CONTINUE_UNSAVED:
 	    return true;
 	case CANCEL:
 	    return false;
 	}
 	return false;
-    }
-
-    Conversations getConv()
-    {
-	return this.conv;
     }
 
     void activateMode(Mode mode)
@@ -147,18 +146,6 @@ final class App extends AppBase<Strings>
 	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(getLuwrain()), corrector.getDefaultCorrector(), PROGRAMMING_MODE_CORRECTOR_HOOK));
 	    break;
 	}
-    }
-
-    String[] read() throws IOException
-    {
-	final String text = org.luwrain.util.FileUtils.readTextFileSingleString(file, charset);
-	return org.luwrain.util.FileUtils.universalLineSplitting(text);
-    }
-
-    void save(String[] lines) throws IOException
-    {
-	NullCheck.notNullItems(lines, "lines");
-	org.luwrain.util.FileUtils.writeTextFileMultipleStrings(file, lines, charset, lineSeparator);
     }
 
     boolean onNarrating(SimpleArea destArea, String[] text)
@@ -237,6 +224,48 @@ final class App extends AppBase<Strings>
 	return true;
     }
 
+        String[] read() throws IOException
+    {
+	final String text = org.luwrain.util.FileUtils.readTextFileSingleString(file, charset);
+	return org.luwrain.util.FileUtils.universalLineSplitting(text);
+    }
+
+    void save(String[] lines) throws IOException
+    {
+	NullCheck.notNullItems(lines, "lines");
+	org.luwrain.util.FileUtils.writeTextFileMultipleStrings(file, lines, charset, lineSeparator);
+    }
+
+            @Override public boolean onInputEvent(Area area, KeyboardEvent event)
+    {
+	NullCheck.notNull(area, "area");
+	if (super.onInputEvent(area, event))
+	    return true;
+	if (event.isSpecial())
+	    switch(event.getSpecial())
+	    {
+	    case ESCAPE:
+		closeApp();
+		return true;
+	    }
+	return false;
+    }
+
+        Conversations getConv()
+    {
+	return this.conv;
+    }
+
+    Hooks getHooks()
+    {
+	return this.hooks;
+    }
+
+    Settings getSett()
+    {
+	return this.sett;
+    }
+
     @Override public AreaLayout getDefaultAreaLayout()
     {
 	return mainLayout.getLayout();
@@ -247,5 +276,11 @@ final class App extends AppBase<Strings>
 	if (!everythingSaved())
 	    return;
 	super.closeApp();
+    }
+
+    @Override public void setAppName(String newName)
+    {
+	NullCheck.notEmpty(newName, "newName");
+	super.setAppName(newName);
     }
 }

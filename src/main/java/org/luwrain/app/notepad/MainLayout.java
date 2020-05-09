@@ -35,19 +35,29 @@ final class MainLayout extends LayoutBase
     {
 	NullCheck.notNull(app, "app");
 	this.app = app;
-			       this.editArea = new EditArea(createEditParams()) {
+	this.editArea = new EditArea(createEditParams()) {
+		private final Actions actions = actions(
+							action("open", app.getStrings().actionOpen(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actOpen)
+							);
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onInputEvent(this, event))
 			return true;
 		    return super.onInputEvent(event);
-		    		}
+		}
 		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
-		    if (app.onSystemEvent(this, event))
+		    if (app.onSystemEvent(this, event, actions))
 			return true;
 		    return super.onSystemEvent(event);
+		}
+		@Override public boolean onAreaQuery(AreaQuery query)
+		{
+		    NullCheck.notNull(query, "query");
+		    if (app.onAreaQuery(this, query))
+			return true;
+		    return super.onAreaQuery(query);
 		}
 		@Override public String getAreaName()
 		{
@@ -57,60 +67,36 @@ final class MainLayout extends LayoutBase
 		}
 		@Override public Action[] getAreaActions()
 		{
-		    return new Action[0];
+		    return actions.getAreaActions();
 		}
 	    };
     }
 
-    private boolean runActionHooks(EnvironmentEvent event, AbstractRegionPoint regionPoint)
+    private boolean actOpen()
     {
-	NullCheck.notNull(event, "event");
-	NullCheck.notNull(regionPoint, "regionPoint");
-	if (!(event instanceof ActionEvent))
+	if (!app.everythingSaved())
 	    return false;
-	final ActionEvent actionEvent = (ActionEvent)event;
-	final MultilineEdit.Model model = editArea.getEdit().getMultilineEditModel();
-	if (model == null || !(model instanceof MultilineEditCorrector))
-	    return false;
-	final MultilineEditCorrector corrector = (MultilineEditCorrector)model;
-	final AtomicBoolean res = new AtomicBoolean(false);
-	corrector.doEditAction((lines, hotPoint)->{
-		try {
-		    res.set(app.getLuwrain().xRunHooks("luwrain.notepad.action", new Object[]{
-				actionEvent.getActionName(),
-				org.luwrain.script.TextScriptUtils.createTextEditHookObject(editArea, lines, hotPoint, regionPoint)
-			    }, Luwrain.HookStrategy.CHAIN_OF_RESPONSIBILITY));
-		}
-		catch(RuntimeException e)
-		{
-		    app.getLuwrain().crash(e);
-		}
-	    });
-	return res.get();
-    }
-
-        void onOpen(EditArea editArea)
-    {
-	NullCheck.notNull(editArea, "editArea");
-	final File file = app.getConv().open();
+		final File file = app.getConv().open();
 	if (file == null)
-	    return;
+	    return true;
+	//To restore on failed reading
+	final File origFile = app.file;
 	app.file = file;
-	app.getLuwrain().onAreaNewName(editArea);
 	try {
-	    editArea.getContent().setLines(app.read());
+	    setText(app.read());
 	}
 	catch(IOException e)
 	{
-	    app.getLuwrain().message(app.getStrings().errorOpeningFile(app.getI18n().getExceptionDescr(e)), Luwrain.MessageType.ERROR);
-	    return;
+	    app.file = origFile;
+	    app.getLuwrain().crash(e);
+	    return true;
 	}
+	app.setAppName(app.file.getName());
 	editArea.reset(false);
-	app.getLuwrain().onAreaNewContent(editArea);
-	app.getLuwrain().onAreaNewHotPoint(editArea);
+	app.getLuwrain().onAreaNewName(editArea);
 	app.modified = false;
+	return true;
     }
-
 
     void onSaveAs(EditArea area)
     {
@@ -140,7 +126,7 @@ final class MainLayout extends LayoutBase
 	    switch(app.getConv().unsavedChanges())
 	    {
 	    case CONTINUE_SAVE:
-		if (!app.onSave(editArea))
+		if (!app.onSave())
 		    return;
 	    case CANCEL:
 		return;
@@ -168,12 +154,14 @@ final class MainLayout extends LayoutBase
     void setText(String[] text)
     {
 	NullCheck.notNullItems(text, "text");
-	//FIXME:
+	editArea.getContent().setLines(text);
+	app.getLuwrain().onAreaNewContent(editArea);
     }
+
     void onAreaNewName()
     {
 	app.getLuwrain().onAreaNewName(editArea);
-	    }
+    }
 
     String[] getLines()
 	      {
