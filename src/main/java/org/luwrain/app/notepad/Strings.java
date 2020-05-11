@@ -26,15 +26,10 @@ public interface Strings
     String actionNoIndents();
     String actionOpen();
     String actionReplace();
-    String actionSave();
     String actionSaveAs();
     String appName();
-    String charsetPopupName();
     String charsetPopupPrefix();
     String enteredPathMayNotBeDir(String fileName);
-    String errorLoadingSpeechChannel(String message);
-    String errorOpeningFile(String comment);
-    String errorSavingFile(String comment);
     String fileIsSaved();
     String initialTitle();
     String modeNatural();
@@ -45,7 +40,6 @@ public interface Strings
     String narratingDestDirPopupName();
     String narratingDestDirPopupPrefix();
     String narratingDone();
-    String narratingNoSupportedAudioFormats();
     String narratingFileWritten(String file);
     String narratingProgress(String status);
     String noChannelToSynth(String channelName);
@@ -57,10 +51,9 @@ public interface Strings
     String saveChangesPopupName();
     String saveChangesPopupQuestion();
     String savePopupName();
-        String savePopupPrefix();
+    String savePopupPrefix();
     String settingsFormFileLenMayNotBeNegative();
     String settingsFormFileLenIsNotInteger();
-    String settingsFormLameCommand();
     String settingsFormName();
     String settingsFormNarratedFileLen();
     String settingsFormNarratingChannelName();
@@ -68,4 +61,5 @@ public interface Strings
     String settingsFormNarratingPauseDuration();
     String settingsFormNarratingSpeechPitch();
     String settingsFormNarratingSpeechRate();
+    String cancelNarratingBeforeClosing();
 }

@@ -269,6 +269,11 @@ this.narratingTask = null;
 
     @Override public void closeApp()
     {
+	if (isBusy())
+	{
+	    getLuwrain().message(getStrings().cancelNarratingBeforeClosing(), Luwrain.MessageType.ERROR);
+	    return;
+	}
 	if (!everythingSaved())
 	    return;
 	super.closeApp();
