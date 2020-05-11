@@ -153,7 +153,7 @@ final class App extends AppBase<Strings>
     boolean narrating(String[] text)
     {
 	NullCheck.notNullItems(text, "text");
-	if (this.narratingTask != null && !this.narratingTask.isDone())
+	if (isBusy())
 	    return false;
 	final NarratingText narratingText = new NarratingText();
 	narratingText.split(text);
@@ -191,11 +191,21 @@ final class App extends AppBase<Strings>
 
     private void cancelNarrating()
     {
-	if (narratingTask == null || narratingTask.isDone())
+	if (isBusy() && narrating != null)
 	{
+	    narrating.interrupting = true;
+	    return;
+	}
+	this.narrating = null;
+this.narratingTask = null;
 	    getLayout().setBasicLayout(mainLayout.getLayout());
 	    getLuwrain().announceActiveArea();
-	}
+    }
+
+    void finishedNarrating()
+    {
+	narrating = null;
+	narratingTask = null;
     }
 
         String[] read() throws IOException
@@ -213,8 +223,6 @@ final class App extends AppBase<Strings>
     boolean onInputEvent(Area area, KeyboardEvent event, Runnable closing)
     {
 	NullCheck.notNull(area, "area");
-	if (super.onInputEvent(area, event))
-	    return true;
 	if (event.isSpecial())
 	    switch(event.getSpecial())
 	    {
@@ -224,7 +232,7 @@ final class App extends AppBase<Strings>
 		    closeApp();
 		return true;
 	    }
-	return false;
+	return super.onInputEvent(area, event);
     }
 
                 @Override public boolean onInputEvent(Area area, KeyboardEvent event)
@@ -247,6 +255,11 @@ final class App extends AppBase<Strings>
     Settings getSett()
     {
 	return this.sett;
+    }
+
+    @Override public boolean isBusy()
+    {
+	return narratingTask != null && !narratingTask.isDone();
     }
 
     @Override public AreaLayout getDefaultAreaLayout()
