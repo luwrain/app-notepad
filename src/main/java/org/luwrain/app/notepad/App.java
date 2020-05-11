@@ -40,7 +40,7 @@ final class App extends AppBase<Strings>
     String charset = DEFAULT_CHARSET;
     String lineSeparator = System.lineSeparator();
     Mode mode = Mode.NONE;
-        final EditUtils.ActiveCorrector corrector;
+    final EditUtils.ActiveCorrector corrector;
     boolean speakIndent = false;
 
     private FutureTask narratingTask = null; 
@@ -197,9 +197,9 @@ final class App extends AppBase<Strings>
 	    return;
 	}
 	this.narrating = null;
-this.narratingTask = null;
-	    getLayout().setBasicLayout(mainLayout.getLayout());
-	    getLuwrain().announceActiveArea();
+	this.narratingTask = null;
+	getLayout().setBasicLayout(mainLayout.getLayout());
+	getLuwrain().announceActiveArea();
     }
 
     void finishedNarrating()
@@ -208,7 +208,7 @@ this.narratingTask = null;
 	narratingTask = null;
     }
 
-        String[] read() throws IOException
+    String[] read() throws IOException
     {
 	final String text = org.luwrain.util.FileUtils.readTextFileSingleString(file, charset);
 	return org.luwrain.util.FileUtils.universalLineSplitting(text);
@@ -235,14 +235,14 @@ this.narratingTask = null;
 	return super.onInputEvent(area, event);
     }
 
-                @Override public boolean onInputEvent(Area area, KeyboardEvent event)
+    @Override public boolean onInputEvent(Area area, KeyboardEvent event)
     {
 	NullCheck.notNull(area, "area");
 	NullCheck.notNull(event, "event");
 	return onInputEvent(area, event, null);
     }
 
-        Conversations getConv()
+    Conversations getConv()
     {
 	return this.conv;
     }

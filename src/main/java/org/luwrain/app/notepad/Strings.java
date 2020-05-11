@@ -28,6 +28,7 @@ public interface Strings
     String actionReplace();
     String actionSaveAs();
     String appName();
+    String cancelNarratingBeforeClosing();
     String charsetPopupPrefix();
     String enteredPathMayNotBeDir(String fileName);
     String fileIsSaved();
@@ -52,8 +53,8 @@ public interface Strings
     String saveChangesPopupQuestion();
     String savePopupName();
     String savePopupPrefix();
-    String settingsFormFileLenMayNotBeNegative();
     String settingsFormFileLenIsNotInteger();
+    String settingsFormFileLenMayNotBeNegative();
     String settingsFormName();
     String settingsFormNarratedFileLen();
     String settingsFormNarratingChannelName();
@@ -61,5 +62,4 @@ public interface Strings
     String settingsFormNarratingPauseDuration();
     String settingsFormNarratingSpeechPitch();
     String settingsFormNarratingSpeechRate();
-    String cancelNarratingBeforeClosing();
 }

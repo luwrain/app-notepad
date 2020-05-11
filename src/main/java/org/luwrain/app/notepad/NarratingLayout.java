@@ -79,7 +79,7 @@ final class NarratingLayout extends LayoutBase implements Narrating.Listener
     {
 	final float value = ((float)sentsProcessed * 100) / sentsTotal;
 	app.getLuwrain().runUiSafely(()->{
-		narratingArea.setLine(narratingArea.getLineCount() - 2, app.getStrings().narratingProgress(String.format("%.1f", value)) + "%");
+		narratingArea.setLine(narratingArea.getLineCount() - 2, app.getStrings().narratingProgress(String.format("%.1f", value) + "%"));
 	    });
     }
 
