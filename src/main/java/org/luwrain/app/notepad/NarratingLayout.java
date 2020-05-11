@@ -31,7 +31,7 @@ final class NarratingLayout extends LayoutBase implements Narrating.Listener
     private final App app;
     private final SimpleArea narratingArea;
 
-    NarratingLayout(App app)
+    NarratingLayout(App app, Runnable closing)
     {
 	NullCheck.notNull(app, "app");
 	this.app = app;
@@ -39,7 +39,7 @@ final class NarratingLayout extends LayoutBase implements Narrating.Listener
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
-		    if (app.onInputEvent(this, event))
+		    if (app.onInputEvent(this, event, closing))
 			return true;
 		    		    return super.onInputEvent(event);
 		}
@@ -50,11 +50,16 @@ final class NarratingLayout extends LayoutBase implements Narrating.Listener
 			return true;
 		    return super.onSystemEvent(event);
 		}
-		@Override public Action[] getAreaActions()
+		@Override public boolean onAreaQuery(AreaQuery query)
 		{
-		    return new Action[0];
+		    NullCheck.notNull(query, "query");
+		    if (app.onAreaQuery(this, query))
+			return true;
+		    return super.onAreaQuery(query);
 		}
 	    };
+	narratingArea.addLine(app.getStrings().narratingProgress("0.0%"));
+narratingArea.addLine("");
     }
 
     		@Override public void writeMessage(String text)
@@ -64,27 +69,27 @@ final class NarratingLayout extends LayoutBase implements Narrating.Listener
 			    narratingArea.insertLine(narratingArea.getLineCount() - 2, text);
 			});
 		}
-    
+
 		@Override public void progressUpdate(int sentsProcessed, int sentsTotal)
 		{
 		    final float value = ((float)sentsProcessed * 100) / sentsTotal;
 		    app.getLuwrain().runUiSafely(()->{
-			    //			    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingProgress(String.format("%.1f", value)) + "%");
+			    narratingArea.setLine(narratingArea.getLineCount() - 2, app.getStrings().narratingProgress(String.format("%.1f", value)) + "%");
 			});
 		}
-    
+
 		@Override public void done()
 		{
 		    app.getLuwrain().runUiSafely(()->{
-			    //					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingDone());
+			    narratingArea.setLine(narratingArea.getLineCount() - 2, app.getStrings().narratingDone());
 			    app.getLuwrain().message(app.getStrings().narratingDone(), Luwrain.MessageType.DONE);
 			});
 		}
-    
+
 		@Override public void cancelled()
 		{
 		    app.getLuwrain().runUiSafely(()->{
-			    //					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingCancelled());
+			    narratingArea.setLine(narratingArea.getLineCount() - 2, app.getStrings().narratingCancelled());
 			    app.getLuwrain().message(app.getStrings().narratingCancelled(), Luwrain.MessageType.DONE);
 			});
 		}
@@ -93,6 +98,5 @@ final class NarratingLayout extends LayoutBase implements Narrating.Listener
     {
 	return new AreaLayout(narratingArea);
     }
-
 }
 

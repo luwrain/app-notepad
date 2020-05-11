@@ -38,8 +38,9 @@ final class MainLayout extends LayoutBase
 	this.editArea = new EditArea(createEditParams()) {
 		private final Actions actions = actions(
 							action("open", app.getStrings().actionOpen(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
-														action("save-as", app.getStrings().actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
-														action("charset", app.getStrings().actionCharset(), new KeyboardEvent(KeyboardEvent.Special.F9), MainLayout .this::actCharset)
+							action("save-as", app.getStrings().actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
+							action("charset", app.getStrings().actionCharset(), new KeyboardEvent(KeyboardEvent.Special.F9), MainLayout .this::actCharset),
+							action("narrating", app.getStrings().actionNarrating(), new KeyboardEvent(KeyboardEvent.Special.F10), MainLayout.this::actNarrating)
 							);
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
@@ -150,6 +151,11 @@ final class MainLayout extends LayoutBase
 	    }
 	}
     return true;
+    }
+
+    private boolean actNarrating()
+    {
+	return app.narrating(editArea.getLines());
     }
 
     private boolean showProperties()

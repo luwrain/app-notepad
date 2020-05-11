@@ -70,7 +70,7 @@ final class App extends AppBase<Strings>
 	this.conv = new Conversations(getLuwrain(), getStrings());
 	this.hooks = new Hooks(this);
 	this.mainLayout = new MainLayout(this);
-	this.narratingLayout = new NarratingLayout(this);
+	this.narratingLayout = new NarratingLayout(this, ()->{});
 	setAppName(getStrings().appName());
 	if (arg != null && !arg.isEmpty())
 	{
@@ -150,9 +150,8 @@ final class App extends AppBase<Strings>
 	}
     }
 
-    boolean onNarrating(SimpleArea destArea, String[] text)
+    boolean narrating(String[] text)
     {
-	NullCheck.notNull(destArea, "destArea");
 	NullCheck.notNullItems(text, "text");
 	if (this.narratingTask != null && !this.narratingTask.isDone())
 	    return false;
@@ -161,11 +160,11 @@ final class App extends AppBase<Strings>
 	if (narratingText.sents.isEmpty())
 	{
 	    getLuwrain().message(getStrings().noTextToSynth(), Luwrain.MessageType.ERROR);
-	    return false;
+	    return true;
 	}
 	final File destDir = conv.narratingDestDir();
 	if (destDir == null)
-	    return false;
+	    return true;
 	final Channel channel;
 	try {
 	    channel = getLuwrain().loadSpeechChannel(sett.getNarratingChannelName(""), sett.getNarratingChannelParams(""));
@@ -173,52 +172,30 @@ final class App extends AppBase<Strings>
 	catch(Exception e)
 	{
 	    getLuwrain().crash(e);
-	    return false;
+	    return true;
 	}
 	if (channel == null)
 	{
 	    getLuwrain().message(getStrings().noChannelToSynth(sett.getNarratingChannelName("")), Luwrain.MessageType.ERROR);
-	    return false;
+	    return true;
 	}
 	Log.debug(LOG_COMPONENT, "narrating channel loaded: " + channel.getChannelName());
-	//	destArea.clear();
-	//	destArea.addLine(base.strings.narratingProgress("0.0%"));
-	destArea.addLine("");
-	this.narrating = new Narrating(this, null, narratingText.sents.toArray(new String[narratingText.sents.size()]),
-				       destDir, 
-				       new File(getLuwrain().getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel)/*{
-		@Override protected void writeMessage(String text)
-		{
-		    NullCheck.notNull(text, "text");
-		    getLuwrain().runUiSafely(()->{
-			    destArea.insertLine(destArea.getLineCount() - 2, text);
-			});
-		}
-		@Override protected void progressUpdate(int sentsProcessed, int sentsTotal)
-		{
-		    final float value = ((float)sentsProcessed * 100) / sentsTotal;
-		    getLuwrain().runUiSafely(()->{
-			    //			    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingProgress(String.format("%.1f", value)) + "%");
-			});
-		}
-		@Override protected void done()
-		{
-		    getLuwrain().runUiSafely(()->{
-			    //					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingDone());
-			    getLuwrain().message(getStrings().narratingDone(), Luwrain.MessageType.DONE);
-			});
-		}
-		@Override protected void cancelled()
-		{
-		    getLuwrain().runUiSafely(()->{
-			    //					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingCancelled());
-			    getLuwrain().message(getStrings().narratingCancelled(), Luwrain.MessageType.DONE);
-			    });
-		}
-		}*/;
+	final NarratingLayout layout = new NarratingLayout(this, ()->cancelNarrating());
+	this.narrating = new Narrating(this, layout, narratingText.sents.toArray(new String[narratingText.sents.size()]),
+				       destDir, new File(getLuwrain().getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel);
 	this.narratingTask = new FutureTask(this.narrating, null);
 	getLuwrain().executeBkg(this.narratingTask);
+	getLayout().setBasicLayout(layout.getLayout());
 	return true;
+    }
+
+    private void cancelNarrating()
+    {
+	if (narratingTask == null || narratingTask.isDone())
+	{
+	    getLayout().setBasicLayout(mainLayout.getLayout());
+	    getLuwrain().announceActiveArea();
+	}
     }
 
         String[] read() throws IOException
