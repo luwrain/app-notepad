@@ -24,11 +24,20 @@ import org.luwrain.core.*;
 import org.luwrain.speech.*;
 import org.luwrain.util.*;
 
-abstract class Narrating implements Runnable
+class Narrating implements Runnable
 {
     static private final String LOG_COMPONENT = App.LOG_COMPONENT;
 
+    interface Listener
+    {
+	void writeMessage(String text);
+	void progressUpdate(int sentsProcessed, int sentsTotal);
+	void done();
+	void cancelled();
+    }
+
     private final App app;
+    private final Listener listener;
     private final File destDir;
     private final String[] text;
     private final Channel channel;
@@ -41,14 +50,16 @@ abstract class Narrating implements Runnable
     private int fragmentNum = 1;
     private AudioFormat chosenFormat = null;
 
-    Narrating(App app, String[] text, File destDir, String compressorCmd, Channel channel)
+    Narrating(App app, Listener listener, String[] text, File destDir, String compressorCmd, Channel channel)
     {
 	NullCheck.notNull(app, "app");
+	NullCheck.notNull(listener, "listener");
 	NullCheck.notNullItems(text, "text");
 	NullCheck.notNull(destDir, "destDir");
 	NullCheck.notNull(compressorCmd, "compressorCmd");
 	NullCheck.notNull(channel, "channel");
 	this.app = app;
+	this .listener = listener;
 	this.text = text;
 	this.destDir = destDir;
 	this.compressorCmd = compressorCmd;
@@ -64,11 +75,6 @@ abstract class Narrating implements Runnable
 	Log.debug(LOG_COMPONENT, "max length of a fragment in bytes is " + String.valueOf(maxFragmentBytes));
     }
 
-    abstract protected void writeMessage(String text);
-    abstract protected void progressUpdate(int sentsProcessed, int sentsTotal);
-    abstract protected void done();
-    abstract protected void cancelled();
-
     @Override public void run()
     {
 	try {
@@ -83,15 +89,15 @@ abstract class Narrating implements Runnable
 		    if (!s.isEmpty())
 			onNewSent(app.getLuwrain().getSpeakableText(s, Luwrain.SpeakableTextType.NATURAL)); else
 			silence(app.sett.getNarratingPauseDuration(500));
-		    progressUpdate(i, text.length);
+		    listener.progressUpdate(i, text.length);
 		}
 	    }
 	    finally {
 		closeStream();
 		if (interrupting)
-		    cancelled();
+		    listener.cancelled();
 	    }
-	    done();
+	    listener.done();
 	}
 	catch(Exception e)
 	{
@@ -149,7 +155,7 @@ abstract class Narrating implements Runnable
 	    is.close();
 	    targetStream.close();
 	}
-	writeMessage(app.getStrings().narratingFileWritten(targetFile.getAbsolutePath()));
+	listener.writeMessage(app.getStrings().narratingFileWritten(targetFile.getAbsolutePath()));
 	//	callCompressor(currentFile, targetFile);
 	this.currentFile.delete();
 	this.currentFile = null;

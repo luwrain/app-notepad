@@ -26,7 +26,7 @@ import org.luwrain.controls.*;
 import org.luwrain.script.*;
 import org.luwrain.template.*;
 
-final class NarratingLayout extends LayoutBase
+final class NarratingLayout extends LayoutBase implements Narrating.Listener
 {
     private final App app;
     private final SimpleArea narratingArea;
@@ -56,5 +56,43 @@ final class NarratingLayout extends LayoutBase
 		}
 	    };
     }
+
+    		@Override public void writeMessage(String text)
+		{
+		    NullCheck.notNull(text, "text");
+		    app.getLuwrain().runUiSafely(()->{
+			    narratingArea.insertLine(narratingArea.getLineCount() - 2, text);
+			});
+		}
+    
+		@Override public void progressUpdate(int sentsProcessed, int sentsTotal)
+		{
+		    final float value = ((float)sentsProcessed * 100) / sentsTotal;
+		    app.getLuwrain().runUiSafely(()->{
+			    //			    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingProgress(String.format("%.1f", value)) + "%");
+			});
+		}
+    
+		@Override public void done()
+		{
+		    app.getLuwrain().runUiSafely(()->{
+			    //					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingDone());
+			    app.getLuwrain().message(app.getStrings().narratingDone(), Luwrain.MessageType.DONE);
+			});
+		}
+    
+		@Override public void cancelled()
+		{
+		    app.getLuwrain().runUiSafely(()->{
+			    //					    destArea.setLine(destArea.getLineCount() - 2, base.strings.narratingCancelled());
+			    app.getLuwrain().message(app.getStrings().narratingCancelled(), Luwrain.MessageType.DONE);
+			});
+		}
+
+    AreaLayout getLayout()
+    {
+	return new AreaLayout(narratingArea);
+    }
+
 }
 

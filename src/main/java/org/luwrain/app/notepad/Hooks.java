@@ -12,8 +12,8 @@ import org.luwrain.script.*;
 
 final class Hooks
 {
-    static private final String PROPERTIES_HOOK = "luwrain.notepad.properties.basic";
-    
+    static private final String PROPERTIES_HOOK = "luwrain.notepad.properties";
+
     private final App app;
 
     Hooks(App app)
@@ -22,22 +22,20 @@ final class Hooks
 	this.app = app;
     }
 
-    boolean runActionHooks(EnvironmentEvent event, EditArea editArea, MultilineEdit.Model model, AbstractRegionPoint regionPoint)
+    boolean runActionHooks(EnvironmentEvent event, EditArea editArea)
     {
 	NullCheck.notNull(event, "event");
 	NullCheck.notNull(editArea, "editArea");
-	NullCheck.notNull(model, "model");
-	NullCheck.notNull(regionPoint, "regionPoint");
 	if (!(event instanceof ActionEvent))
 	    return false;
 	final ActionEvent actionEvent = (ActionEvent)event;
-	final MultilineEditCorrector corrector = (MultilineEditCorrector)model;
+	final MultilineEditCorrector corrector = (MultilineEditCorrector)editArea.getEdit().getMultilineEditModel();
 	final AtomicBoolean res = new AtomicBoolean(false);
 	corrector.doEditAction((lines, hotPoint)->{
 		try {
 		    res.set(app.getLuwrain().xRunHooks("luwrain.notepad.action", new Object[]{
 				actionEvent.getActionName(),
-				org.luwrain.script.TextScriptUtils.createTextEditHookObject(editArea, lines, hotPoint, regionPoint)
+				org.luwrain.script.TextScriptUtils.createTextEditHookObject(editArea, lines, hotPoint, editArea.getRegionPoint())
 			    }, Luwrain.HookStrategy.CHAIN_OF_RESPONSIBILITY));
 		}
 		catch(RuntimeException e)
@@ -65,6 +63,8 @@ final class Hooks
 			return app.file.getAbsolutePath();
 		    case "charset":
 			return app.charset;
+		    case "hotPoint":
+			return new HotPointHookObject(editArea);
 		    default:
 			return super.getMember(name);
 		    }

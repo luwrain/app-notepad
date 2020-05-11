@@ -154,7 +154,10 @@ final class MainLayout extends LayoutBase
 
     private boolean showProperties()
     {
-	final PropertiesLayout propertiesLayout = new PropertiesLayout(app, new String[0], ()->{
+	final String[] lines = app.getHooks().runPropertiesHook(editArea);
+	if (lines.length == 0)
+	    return false;
+	final PropertiesLayout propertiesLayout = new PropertiesLayout(app, lines, ()->{
 		app.openLayout(getLayout());
 		app.getLuwrain().announceActiveArea();
 	    });
