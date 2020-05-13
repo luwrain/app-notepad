@@ -22,6 +22,7 @@ import java.io.*;
 
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
+import org.luwrain.core.queries.*;
 import org.luwrain.controls.*;
 import org.luwrain.script.*;
 import org.luwrain.template.*;
@@ -68,6 +69,8 @@ final class MainLayout extends LayoutBase
 		@Override public boolean onAreaQuery(AreaQuery query)
 		{
 		    NullCheck.notNull(query, "query");
+		    if (query.getQueryCode() == AreaQuery.CURRENT_DIR && query instanceof CurrentDirQuery)
+			return onDirectoryQuery((CurrentDirQuery)query);
 		    if (app.onAreaQuery(this, query))
 			return true;
 		    return super.onAreaQuery(query);
@@ -83,6 +86,18 @@ final class MainLayout extends LayoutBase
 		    return actions.getAreaActions();
 		}
 	    };
+    }
+
+    private boolean onDirectoryQuery(CurrentDirQuery query)
+    {
+	NullCheck.notNull(query, "query");
+	if (app.file == null)
+	    return false;
+	final File f = app.file.getParentFile();
+	if (f == null)
+	    return false;
+	query.answer(f.getAbsolutePath());
+	return true;
     }
 
     private boolean actOpen()
