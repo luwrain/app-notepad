@@ -23,14 +23,36 @@ import java.io.*;
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-final class Appearance extends EditUtils.DefaultEditAreaAppearance
+abstract class Appearance extends EditUtils.DefaultEditAreaAppearance
 {
     Appearance(ControlContext context)
     {
 	super(context);
     }
 
+    abstract App.Mode getMode();
+
     @Override public void announceLine(int index, String line)
     {
+	final App.Mode mode = getMode();
+	if (mode == null)
+	{
+	    NavigationArea.defaultLineAnnouncement(context, index, line);
+	    return;
+	}
+	switch(mode)
+	{
+	case NONE:
+	    NavigationArea.defaultLineAnnouncement(context, index, context.getSpeakableText(line, Luwrain.SpeakableTextType.NONE));
+	    break;
+	case PROGRAMMING:
+	    NavigationArea.defaultLineAnnouncement(context, index, context.getSpeakableText(line, Luwrain.SpeakableTextType.PROGRAMMING));
+	    break;
+	case NATURAL:
+	    NavigationArea.defaultLineAnnouncement(context, index, context.getSpeakableText(line, Luwrain.SpeakableTextType.NATURAL));
+	    break;
+	default:
+	    NavigationArea.defaultLineAnnouncement(context, index, line);
+	}
     }
 }

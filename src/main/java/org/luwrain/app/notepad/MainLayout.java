@@ -41,7 +41,10 @@ final class MainLayout extends LayoutBase
 							action("open", app.getStrings().actionOpen(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
 							action("save-as", app.getStrings().actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
 							action("charset", app.getStrings().actionCharset(), new KeyboardEvent(KeyboardEvent.Special.F9), MainLayout .this::actCharset),
-							action("narrating", app.getStrings().actionNarrating(), new KeyboardEvent(KeyboardEvent.Special.F10), MainLayout.this::actNarrating)
+							action("narrating", app.getStrings().actionNarrating(), new KeyboardEvent(KeyboardEvent.Special.F10), MainLayout.this::actNarrating),
+							action("mode-none", app.getStrings().modeNone(), new KeyboardEvent(KeyboardEvent.Special.F1, EnumSet.of(KeyboardEvent.Modifiers.ALT)), MainLayout.this::actModeNone),
+							action("mode-natural", app.getStrings().modeNatural(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.ALT)), MainLayout.this::actModeNatural),
+							action("mode-programming", app.getStrings().modeProgramming(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.ALT)), MainLayout.this::actModeProgramming)
 							);
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
@@ -187,6 +190,27 @@ final class MainLayout extends LayoutBase
 	return true;
     }
 
+    private boolean actModeNone()
+    {
+	app.mode = App.Mode.NONE;
+	app.getLuwrain().message(app.getStrings().modeNone(), Luwrain.MessageType.OK);
+	return true;
+    }
+
+    private boolean actModeNatural()
+    {
+	app.mode = App.Mode.NATURAL;
+		app.getLuwrain().message(app.getStrings().modeNatural(), Luwrain.MessageType.OK);
+	return true;
+    }
+
+    private boolean actModeProgramming()
+    {
+	app.mode = App.Mode.PROGRAMMING;
+		app.getLuwrain().message(app.getStrings().modeProgramming(), Luwrain.MessageType.OK);
+	return true;
+    }
+
         String[] getText()
 	      {
 		  return editArea.getLines();
@@ -214,8 +238,12 @@ AreaLayout getLayout()
 		final EditArea.Params params = new EditArea.Params();
 		params.context = new DefaultControlContext(app.getLuwrain());
 	params.name = "";
-		params.appearance = new Appearance(params.context);
-		params.appearance = new EditUtils.DefaultEditAreaAppearance(params.context);
+	params.appearance = new Appearance(params.context){
+		@Override App.Mode getMode()
+		{
+		    return app.mode;
+		}
+	    };
 	params.changeListener = ()->{app.modified = true;};
 	params.editFactory = (p, c)->{
 	    final MultilineEdit.Params pp = new MultilineEdit.Params();
