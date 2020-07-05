@@ -38,15 +38,15 @@ final class MainLayout extends LayoutBase
 	this.app = app;
 	this.editArea = new EditArea(createEditParams()) {
 		private final Actions actions = actions(
-							action("open", app.getStrings().actionOpen(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
-							action("save-as", app.getStrings().actionSaveAs(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
-							action("charset", app.getStrings().actionCharset(), new KeyboardEvent(KeyboardEvent.Special.F9), MainLayout .this::actCharset),
-							action("narrating", app.getStrings().actionNarrating(), new KeyboardEvent(KeyboardEvent.Special.F10), MainLayout.this::actNarrating),
-							action("mode-none", app.getStrings().modeNone(), new KeyboardEvent(KeyboardEvent.Special.F1, EnumSet.of(KeyboardEvent.Modifiers.ALT)), MainLayout.this::actModeNone),
-							action("mode-natural", app.getStrings().modeNatural(), new KeyboardEvent(KeyboardEvent.Special.F2, EnumSet.of(KeyboardEvent.Modifiers.ALT)), MainLayout.this::actModeNatural),
-							action("mode-programming", app.getStrings().modeProgramming(), new KeyboardEvent(KeyboardEvent.Special.F3, EnumSet.of(KeyboardEvent.Modifiers.ALT)), MainLayout.this::actModeProgramming)
+							action("open", app.getStrings().actionOpen(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
+							action("save-as", app.getStrings().actionSaveAs(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
+							action("charset", app.getStrings().actionCharset(), new InputEvent(InputEvent.Special.F9), MainLayout .this::actCharset),
+							action("narrating", app.getStrings().actionNarrating(), new InputEvent(InputEvent.Special.F10), MainLayout.this::actNarrating),
+							action("mode-none", app.getStrings().modeNone(), new InputEvent(InputEvent.Special.F1, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNone),
+							action("mode-natural", app.getStrings().modeNatural(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNatural),
+							action("mode-programming", app.getStrings().modeProgramming(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeProgramming)
 							);
-		@Override public boolean onInputEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(InputEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onInputEvent(this, event))
@@ -245,14 +245,10 @@ AreaLayout getLayout()
 		}
 	    };
 	params.changeListener = ()->{app.modified = true;};
-	params.editFactory = (p, c)->{
-	    final MultilineEdit.Params pp = new MultilineEdit.Params();
-	    pp.context = p.context;
-	    	    	    app.corrector.setDefaultCorrector(c);
-	    pp.model = app.corrector;
-	    pp.regionPoint = p.regionPoint;
-	    pp.appearance = p.appearance;
-	    return new MultilineEdit(pp);
+	params.editFactory = (p)->{
+	    app.corrector.setDefaultCorrector((MultilineEditCorrector)p.model);
+	    p.model = app.corrector;
+	    return new MultilineEdit(p);
 	};
 	return params;
     }

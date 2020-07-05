@@ -36,7 +36,7 @@ final class PropertiesLayout extends LayoutBase
 	NullCheck.notNull(closing, "closing");
 	this.app = app;
 	this.propsArea = new SimpleArea(new DefaultControlContext(app.getLuwrain()), app.getStrings().propsAreaName()) {
-		@Override public boolean onInputEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(InputEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onInputEvent(this, event, closing))
