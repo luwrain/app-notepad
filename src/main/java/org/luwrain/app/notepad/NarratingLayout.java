@@ -43,7 +43,7 @@ final class NarratingLayout extends LayoutBase implements Narrating.Listener
 			return true;
 		    return super.onInputEvent(event);
 		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(SystemEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onSystemEvent(this, event))

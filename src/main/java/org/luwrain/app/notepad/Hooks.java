@@ -22,7 +22,7 @@ final class Hooks
 	this.app = app;
     }
 
-    boolean runActionHooks(EnvironmentEvent event, EditArea editArea)
+    boolean runActionHooks(SystemEvent event, EditArea editArea)
     {
 	NullCheck.notNull(event, "event");
 	NullCheck.notNull(editArea, "editArea");
