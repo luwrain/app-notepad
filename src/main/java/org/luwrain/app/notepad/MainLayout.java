@@ -25,7 +25,7 @@ import org.luwrain.core.events.*;
 import org.luwrain.core.queries.*;
 import org.luwrain.controls.*;
 import org.luwrain.script.*;
-import org.luwrain.template.*;
+import org.luwrain.app.base.*;
 
 final class MainLayout extends LayoutBase
 {

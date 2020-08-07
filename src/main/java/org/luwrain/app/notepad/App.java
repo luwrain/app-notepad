@@ -24,9 +24,9 @@ import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.speech.*;
-import org.luwrain.template.*;
+import org.luwrain.app.base.*;
 
-final class App extends AppBase<Strings>
+public final class App extends AppBase<Strings>
 {
     static final String LOG_COMPONENT = "notepad";
     static private final String DEFAULT_CHARSET = "UTF-8";
@@ -52,14 +52,14 @@ final class App extends AppBase<Strings>
     private MainLayout mainLayout = null;
     private NarratingLayout narratingLayout = null;
 
-    App()
+    public App()
     {
 	this(null);
     }
 
-    App(String arg)
+    public App(String arg)
     {
-	super(Strings.NAME, Strings.class);
+	super(Strings.NAME, Strings.class, "luwrain.notepad");
 	this.arg = arg;
 	this.corrector = new EditUtils.ActiveCorrector();
     }
