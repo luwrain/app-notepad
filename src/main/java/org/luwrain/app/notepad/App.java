@@ -245,6 +245,12 @@ public final class App extends AppBase<Strings>
 	return mainLayout.getLayout();
     }
 
+    @Override public boolean onEscape(InputEvent event)
+    {
+	closeApp();
+	return true;
+    }
+
     @Override public void closeApp()
     {
 	if (isBusy())
