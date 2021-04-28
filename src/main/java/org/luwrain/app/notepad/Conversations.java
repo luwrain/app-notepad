@@ -72,7 +72,7 @@ final class Conversations
 
     File narratingDestDir()
     {
-	return Popups.existingDir(luwrain, strings.narratingDestDirPopupName(), strings.narratingDestDirPopupPrefix());
+	return Popups.existingDir(luwrain, strings.narratingDestDirPopupPrefix());
     }
 
     String charset()
