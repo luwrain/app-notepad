@@ -64,7 +64,7 @@ public final class App extends AppBase<Strings>
 	this.corrector = new EditUtils.ActiveCorrector();
     }
 
-    @Override public boolean onAppInit() throws IOException
+    @Override protected AreaLayout onAppInit() throws IOException
     {
 	this.sett = Settings.create(getLuwrain().getRegistry());
 	this.conv = new Conversations(getLuwrain(), getStrings());
@@ -80,7 +80,7 @@ public final class App extends AppBase<Strings>
 	    this.modified = false;
 	    setAppName(file.getName());
 	}
-	return true;
+	return mainLayout.getLayout();
     }
 
     void openLayout(AreaLayout layout)
@@ -238,11 +238,6 @@ public final class App extends AppBase<Strings>
     @Override public boolean isBusy()
     {
 	return narratingTask != null && !narratingTask.isDone();
-    }
-
-    @Override public AreaLayout getDefaultAreaLayout()
-    {
-	return mainLayout.getLayout();
     }
 
     @Override public boolean onEscape(InputEvent event)
