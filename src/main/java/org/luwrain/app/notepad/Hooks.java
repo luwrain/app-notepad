@@ -24,6 +24,7 @@ import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.script.*;
+import org.luwrain.script.hooks.*;
 
 final class Hooks
 {
@@ -48,10 +49,10 @@ final class Hooks
 	final AtomicBoolean res = new AtomicBoolean(false);
 	corrector.doEditAction((lines, hotPoint)->{
 		try {
-		    res.set(app.getLuwrain().xRunHooks("luwrain.notepad.action", new Object[]{
+		    res.set(new ChainOfResponsibilityHook(app.getLuwrain()).runNoExcept("luwrain.notepad.action", new Object[]{
 				actionEvent.getActionName(),
 				org.luwrain.script.TextScriptUtils.createTextEditHookObject(editArea, lines, hotPoint, editArea.getRegionPoint())
-			    }, Luwrain.HookStrategy.CHAIN_OF_RESPONSIBILITY));
+			    }));
 		}
 		catch(RuntimeException e)
 		{
