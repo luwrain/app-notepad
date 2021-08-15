@@ -18,11 +18,10 @@ package org.luwrain.app.notepad;
 
 import java.util.*;
 
-import org.luwrain.base.*;
 import org.luwrain.core.*;
 import org.luwrain.cpanel.*;
 
-public final class Extension extends org.luwrain.core.extensions.EmptyExtension
+public final class Extension extends EmptyExtension
 {
     static private final Element controlPanelElement = new SimpleElement(StandardElements.APPLICATIONS, Extension.class.getName());
 

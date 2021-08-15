@@ -240,7 +240,7 @@ public final class App extends AppBase<Strings>
 	return narratingTask != null && !narratingTask.isDone();
     }
 
-    @Override public boolean onEscape(InputEvent event)
+    @Override public boolean onEscape()
     {
 	closeApp();
 	return true;
