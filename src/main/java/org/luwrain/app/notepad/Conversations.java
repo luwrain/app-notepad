@@ -57,18 +57,8 @@ final class Conversations
 
     File open()
     {
-	return Popups.path(luwrain,
-			   strings.openPopupName(), strings.openPopupPrefix(),
-			   (file, announce)->{
-			       if (file.exists() && file.isDirectory())
-			       {
-				   if (announce)
-				       luwrain.message(strings.enteredPathMayNotBeDir(file.getAbsolutePath()), Luwrain.MessageType.ERROR);
-				   return false;
-			       }
-			       return true;
-			   });
-    }
+	return Popups.existingFile(luwrain, strings.openPopupName());
+	    }
 
     File narratingDestDir()
     {

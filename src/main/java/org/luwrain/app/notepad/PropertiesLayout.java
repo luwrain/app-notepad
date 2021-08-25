@@ -58,12 +58,12 @@ final class PropertiesLayout extends LayoutBase
 		    return super.onAreaQuery(query);
 		}
 	    };
-	propsArea.beginLinesTrans();
-	propsArea.addLine("");
+	propsArea.update((text)->{
+text.addLine("");
 	for(String s: lines)
-	    propsArea.addLine(s);
-	propsArea.addLine("");
-	propsArea.endLinesTrans();
+	    text.addLine(s);
+	text.addLine("");
+	    });
     }
 
     AreaLayout getLayout()
