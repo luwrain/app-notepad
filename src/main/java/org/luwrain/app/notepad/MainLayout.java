@@ -173,7 +173,7 @@ final class MainLayout extends LayoutBase
 
     private boolean actNarrating()
     {
-	return app.narrating(editArea.getLines());
+	return app.narrating(editArea.getText());
     }
 
     private boolean showProperties()
@@ -213,7 +213,7 @@ final class MainLayout extends LayoutBase
 
         String[] getText()
 	      {
-		  return editArea.getLines();
+		  return editArea.getText();
 	      }
 
     void setText(String[] text)

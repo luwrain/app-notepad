@@ -72,7 +72,7 @@ final class Hooks
 		    switch(name)
 		    {
 		    case "lines":
-			return ScriptUtils.createReadOnlyArray(editArea.getLines());
+			return ScriptUtils.createReadOnlyArray(editArea.getText());
 		    case "fileName":
 			if (app.file == null)
 			    return "";
@@ -86,7 +86,7 @@ final class Hooks
 		    }
 		}
 	    };
-	final List<String> res = new LinkedList();
+	final List<String> res = new ArrayList<>();
 	try {
 	    final Object o = new org.luwrain.script.hooks.ProviderHook(app.getLuwrain()).run(PROPERTIES_HOOK, new Object[]{hookObj});
 	    if (o != null)

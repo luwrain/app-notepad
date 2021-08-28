@@ -22,7 +22,7 @@ import org.luwrain.core.*;
 
 final class NarratingText
 {
-    final LinkedList<String> sents = new LinkedList();
+    final LinkedList<String> sents = new LinkedList<>();
     private StringBuilder b = new StringBuilder();
 
     void split(String[] text)
@@ -43,7 +43,7 @@ final class NarratingText
 		final char c = line.charAt(j);
 		final char cc = j + 1< line.length()?line.charAt(j + 1):'\0';
 		if ((c == '.' || c == '!' || c == '?')&&
-		    (cc == '\0' || Character.isSpace(cc)))
+		    (cc == '\0' || Character.isWhitespace(cc)))
 		{
 		    onSentEnd(line, posFrom, j + 1);
 		    j++;

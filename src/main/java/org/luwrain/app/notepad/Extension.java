@@ -54,7 +54,7 @@ public final class Extension extends EmptyExtension
 		    NullCheck.notNullItems(args, "args");
 		    if (args.length == 0)
 			return new Application[]{new App()};
-		    final List<Application> v = new LinkedList();
+		    final List<Application> v = new ArrayList<>();
 		    for(String s: args)
 			v.add(new App(s));
 		    if (v.isEmpty())

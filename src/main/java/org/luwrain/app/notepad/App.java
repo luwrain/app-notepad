@@ -183,7 +183,7 @@ public final class App extends AppBase<Strings>
 	final NarratingLayout layout = new NarratingLayout(this, ()->cancelNarrating());
 	this.narrating = new Narrating(this, layout, narratingText.sents.toArray(new String[narratingText.sents.size()]),
 				       destDir, new File(getLuwrain().getFileProperty("luwrain.dir.scripts"), "lwr-audio-compress").getAbsolutePath(), channel);
-	this.narratingTask = new FutureTask(this.narrating, null);
+	this.narratingTask = new FutureTask<>(this.narrating, null);
 	getLuwrain().executeBkg(this.narratingTask);
 	getLayout().setBasicLayout(layout.getLayout());
 	return true;
