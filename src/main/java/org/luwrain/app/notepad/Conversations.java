@@ -43,7 +43,7 @@ final class Conversations
     {
 	return Popups.path(luwrain, 
 			   strings.savePopupName(), strings.savePopupPrefix(),
-			   currentFile, //Tt's OK, if this value is null
+			   currentFile, //It's OK, if this value is null
 			   (fileToCheck, announce)->{
 			       if (fileToCheck.exists() && fileToCheck.isDirectory())
 			       {
