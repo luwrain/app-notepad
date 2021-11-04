@@ -30,29 +30,24 @@ import org.luwrain.app.base.*;
 final class MainLayout extends LayoutBase
 {
     private final App app;
-    private final EditArea editArea;
+    final EditArea editArea;
 
     MainLayout(App app)
     {
-	NullCheck.notNull(app, "app");
+	super(app);
 	this.app = app;
-	this.editArea = new EditArea(createEditParams()) {
-		private final Actions actions = actions(
-							action("open", app.getStrings().actionOpen(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
-							action("save-as", app.getStrings().actionSaveAs(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
-							action("charset", app.getStrings().actionCharset(), new InputEvent(InputEvent.Special.F9), MainLayout .this::actCharset),
-							action("narrating", app.getStrings().actionNarrating(), new InputEvent(InputEvent.Special.F10), MainLayout.this::actNarrating),
-							action("mode-none", app.getStrings().modeNone(), new InputEvent(InputEvent.Special.F1, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNone),
-							action("mode-natural", app.getStrings().modeNatural(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNatural),
-							action("mode-programming", app.getStrings().modeProgramming(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeProgramming)
-							);
-		@Override public boolean onInputEvent(InputEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onInputEvent(this, event))
-			return true;
-		    return super.onInputEvent(event);
-		}
+	this.editArea = new EditArea(editParams((params)->{
+	params.name = "";
+	params.appearance = new Appearance(params.context){
+		@Override App.Mode getMode() { return app.mode; }
+	    };
+	params.changeListener = ()->{app.modified = true;};
+	params.editFactory = (p)->{
+	    app.corrector.setDefaultCorrector((MultilineEditCorrector)p.model);
+	    p.model = app.corrector;
+	    return new MultilineEdit(p);
+	};
+		})){
 		@Override public boolean onSystemEvent(SystemEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -65,8 +60,6 @@ final class MainLayout extends LayoutBase
 			    case PROPERTIES:
 				return showProperties();
 			    }
-					    if (app.onSystemEvent(this, event, actions))
-			return true;
 		    return super.onSystemEvent(event);
 		}
 		@Override public boolean onAreaQuery(AreaQuery query)
@@ -74,8 +67,6 @@ final class MainLayout extends LayoutBase
 		    NullCheck.notNull(query, "query");
 		    if (query.getQueryCode() == AreaQuery.CURRENT_DIR && query instanceof CurrentDirQuery)
 			return onDirectoryQuery((CurrentDirQuery)query);
-		    if (app.onAreaQuery(this, query))
-			return true;
 		    return super.onAreaQuery(query);
 		}
 		@Override public String getAreaName()
@@ -84,11 +75,16 @@ final class MainLayout extends LayoutBase
 			return app.getStrings().initialTitle();
 		    return app.file.getName();
 		}
-		@Override public Action[] getAreaActions()
-		{
-		    return actions.getAreaActions();
-		}
 	    };
+	setAreaLayout(editArea, actions(
+							action("open", app.getStrings().actionOpen(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
+							action("save-as", app.getStrings().actionSaveAs(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
+							action("charset", app.getStrings().actionCharset(), new InputEvent(InputEvent.Special.F9), MainLayout .this::actCharset),
+							action("narrating", app.getStrings().actionNarrating(), new InputEvent(InputEvent.Special.F10), MainLayout.this::actNarrating),
+							action("mode-none", app.getStrings().modeNone(), new InputEvent(InputEvent.Special.F1, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNone),
+							action("mode-natural", app.getStrings().modeNatural(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNatural),
+							action("mode-programming", app.getStrings().modeProgramming(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeProgramming)
+					));
     }
 
     private boolean onDirectoryQuery(CurrentDirQuery query)
@@ -182,7 +178,7 @@ final class MainLayout extends LayoutBase
 	if (lines.length == 0)
 	    return false;
 	final PropertiesLayout propertiesLayout = new PropertiesLayout(app, lines, ()->{
-		app.openLayout(getLayout());
+		app.setAreaLayout(this);
 		app.getLuwrain().announceActiveArea();
 	    });
 	app.openLayout(propertiesLayout.getLayout());
@@ -226,30 +222,5 @@ final class MainLayout extends LayoutBase
         void onNewFile()
     {
 	app.getLuwrain().onAreaNewName(editArea);
-    }
-
-AreaLayout getLayout()
-    {
-	return new AreaLayout(editArea);
-    }
-
-    EditArea.Params createEditParams()
-    {
-		final EditArea.Params params = new EditArea.Params();
-		params.context = new DefaultControlContext(app.getLuwrain());
-	params.name = "";
-	params.appearance = new Appearance(params.context){
-		@Override App.Mode getMode()
-		{
-		    return app.mode;
-		}
-	    };
-	params.changeListener = ()->{app.modified = true;};
-	params.editFactory = (p)->{
-	    app.corrector.setDefaultCorrector((MultilineEditCorrector)p.model);
-	    p.model = app.corrector;
-	    return new MultilineEdit(p);
-	};
-	return params;
     }
 }

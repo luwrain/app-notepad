@@ -80,7 +80,7 @@ public final class App extends AppBase<Strings>
 	    this.modified = false;
 	    setAppName(file.getName());
 	}
-	return mainLayout.getLayout();
+	return mainLayout.getAreaLayout();
     }
 
     void openLayout(AreaLayout layout)
@@ -198,7 +198,7 @@ public final class App extends AppBase<Strings>
 	}
 	this.narrating = null;
 	this.narratingTask = null;
-	getLayout().setBasicLayout(mainLayout.getLayout());
+	setAreaLayout(mainLayout);
 	getLuwrain().announceActiveArea();
     }
 
