@@ -29,7 +29,7 @@ public interface Strings
     String actionSaveAs();
     String appName();
     String cancelNarratingBeforeClosing();
-    String charsetPopupPrefix();
+
     String enteredPathMayNotBeDir(String fileName);
     String fileIsSaved();
     String initialTitle();
@@ -62,4 +62,10 @@ public interface Strings
     String settingsFormNarratingPauseDuration();
     String settingsFormNarratingSpeechPitch();
     String settingsFormNarratingSpeechRate();
+
+
+        String charsetPopupPrefix();
+    String replacePopupName();
+    String replaceExpPopupPrefix();
+    String replaceWithPopupPrefix();
 }

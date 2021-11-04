@@ -62,12 +62,13 @@ public final class App extends AppBase<Strings>
 	super(Strings.NAME, Strings.class, "luwrain.notepad");
 	this.arg = arg;
 	this.corrector = new EditUtils.ActiveCorrector();
+	setTabProcessing(false);
     }
 
     @Override protected AreaLayout onAppInit() throws IOException
     {
 	this.sett = Settings.create(getLuwrain().getRegistry());
-	this.conv = new Conversations(getLuwrain(), getStrings());
+	this.conv = new Conversations(this);
 	this.hooks = new Hooks(this);
 	this.mainLayout = new MainLayout(this);
 	this.narratingLayout = new NarratingLayout(this, ()->{});
@@ -107,7 +108,7 @@ public final class App extends AppBase<Strings>
 	    setAppName(file.getName());
 	}
 	try {
-	    save(mainLayout.getText());
+	    save(mainLayout.editArea.getText());
 	}
 	catch(IOException e)
 	{
@@ -220,21 +221,6 @@ public final class App extends AppBase<Strings>
 	org.luwrain.util.FileUtils.writeTextFileMultipleStrings(file, lines, charset, lineSeparator);
     }
 
-    Conversations getConv()
-    {
-	return this.conv;
-    }
-
-    Hooks getHooks()
-    {
-	return this.hooks;
-    }
-
-    Settings getSett()
-    {
-	return this.sett;
-    }
-
     @Override public boolean isBusy()
     {
 	return narratingTask != null && !narratingTask.isDone();
@@ -258,9 +244,8 @@ public final class App extends AppBase<Strings>
 	super.closeApp();
     }
 
-    @Override public void setAppName(String newName)
-    {
-	NullCheck.notEmpty(newName, "newName");
-	super.setAppName(newName);
-    }
+            Conversations getConv() { return this.conv; }
+    Hooks getHooks() { return this.hooks; }
+    Settings getSett() { return this.sett; }
+
 }

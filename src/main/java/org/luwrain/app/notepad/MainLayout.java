@@ -37,29 +37,29 @@ final class MainLayout extends LayoutBase
 	super(app);
 	this.app = app;
 	this.editArea = new EditArea(editParams((params)->{
-	params.name = "";
-	params.appearance = new Appearance(params.context){
-		@Override App.Mode getMode() { return app.mode; }
-	    };
-	params.changeListener = ()->{app.modified = true;};
-	params.editFactory = (p)->{
-	    app.corrector.setDefaultCorrector((MultilineEditCorrector)p.model);
-	    p.model = app.corrector;
-	    return new MultilineEdit(p);
-	};
+		    params.name = "";
+		    params.appearance = new Appearance(params.context){
+			    @Override App.Mode getMode() { return app.mode; }
+			};
+		    params.changeListener = ()->{app.modified = true;};
+		    params.editFactory = (p)->{
+			app.corrector.setDefaultCorrector((MultilineEditCorrector)p.model);
+			p.model = app.corrector;
+			return new MultilineEdit(p);
+		    };
 		})){
 		@Override public boolean onSystemEvent(SystemEvent event)
 		{
 		    NullCheck.notNull(event, "event");
-			if (event.getType() == SystemEvent.Type.REGULAR)
-			    switch(event.getCode())
-			    {
-			    case SAVE:
-				app.onSave();
-								return true;
-			    case PROPERTIES:
-				return showProperties();
-			    }
+		    if (event.getType() == SystemEvent.Type.REGULAR)
+			switch(event.getCode())
+			{
+			case SAVE:
+			    app.onSave();
+			    return true;
+			case PROPERTIES:
+			    return showProperties();
+			}
 		    return super.onSystemEvent(event);
 		}
 		@Override public boolean onAreaQuery(AreaQuery query)
@@ -77,14 +77,30 @@ final class MainLayout extends LayoutBase
 		}
 	    };
 	setAreaLayout(editArea, actions(
-							action("open", app.getStrings().actionOpen(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
-							action("save-as", app.getStrings().actionSaveAs(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
-							action("charset", app.getStrings().actionCharset(), new InputEvent(InputEvent.Special.F9), MainLayout .this::actCharset),
-							action("narrating", app.getStrings().actionNarrating(), new InputEvent(InputEvent.Special.F10), MainLayout.this::actNarrating),
-							action("mode-none", app.getStrings().modeNone(), new InputEvent(InputEvent.Special.F1, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNone),
-							action("mode-natural", app.getStrings().modeNatural(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNatural),
-							action("mode-programming", app.getStrings().modeProgramming(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeProgramming)
+					action("replace", app.getStrings().actionReplace(), new InputEvent(InputEvent.Special.F5), this::actReplace),
+					action("charset", app.getStrings().actionCharset(), new InputEvent(InputEvent.Special.F9), MainLayout .this::actCharset),
+					action("narrating", app.getStrings().actionNarrating(), new InputEvent(InputEvent.Special.F10), MainLayout.this::actNarrating),
+					action("open", app.getStrings().actionOpen(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
+					action("save-as", app.getStrings().actionSaveAs(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actSaveAs),
+					action("mode-none", app.getStrings().modeNone(), new InputEvent(InputEvent.Special.F1, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNone),
+					action("mode-natural", app.getStrings().modeNatural(), new InputEvent(InputEvent.Special.F2, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeNatural),
+					action("mode-programming", app.getStrings().modeProgramming(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.ALT)), MainLayout.this::actModeProgramming)
 					));
+    }
+
+    private boolean actReplace()
+    {
+	final String oldValue = app.getConv().replaceExp();
+	if (oldValue == null || oldValue.isEmpty())
+	    return true;
+	final String newValue = app.getConv().replaceWith();
+	if (newValue == null)
+	    return true;
+	editArea.getContent().update((lines)->{
+		for(int i = 0;i < lines.getLineCount();i++)
+		    lines.setLine(i, lines.getLine(i).replaceAll(oldValue, newValue));
+	    });
+	return true;
     }
 
     private boolean onDirectoryQuery(CurrentDirQuery query)
@@ -103,7 +119,7 @@ final class MainLayout extends LayoutBase
     {
 	if (!app.everythingSaved())
 	    return true;
-		final File file = app.getConv().open();
+	final File file = app.getConv().open();
 	if (file == null)
 	    return true;
 	//To restore on failed reading
@@ -133,7 +149,7 @@ final class MainLayout extends LayoutBase
 	app.file = f;
 	onNewFile();
 	try {
-	    app.save(getText());
+	    app.save(editArea.getText());
 	}
 	catch(IOException e)
 	{
@@ -147,7 +163,7 @@ final class MainLayout extends LayoutBase
 
     private boolean actCharset()
     {
-		if (!app.everythingSaved())
+	if (!app.everythingSaved())
 	    return true;
 	final String res = app.getConv().charset();
 	if (res == null)
@@ -164,7 +180,7 @@ final class MainLayout extends LayoutBase
 		return true;
 	    }
 	}
-    return true;
+	return true;
     }
 
     private boolean actNarrating()
@@ -207,17 +223,12 @@ final class MainLayout extends LayoutBase
 	return true;
     }
 
-        String[] getText()
-	      {
-		  return editArea.getText();
-	      }
-
     void setText(String[] text)
     {
 	NullCheck.notNullItems(text, "text");
 	editArea.getContent().setLines(text);
-	app.getLuwrain().onAreaNewContent(editArea);
-    }
+	editArea.refresh();
+	    }
 
         void onNewFile()
     {

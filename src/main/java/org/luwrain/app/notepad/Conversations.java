@@ -30,12 +30,15 @@ final class Conversations
     private final Luwrain luwrain;
     private final Strings strings;
 
-    Conversations(Luwrain luwrain, Strings strings)
+    private final Set<String>
+	replaceExpHistory = new HashSet<>(),
+	replaceWithHistory = new HashSet<>();
+
+    Conversations(App app)
     {
-	NullCheck.notNull(luwrain, "luwrain");
-	NullCheck.notNull(strings, "strings");
-	this.luwrain = luwrain;
-	this.strings = strings;
+	NullCheck.notNull(app, "app");
+	this.luwrain = app.getLuwrain();
+	this.strings = app.getStrings();
     }
 
     //currentFile may be null
@@ -88,4 +91,15 @@ final class Conversations
 	    return UnsavedChangesRes.CANCEL;
 	return popup.result()?UnsavedChangesRes.CONTINUE_SAVE:UnsavedChangesRes.CONTINUE_UNSAVED;
     }
+
+    String replaceExp()
+    {
+	return Popups.editWithHistory(luwrain, strings.replacePopupName(), strings.replaceExpPopupPrefix(), "", replaceExpHistory);
+    }
+
+        String replaceWith()
+    {
+	return Popups.editWithHistory(luwrain, strings.replacePopupName(), strings.replaceWithPopupPrefix(), "", replaceWithHistory);
+    }
+
 }
