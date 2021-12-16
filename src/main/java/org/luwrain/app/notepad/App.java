@@ -143,10 +143,10 @@ public final class App extends AppBase<Strings>
 	switch(mode)
 	{
 	case NATURAL:
-	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(getLuwrain()), corrector.getDefaultCorrector(), NATURAL_MODE_CORRECTOR_HOOK));
+	    //	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(getLuwrain()), corrector.getDefaultCorrector(), NATURAL_MODE_CORRECTOR_HOOK));
 	    break;
 	case PROGRAMMING:
-	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(getLuwrain()), corrector.getDefaultCorrector(), PROGRAMMING_MODE_CORRECTOR_HOOK));
+	    //	    corrector.setActivatedCorrector(new DirectScriptMultilineEditCorrector(new DefaultControlContext(getLuwrain()), corrector.getDefaultCorrector(), PROGRAMMING_MODE_CORRECTOR_HOOK));
 	    break;
 	}
     }

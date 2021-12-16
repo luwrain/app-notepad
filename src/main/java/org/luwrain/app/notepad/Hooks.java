@@ -40,6 +40,7 @@ final class Hooks
 
     boolean runActionHooks(SystemEvent event, EditArea editArea)
     {
+	/*
 	NullCheck.notNull(event, "event");
 	NullCheck.notNull(editArea, "editArea");
 	if (!(event instanceof ActionEvent))
@@ -60,6 +61,8 @@ final class Hooks
 		}
 	    });
 	return res.get();
+	*/
+	return false;
     }
 
     String[] runPropertiesHook(EditArea editArea)
