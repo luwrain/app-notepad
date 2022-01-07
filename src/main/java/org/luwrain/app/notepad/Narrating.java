@@ -170,7 +170,7 @@ class Narrating implements Runnable
 	final byte[] buf = new byte[numBytes];
 	for(int i = 0;i < buf.length;++i)
 	    buf[i] = 0;
-	FileUtils.writeAllBytes(stream, buf);
+	StreamUtils.writeAllBytes(stream, buf);
     }
 
     private int timeToBytes(int msec)
