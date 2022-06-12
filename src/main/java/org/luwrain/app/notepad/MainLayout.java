@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2021 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2022 Michael Pozhidaev <msp@luwrain.org>
 
    This file is part of LUWRAIN.
 
@@ -26,6 +26,7 @@ import org.luwrain.core.queries.*;
 import org.luwrain.controls.*;
 import org.luwrain.script.*;
 import org.luwrain.app.base.*;
+import org.luwrain.nlp.*;
 
 final class MainLayout extends LayoutBase
 {
@@ -41,7 +42,9 @@ final class MainLayout extends LayoutBase
 		    params.appearance = new Appearance(params.context){
 			    @Override App.Mode getMode() { return app.mode; }
 			};
-		    params.changeListener = ()->{app.modified = true;};
+		    params.changeListeners = Arrays.asList(
+							  (area, lines, hotPoint)->{app.modified = true;},
+							  new EditSpellChecking(getLuwrain()));
 		    params.editFactory = (p)->{
 			app.corrector.setDefaultCorrector((MultilineEditCorrector)p.model);
 			p.model = app.corrector;
@@ -50,7 +53,6 @@ final class MainLayout extends LayoutBase
 		})){
 		@Override public boolean onSystemEvent(SystemEvent event)
 		{
-		    NullCheck.notNull(event, "event");
 		    if (event.getType() == SystemEvent.Type.REGULAR)
 			switch(event.getCode())
 			{
@@ -59,12 +61,13 @@ final class MainLayout extends LayoutBase
 			    return true;
 			case PROPERTIES:
 			    return showProperties();
+			case IDLE:
+			    return onIdle();
 			}
 		    return super.onSystemEvent(event);
 		}
 		@Override public boolean onAreaQuery(AreaQuery query)
 		{
-		    NullCheck.notNull(query, "query");
 		    if (query.getQueryCode() == AreaQuery.CURRENT_DIR && query instanceof CurrentDirQuery)
 			return onDirectoryQuery((CurrentDirQuery)query);
 		    return super.onAreaQuery(query);
@@ -100,6 +103,31 @@ final class MainLayout extends LayoutBase
 		for(int i = 0;i < lines.getLineCount();i++)
 		    lines.setLine(i, lines.getLine(i).replaceAll(oldValue, newValue));
 	    });
+	return true;
+    }
+
+    private boolean onIdle()
+    {
+	final MarkedLines lines = editArea.getContent();
+	final int
+	x = editArea.getHotPointX(),
+	y = editArea.getHotPointY();
+	if (y >= lines.getLineCount())
+	    return true;
+	final LineMarks marks = lines.getLineMarks(y);
+	if (marks == null)
+	    return  true;
+	final LineMarks.Mark[] atPoint = marks.findAtPos(x);
+	if (atPoint == null || atPoint.length == 0)
+	    return true;
+	for(LineMarks.Mark m: atPoint)
+	{
+	    if (m.getMarkObject() == null || !(m.getMarkObject() instanceof SpellProblem))
+		continue;
+	    final SpellProblem p = (SpellProblem)m.getMarkObject();
+	    app.message(p.getComment(), Luwrain.MessageType.ANNOUNCEMENT);
+	    return true;
+	}
 	return true;
     }
 
