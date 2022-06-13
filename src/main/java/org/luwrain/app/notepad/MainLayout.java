@@ -41,6 +41,7 @@ final class MainLayout extends LayoutBase
 		    params.name = "";
 		    params.appearance = new Appearance(params.context){
 			    @Override App.Mode getMode() { return app.mode; }
+			    @Override public EditArea getEditArea() { return editArea; };
 			};
 		    params.changeListeners = Arrays.asList(
 							  (area, lines, hotPoint)->{app.modified = true;},

@@ -18,10 +18,12 @@ package org.luwrain.app.notepad;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.io.*;
+//import java.io.*;
 
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
+import org.luwrain.nlp.*;
+import static org.luwrain.core.DefaultEventResponse.*;
 
 abstract class Appearance extends EditUtils.DefaultEditAreaAppearance
 {
@@ -31,28 +33,45 @@ abstract class Appearance extends EditUtils.DefaultEditAreaAppearance
     }
 
     abstract App.Mode getMode();
+    abstract EditArea getEditArea();
 
     @Override public void announceLine(int index, String line)
     {
 	final App.Mode mode = getMode();
-	if (mode == null)
+	final String text;
+	if (mode != null)
+	    switch(mode)
+	    {
+	    case NONE:
+		text = context.getSpeakableText(line, Luwrain.SpeakableTextType.NONE);
+		break;
+	    case PROGRAMMING:
+		text = context.getSpeakableText(line, Luwrain.SpeakableTextType.PROGRAMMING);
+		break;
+	    case NATURAL:
+		text = context.getSpeakableText(line, Luwrain.SpeakableTextType.NATURAL);
+		break;
+	    default:
+		text = line;
+	    } else
+	    text = line;
+	boolean hasSpellProblems = false;
+	if (getEditArea().getContent().getLineMarks(index) != null)
 	{
-	    NavigationArea.defaultLineAnnouncement(context, index, line);
+	    final LineMarks.Mark[] marks = getEditArea().getContent().getLineMarks(index).getMarks();
+	    if (marks != null)
+		for(LineMarks.Mark m: marks)
+		    if (m.getMarkObject() != null && m.getMarkObject() instanceof SpellProblem)
+		    {
+			hasSpellProblems = true;
+			break;
+		    }
+	}
+	if (!hasSpellProblems || line.trim().isEmpty())
+	{
+	    NavigationArea.defaultLineAnnouncement(context, index, text);
 	    return;
 	}
-	switch(mode)
-	{
-	case NONE:
-	    NavigationArea.defaultLineAnnouncement(context, index, context.getSpeakableText(line, Luwrain.SpeakableTextType.NONE));
-	    break;
-	case PROGRAMMING:
-	    NavigationArea.defaultLineAnnouncement(context, index, context.getSpeakableText(line, Luwrain.SpeakableTextType.PROGRAMMING));
-	    break;
-	case NATURAL:
-	    NavigationArea.defaultLineAnnouncement(context, index, context.getSpeakableText(line, Luwrain.SpeakableTextType.NATURAL));
-	    break;
-	default:
-	    NavigationArea.defaultLineAnnouncement(context, index, line);
-	}
+	context.setEventResponse(text(Sounds.SPELLING, text));
     }
 }
