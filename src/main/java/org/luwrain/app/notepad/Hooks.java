@@ -68,6 +68,7 @@ final class Hooks
     String[] runPropertiesHook(EditArea editArea)
     {
 	NullCheck.notNull(editArea, "editArea");
+	/*
 		final EmptyHookObject hookObj = new EmptyHookObject(){
 		@Override public Object getMember(String name)
 		{
@@ -109,5 +110,7 @@ final class Hooks
 	    return new String[0];
 	}
 	return res.toArray(new String[res.size()]);
+	*/
+	return new String[0];
     }
 }
