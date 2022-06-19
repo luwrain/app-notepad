@@ -33,19 +33,22 @@ final class MainLayout extends LayoutBase
     private final App app;
     final EditArea editArea;
 
+    final EditSpellChecking spellChecking;
+    final EditArea.ChangeListener modificationMarkListener;
+
     MainLayout(App app)
     {
 	super(app);
 	this.app = app;
+	this.spellChecking =new EditSpellChecking(getLuwrain());
+	this.modificationMarkListener = (area, lines, hotPoint)->{app.modified = true;};
 	this.editArea = new EditArea(editParams((params)->{
 		    params.name = "";
 		    params.appearance = new Appearance(params.context){
 			    @Override App.Mode getMode() { return app.mode; }
 			    @Override public EditArea getEditArea() { return editArea; };
 			};
-		    params.changeListeners = Arrays.asList(
-							  (area, lines, hotPoint)->{app.modified = true;},
-							  new EditSpellChecking(getLuwrain()));
+		    params.changeListeners = Arrays.asList(modificationMarkListener);
 		    params.editFactory = (p)->{
 			app.corrector.setDefaultCorrector((MultilineEditCorrector)p.model);
 			p.model = app.corrector;
@@ -82,6 +85,7 @@ final class MainLayout extends LayoutBase
 	    };
 	setAreaLayout(editArea, actions(
 					action("replace", app.getStrings().actionReplace(), new InputEvent(InputEvent.Special.F5), this::actReplace),
+										action("spell-right", app.getStrings().actionSpellRight(), new InputEvent(InputEvent.Special.ARROW_RIGHT, EnumSet.of(InputEvent.Modifiers.SHIFT)), this::actFindSpellRight),
 					action("charset", app.getStrings().actionCharset(), new InputEvent(InputEvent.Special.F9), MainLayout .this::actCharset),
 					action("narrating", app.getStrings().actionNarrating(), new InputEvent(InputEvent.Special.F10), MainLayout.this::actNarrating),
 					action("open", app.getStrings().actionOpen(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
@@ -100,10 +104,42 @@ final class MainLayout extends LayoutBase
 	final String newValue = app.getConv().replaceWith();
 	if (newValue == null)
 	    return true;
-	editArea.getContent().update((lines)->{
+	editArea.update((lines, hotPoint)->{
 		for(int i = 0;i < lines.getLineCount();i++)
 		    lines.setLine(i, lines.getLine(i).replaceAll(oldValue, newValue));
+		return true;
 	    });
+	return true;
+    }
+
+    private boolean actFindSpellRight()
+    {
+	final AtomicBoolean moved = new AtomicBoolean(false);
+	editArea.update((lines, hotPoint)->{
+		final int index = hotPoint.getHotPointY();
+		final int len = lines.getLine(index).length();
+		for(int i = 0;i < len;i++)
+		{
+		    final LineMarks lineMarks = lines.getLineMarks(index);
+		    if (lineMarks == null)
+			continue;
+		    final LineMarks.Mark[] marks = lineMarks.findAtPos(i);
+		    if (marks == null || marks.length == 0)
+			continue;
+		    for(LineMarks.Mark m: marks)
+			if (m.getMarkObject() != null && m.getMarkObject() instanceof SpellProblem)
+		    {
+			hotPoint.setHotPointX(i);
+			moved.set(true);
+			return false;
+		    }
+		}
+		if (!moved.get())
+		return false;
+		getControlContext().onAreaNewHotPoint(editArea);
+		return true;
+	    });
+
 	return true;
     }
 
@@ -160,7 +196,7 @@ final class MainLayout extends LayoutBase
 	catch(IOException e)
 	{
 	    app.file = origFile;
-	    app.getLuwrain().crash(e);
+	    app.crash(e);
 	    return true;
 	}
 	app.setAppName(app.file.getName());
@@ -234,30 +270,38 @@ final class MainLayout extends LayoutBase
     private boolean actModeNone()
     {
 	app.mode = App.Mode.NONE;
-	app.getLuwrain().message(app.getStrings().modeNone(), Luwrain.MessageType.OK);
+	editArea.setChangeListeners(Arrays.asList(modificationMarkListener));
+	spellChecking.eraseSpellingMarks(editArea);
+	app.message(app.getStrings().modeNone(), Luwrain.MessageType.OK);
 	return true;
     }
 
     private boolean actModeNatural()
     {
 	app.mode = App.Mode.NATURAL;
-		app.getLuwrain().message(app.getStrings().modeNatural(), Luwrain.MessageType.OK);
+	editArea.setChangeListeners(Arrays.asList(modificationMarkListener, spellChecking));
+	spellChecking.initialChecking(editArea);
+	app.message(app.getStrings().modeNatural(), Luwrain.MessageType.OK);
 	return true;
     }
 
     private boolean actModeProgramming()
     {
 	app.mode = App.Mode.PROGRAMMING;
-		app.getLuwrain().message(app.getStrings().modeProgramming(), Luwrain.MessageType.OK);
+	spellChecking.eraseSpellingMarks(editArea); 
+	editArea.setChangeListeners(Arrays.asList(modificationMarkListener));
+	app.message(app.getStrings().modeProgramming(), Luwrain.MessageType.OK);
 	return true;
     }
 
     void setText(String[] text)
     {
-	NullCheck.notNullItems(text, "text");
-	editArea.getContent().setLines(text);
+	editArea.update((lines, hotPoint)->{
+		lines.setLines(text);
+		return false;//Means no need to call listeners etc
+	    });
 	editArea.refresh();
-	    }
+    }
 
         void onNewFile()
     {

@@ -26,6 +26,8 @@ public interface Strings
     String actionNoIndents();
     String actionOpen();
     String actionReplace();
+    String actionSpellRight();
+    String actionSpellLeft();
     String actionSaveAs();
     String appName();
     String cancelNarratingBeforeClosing();
