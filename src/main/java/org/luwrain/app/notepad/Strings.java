@@ -26,8 +26,8 @@ public interface Strings
     String actionNoIndents();
     String actionOpen();
     String actionReplace();
-    String actionSpellRight();
-    String actionSpellLeft();
+
+
     String actionSaveAs();
     String appName();
     String cancelNarratingBeforeClosing();
@@ -67,9 +67,13 @@ public interface Strings
 
 
         String charsetPopupPrefix();
+
     String replacePopupName();
     String replaceExpPopupPrefix();
     String replaceWithPopupPrefix();
 
+        String actionSpellRight();
+
     String actionWordSuggestions();
+    String correctionSuggestionsPopupName();
 }

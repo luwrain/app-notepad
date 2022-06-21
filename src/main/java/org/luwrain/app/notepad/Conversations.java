@@ -102,4 +102,10 @@ final class Conversations
 	return Popups.editWithHistory(luwrain, strings.replacePopupName(), strings.replaceWithPopupPrefix(), "", replaceWithHistory);
     }
 
+    String correctionSuggestion(String[] options)
+    {
+final Object res = Popups.fixedList(luwrain, strings.correctionSuggestionsPopupName(), options);
+return res != null?res.toString():null;
+    }
+
 }

@@ -297,11 +297,21 @@ final class MainLayout extends LayoutBase
 
     private boolean actWordSuggestions()
     {
-	final Lines lines = editArea.getContent();
-	final String word = new TextFragmentUtils(lines).getWord(editArea.getHotPointX(), editArea.getHotPointY());
+	final String word = new TextFragmentUtils(editArea.getContent()).getWord(editArea.getHotPointX(), editArea.getHotPointY());
 	if (word == null)
 	    return false;
-	app.message(word);
+	final List<String> suggestions = spellChecking.getSpellChecker().suggestCorrections(word);
+	if (suggestions != null)
+	if (suggestions == null || suggestions.isEmpty())
+	    return false;
+	final String correction = app.getConv().correctionSuggestion(suggestions.toArray(new String[suggestions.size()]));
+	if (correction == null)
+	    return true;
+	editArea.update((lines, hotPoint)->{
+		final String newLine = new TextFragmentUtils(lines).replaceWord(hotPoint.getHotPointX(), hotPoint.getHotPointY(), correction);
+		lines.setLine(hotPoint.getHotPointY(), newLine);
+		return true;
+	    });
 	return true;
     }
 
