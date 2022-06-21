@@ -86,6 +86,7 @@ final class MainLayout extends LayoutBase
 	setAreaLayout(editArea, actions(
 					action("replace", app.getStrings().actionReplace(), new InputEvent(InputEvent.Special.F5), this::actReplace),
 										action("spell-right", app.getStrings().actionSpellRight(), new InputEvent(InputEvent.Special.ARROW_RIGHT, EnumSet.of(InputEvent.Modifiers.SHIFT)), this::actFindSpellRight),
+					action("word-suggestions", app.getStrings().actionWordSuggestions(), new InputEvent(InputEvent.Special.F8), this::actWordSuggestions),
 					action("charset", app.getStrings().actionCharset(), new InputEvent(InputEvent.Special.F9), MainLayout .this::actCharset),
 					action("narrating", app.getStrings().actionNarrating(), new InputEvent(InputEvent.Special.F10), MainLayout.this::actNarrating),
 					action("open", app.getStrings().actionOpen(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
@@ -291,6 +292,16 @@ final class MainLayout extends LayoutBase
 	spellChecking.eraseSpellingMarks(editArea); 
 	editArea.setChangeListeners(Arrays.asList(modificationMarkListener));
 	app.message(app.getStrings().modeProgramming(), Luwrain.MessageType.OK);
+	return true;
+    }
+
+    private boolean actWordSuggestions()
+    {
+	final Lines lines = editArea.getContent();
+	final String word = new TextFragmentUtils(lines).getWord(editArea.getHotPointX(), editArea.getHotPointY());
+	if (word == null)
+	    return false;
+	app.message(word);
 	return true;
     }
 

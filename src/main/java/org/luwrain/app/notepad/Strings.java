@@ -70,4 +70,6 @@ public interface Strings
     String replacePopupName();
     String replaceExpPopupPrefix();
     String replaceWithPopupPrefix();
+
+    String actionWordSuggestions();
 }
