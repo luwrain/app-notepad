@@ -87,6 +87,7 @@ final class MainLayout extends LayoutBase
 					action("replace", app.getStrings().actionReplace(), new InputEvent(InputEvent.Special.F5), this::actReplace),
 										action("spell-right", app.getStrings().actionSpellRight(), new InputEvent(InputEvent.Special.ARROW_RIGHT, EnumSet.of(InputEvent.Modifiers.SHIFT)), this::actFindSpellRight),
 					action("word-suggestions", app.getStrings().actionWordSuggestions(), new InputEvent(InputEvent.Special.F8), this::actWordSuggestions),
+					action("add-spell-exclusion", app.getStrings().actionAddSpellExclusion(), new InputEvent(InputEvent.Special.F8, EnumSet.of(InputEvent.Modifiers.SHIFT)), this::actAddSpellExclusion),
 					action("charset", app.getStrings().actionCharset(), new InputEvent(InputEvent.Special.F9), MainLayout .this::actCharset),
 					action("narrating", app.getStrings().actionNarrating(), new InputEvent(InputEvent.Special.F10), MainLayout.this::actNarrating),
 					action("open", app.getStrings().actionOpen(), new InputEvent(InputEvent.Special.F3, EnumSet.of(InputEvent.Modifiers.SHIFT)), MainLayout.this::actOpen),
@@ -312,6 +313,25 @@ final class MainLayout extends LayoutBase
 		lines.setLine(hotPoint.getHotPointY(), newLine);
 		return true;
 	    });
+	return true;
+    }
+
+    private boolean actAddSpellExclusion()
+    {
+	final String word = new TextFragmentUtils(editArea.getContent()).getWord(editArea.getHotPointX(), editArea.getHotPointY());
+	if (word == null)
+	    return false;
+	for(SpellExclusion.Exclusion e: 	spellChecking.getSpellChecker().getExclusion().getExclusions())
+	    if (e.getText().toUpperCase().equals(word.toUpperCase()))
+	    {
+		getLuwrain().playSound(Sounds.OK);
+		return true;
+	    }
+	final SpellExclusion.Exclusion e = new SpellExclusion.Exclusion();
+	e.setText(word.toUpperCase());
+	spellChecking.getSpellChecker().getExclusion().getExclusions().add(e);
+	spellChecking.getSpellChecker().getExclusion().save();
+	getLuwrain().playSound(Sounds.OK);
 	return true;
     }
 

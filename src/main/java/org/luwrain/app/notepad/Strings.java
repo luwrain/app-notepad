@@ -76,4 +76,6 @@ public interface Strings
 
     String actionWordSuggestions();
     String correctionSuggestionsPopupName();
+
+    String actionAddSpellExclusion();
 }
