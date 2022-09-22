@@ -22,9 +22,13 @@ import java.util.*;
 import org.luwrain.core.*;
 import org.luwrain.popups.*;
 
+import static org.luwrain.popups.Popups.*;
+
 final class Conversations
 {
-    static final String charsets = "UTF-8:KOI8-R:windows-1251:IBM866:ISO-8859-5";
+    static final String
+	charsets = "UTF-8:KOI8-R:windows-1251:IBM866:ISO-8859-5";
+
     enum UnsavedChangesRes {CONTINUE_SAVE, CONTINUE_UNSAVED, CANCEL};
 
     private final Luwrain luwrain;
@@ -44,34 +48,34 @@ final class Conversations
     //currentFile may be null
     File save(File currentFile)
     {
-	return Popups.path(luwrain, 
-			   strings.savePopupName(), strings.savePopupPrefix(),
-			   currentFile, //It's OK, if this value is null
-			   (fileToCheck, announce)->{
-			       if (fileToCheck.exists() && fileToCheck.isDirectory())
-			       {
-				   if (announce)
-				       luwrain.message(strings.enteredPathMayNotBeDir(fileToCheck.getAbsolutePath()), Luwrain.MessageType.ERROR);
-				   return false;
-			       }
-			       return true;
-			   });
+	return path(luwrain, 
+		    strings.savePopupName(), strings.savePopupPrefix(),
+		    currentFile, //It's OK, if this value is null
+		    (fileToCheck, announce)->{
+			if (fileToCheck.exists() && fileToCheck.isDirectory())
+			{
+			    if (announce)
+				luwrain.message(strings.enteredPathMayNotBeDir(fileToCheck.getAbsolutePath()), Luwrain.MessageType.ERROR);
+			    return false;
+			}
+			return true;
+		    });
     }
 
     File open()
     {
-	return Popups.existingFile(luwrain, strings.openPopupName());
-	    }
+	return existingFile(luwrain, strings.openPopupName());
+    }
 
     File narratingDestDir()
     {
-	return Popups.existingDir(luwrain, strings.narratingDestDirPopupPrefix());
+	return existingDir(luwrain, strings.narratingDestDirPopupPrefix());
     }
 
     String charset()
     {
 	final String[] names = charsets.split(":", -1);
-	final Object res = Popups.fixedList(luwrain, strings.charsetPopupPrefix(), names);
+	final Object res = fixedList(luwrain, strings.charsetPopupPrefix(), names);
 	if (res == null)
 	    return null;
 	return res.toString();

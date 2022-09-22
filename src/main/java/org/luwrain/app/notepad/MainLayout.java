@@ -172,7 +172,6 @@ final class MainLayout extends LayoutBase
 
     private boolean onDirectoryQuery(CurrentDirQuery query)
     {
-	NullCheck.notNull(query, "query");
 	if (app.file == null)
 	    return false;
 	final File f = app.file.getParentFile();
