@@ -43,7 +43,6 @@ public final class Extension extends EmptyExtension
     @Override public ExtensionObject[] getExtObjects(Luwrain luwrain)
     {
 	return new ExtensionObject[]{
-	    
 	    new Shortcut() {
 		@Override public String getExtObjName()
 		{
@@ -62,13 +61,11 @@ public final class Extension extends EmptyExtension
 		    return v.toArray(new Application[v.size()]);
 		}
 	    },
-
 	};
     }
 
     @Override public Factory[] getControlPanelFactories(Luwrain luwrain)
     {
-	NullCheck.notNull(luwrain, "luwrain");
 	return new Factory[]{
 	    new Factory() {
 		@Override public Element[] getElements()
@@ -81,7 +78,6 @@ public final class Extension extends EmptyExtension
 		}
 		@Override public org.luwrain.cpanel.Section createSection(Element el)
 		{
-		    NullCheck.notNull(el, "el");
 		    final Strings strings = (Strings)luwrain.i18n().getStrings(Strings.NAME);
 		    if (el.equals(controlPanelElement))
 			return new SimpleSection(controlPanelElement, strings.settingsFormName(), (controlPanel)->SettingsForm.create(controlPanel));
